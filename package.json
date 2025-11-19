@@ -1,0 +1,30 @@
+{
+ "name": "@tokenring-ai/chat",
+ "version": "0.1.0",
+ "description": "AI chat client for the Token Ring ecosystem",
+ "dependencies": {
+  "@tokenring-ai/agent": "0.1.0",
+  "@tokenring-ai/chat": "0.1.0",
+  "@tokenring-ai/utility": "0.1.0",
+  "@types/async": "^3.2.25",
+  "async": "^3.2.6"
+ },
+ "devDependencies": {
+  "@vitest/coverage-v8": "^4.0.10",
+  "typescript": "^5.9.3",
+  "vitest": "^4.0.10"
+ },
+ "exports": {
+  ".": "./index.ts",
+  "./*": "./*.ts"
+ },
+ "types": "./index.ts",
+ "license": "MIT",
+ "scripts": {
+  "build": "tsc -p tsconfig.json",
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "test:coverage": "vitest run --coverage"
+ },
+ "type": "module"
+}
