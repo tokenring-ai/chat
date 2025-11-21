@@ -10,9 +10,9 @@
   "async": "^3.2.6"
  },
  "devDependencies": {
-  "@vitest/coverage-v8": "^4.0.10",
+  "@vitest/coverage-v8": "^4.0.12",
   "typescript": "^5.9.3",
-  "vitest": "^4.0.10"
+  "vitest": "^4.0.12"
  },
  "exports": {
   ".": "./index.ts",
