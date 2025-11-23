@@ -1,4 +1,5 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../ChatService.ts";
 
@@ -11,10 +12,10 @@ import ChatService from "../ChatService.ts";
  *   /tools set a b c       - sets enabled tools to a, b, c
  */
 
-export const description =
+const description =
   "/tools [enable|disable|set] <tool1> <tool2> ... - List, enable, disable, or set enabled tools for the chat session." as const;
 
-export async function execute(
+async function execute(
   remainder: string | undefined,
   agent: Agent,
 ): Promise<void> {
@@ -135,3 +136,8 @@ export function help(): string[] {
     "  - set: Set exactly which tools are enabled",
   ];
 }
+export default {
+  description,
+  execute,
+  help,
+} as TokenRingAgentCommand

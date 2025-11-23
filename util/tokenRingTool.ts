@@ -3,12 +3,14 @@ import {chatTool} from "@tokenring-ai/ai-client";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 import {TokenRingToolDefinition} from "../types.ts";
 
-export function tokenRingTool({
+
+
+export function tokenRingTool<inputSchemaType>({
                                 name,
                                 description,
                                 inputSchema,
                                 execute,
-                              }: TokenRingToolDefinition) {
+                              }: TokenRingToolDefinition<any>) {
   return {
     name,
     tool: chatTool({

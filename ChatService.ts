@@ -1,24 +1,28 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import type {TokenRingService} from "@tokenring-ai/agent/types";
 import type {AIResponse, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
+import {TokenRingService} from "@tokenring-ai/app/types";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {NamedTool, TokenRingToolDefinition} from "./types.ts";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
 
-export type ChatConfig = {
-  model: string;
-  systemPrompt: string | ((agent: Agent) => string);
-  temperature?: number;
-  maxTokens?: number;
-  topP?: number;
-  topK?: number;
-  frequencyPenalty?: number;
-  presencePenalty?: number;
-  stopSequences?: string[];
-  autoCompact?: boolean;
-  enabledTools?: string[];
-};
+import {z} from "zod";
+
+export const ChatConfigSchema = z.object({
+  model: z.string().optional(),
+  systemPrompt: z.union([z.string(), z.function({output: z.string()})]),
+  temperature: z.number().optional(),
+  maxTokens: z.number().optional(),
+  topP: z.number().optional(),
+  topK: z.number().optional(),
+  frequencyPenalty: z.number().optional(),
+  presencePenalty: z.number().optional(),
+  stopSequences: z.array(z.string()).optional(),
+  autoCompact: z.boolean().optional(),
+  enabledTools: z.array(z.string()).optional(),
+});
+
+export type ChatConfig = z.infer<typeof ChatConfigSchema>;
 
 /**
  * Represents a chat message in the storage system
@@ -43,7 +47,6 @@ export default class ChatService implements TokenRingService {
   description = "A service for managing AI configuration";
   model: string;
 
-
   private tools = new KeyedRegistry<NamedTool>();
 
   requireTool = this.tools.requireItemByName;
@@ -58,13 +61,13 @@ export default class ChatService implements TokenRingService {
   }
 
   async attach(agent: Agent): Promise<void> {
-    agent.initializeState(ChatServiceState, agent.options.ai);
+    agent.initializeState(ChatServiceState, agent.getAgentConfigSlice('chat', ChatConfigSchema));
   }
 
 
   addTools(
     pkgName: string,
-    tools: Record<string, TokenRingToolDefinition>,
+    tools: Record<string, TokenRingToolDefinition<any>>,
   ) {
     for (const toolName in tools) {
       const fullName = `${pkgName}/${toolName}`;

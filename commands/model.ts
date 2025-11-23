@@ -1,4 +1,5 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ModelRegistry from "@tokenring-ai/ai-client/ModelRegistry";
 import ChatService from "../ChatService.ts";
 
@@ -9,10 +10,10 @@ interface TreeNode {
   hasChildren?: boolean;
 }
 
-export const description: string =
+const description: string =
   "/model [model_name] - Set or show the target model for chat";
 
-export async function execute(remainder: string, agent: Agent): Promise<void> {
+async function execute(remainder: string, agent: Agent): Promise<void> {
   debugger;
   const modelRegistry = agent.requireServiceByType(ModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
@@ -114,3 +115,8 @@ export function help(): string[] {
     "  - Special values: auto|auto:reasoning|auto:frontier to auto-select model",
   ];
 }
+export default {
+  description,
+  execute,
+  help,
+} as TokenRingAgentCommand

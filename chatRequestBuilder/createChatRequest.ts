@@ -63,7 +63,7 @@ export async function createChatRequest(
   }
 
   if (typeof systemPrompt === "function") {
-    systemPrompt = systemPrompt(agent);
+    systemPrompt = systemPrompt();
   }
 
   let systemMessages: ChatInputMessage[] = [
@@ -90,7 +90,7 @@ export async function createChatRequest(
   }
 
   if (includeContextItems) {
-    for (const service of agent.team.getServices()) {
+    for (const service of agent.app.getServices()) {
       if (!service.getContextItems) continue;
       for await (const {content, position} of service.getContextItems(
         agent,

@@ -1,13 +1,14 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ModelRegistry from "@tokenring-ai/ai-client/ModelRegistry";
 import {FeatureOptions} from "@tokenring-ai/ai-client/ModelTypeRegistry";
 import {createChatRequest} from "../chatRequestBuilder/createChatRequest.ts";
 import ChatService from "../ChatService.ts";
 
-export const description: string =
+const description: string =
   "/ai settings key=value [key=value...] - Update AI configuration settings | /ai context - Show context items | /ai feature <list|enable|disable> ...";
 
-export async function execute(remainder: string, agent: Agent): Promise<void> {
+async function execute(remainder: string, agent: Agent): Promise<void> {
   const chatService = agent.requireServiceByType(ChatService);
 
   if (!remainder?.trim()) {
@@ -225,7 +226,7 @@ async function showContext(agent: Agent): Promise<void> {
 
     const systemPrompt =
       typeof config.systemPrompt === "function"
-        ? config.systemPrompt(agent)
+        ? config.systemPrompt()
         : config.systemPrompt;
 
     const request = await createChatRequest(
@@ -277,3 +278,8 @@ export function help(): string[] {
     "  - Show all context items that would be added to a chat request",
   ];
 }
+export default {
+  description,
+  execute,
+  help,
+} as TokenRingAgentCommand

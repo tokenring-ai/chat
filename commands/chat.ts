@@ -1,12 +1,13 @@
 import {Agent} from "@tokenring-ai/agent";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import type {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
 import runChat from "../runChat.ts";
 import {outputChatAnalytics} from "../util/outputChatAnalytics.ts";
 
-export const description =
+const description =
   "/chat [message] - Send a message to the chat service";
 
-export async function execute(remainder: string, agent: Agent): Promise<void> {
+async function execute(remainder: string, agent: Agent): Promise<void> {
   if (!remainder?.trim()) {
     agent.infoLine("Please enter a message to send to AI, or type /help for a list of the available commands.");
     return;
@@ -32,3 +33,8 @@ export function help(): string[] {
     "  - Displays token usage information after completion",
   ];
 }
+export default {
+  description,
+  execute,
+  help,
+} as TokenRingAgentCommand
