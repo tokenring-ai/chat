@@ -1,7 +1,7 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import type {TokenRingService} from "@tokenring-ai/agent/types";
 import type {AIResponse, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
-import KeyedRegistry from "@tokenring-ai/utility/KeyedRegistry";
+import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {NamedTool, TokenRingToolDefinition} from "./types.ts";
 import {tokenRingTool} from "./util/tokenRingTool.ts";

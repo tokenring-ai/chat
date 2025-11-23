@@ -1,5 +1,6 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import ModelRegistry from "@tokenring-ai/ai-client/ModelRegistry";
+import {FeatureOptions} from "@tokenring-ai/ai-client/ModelTypeRegistry";
 import {createChatRequest} from "../chatRequestBuilder/createChatRequest.ts";
 import ChatService from "../ChatService.ts";
 
@@ -83,10 +84,10 @@ export async function execute(remainder: string, agent: Agent): Promise<void> {
   }
 }
 
-function parseModelAndFeatures(model: string): { base: string; features: Record<string, any> } {
+function parseModelAndFeatures(model: string): { base: string; features: FeatureOptions } {
   const qIndex = model.indexOf("?");
   const base = qIndex >= 0 ? model.substring(0, qIndex) : model;
-  const features: Record<string, any> = Object.create(null);
+  const features: FeatureOptions = Object.create(null);
   if (qIndex >= 0) {
     const query = model.substring(qIndex + 1);
     for (const part of query.split("&")) {
@@ -111,7 +112,7 @@ function coerceFeatureValue(v: string): any {
   return v;
 }
 
-function serializeModel(base: string, features: Record<string, any>): string {
+function serializeModel(base: string, features: FeatureOptions): string {
   const entries = Object.entries(features).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return base;
   const query = entries
