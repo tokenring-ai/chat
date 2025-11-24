@@ -1,9 +1,9 @@
 import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
-import type {AIResponse, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
+import type {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 import ModelRegistry from "@tokenring-ai/ai-client/ModelRegistry";
 import {type ChatRequestConfig, createChatRequest,} from "./chatRequestBuilder/createChatRequest.ts";
-import ChatService, {StoredChatMessage} from "./ChatService.ts";
+import ChatService from "./ChatService.ts";
 import {compactContext} from "./util/compactContext.ts";
 
 /**

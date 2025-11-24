@@ -261,7 +261,7 @@ async function showContext(agent: Agent): Promise<void> {
   }
 }
 
-export function help(): string[] {
+function help(): string[] {
   return [
     "/ai settings key=value [key=value...]",
     "  - Update AI configuration settings",

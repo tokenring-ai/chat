@@ -26,7 +26,7 @@ async function execute(remainder: string, agent: Agent): Promise<void> {
 }
 
 // noinspection JSUnusedGlobalSymbols
-export function help(): string[] {
+function help(): string[] {
   return [
     "/chat [message]",
     "  - Sends a message to the chat service using current model and system prompt",

@@ -127,7 +127,7 @@ async function execute(
 }
 
 // noinspection JSUnusedGlobalSymbols
-export function help(): string[] {
+function help(): string[] {
   return [
     "/tools [enable|disable|set] <tool1> <tool2> ...",
     "  - With no arguments: Shows interactive tree selection for tools grouped by package",

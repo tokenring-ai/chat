@@ -107,7 +107,7 @@ async function execute(remainder: string, agent: Agent): Promise<void> {
 }
 
 // noinspection JSUnusedGlobalSymbols
-export function help(): string[] {
+function help(): string[] {
   return [
     "/model [model_name]",
     "  - With no arguments: Shows interactive tree selection for models grouped by provider",

@@ -10,7 +10,7 @@ async function execute(remainder: string, agent: Agent): Promise<void> {
   await compactContext(agent);
 }
 
-export function help(): string[] {
+function help(): string[] {
   return [
     "/compact",
     "  - Compacts the conversation context by creating a summary of all prior messages",
