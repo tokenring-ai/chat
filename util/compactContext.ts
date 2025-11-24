@@ -38,10 +38,12 @@ export async function compactContext(agent: Agent): Promise<void> {
 
   chatService.clearChatMessages(agent);
 
+  const {tools, ...storedRequest } = request;
+
   // Update the current message to follow up to the previous
   chatService.pushChatMessage(
     {
-      request,
+      request: storedRequest,
       response,
       createdAt: Date.now(),
       updatedAt: Date.now(),

@@ -27,9 +27,9 @@ export type ChatConfig = z.infer<typeof ChatConfigSchema>;
 /**
  * Represents a chat message in the storage system
  */
-export interface StoredChatMessage {
+export type StoredChatMessage = {
   /** The AI request */
-  request: ChatRequest;
+  request: Omit<ChatRequest,"tools"> & { tools?: never};
   /** The response from AI */
   response: AIResponse;
   /** The creation time in milliseconds since the epoch format */
