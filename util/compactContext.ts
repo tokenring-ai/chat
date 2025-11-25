@@ -1,11 +1,11 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import ModelRegistry from "@tokenring-ai/ai-client/ModelRegistry";
+import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {createChatRequest} from "../chatRequestBuilder/createChatRequest.js";
 import ChatService from "../ChatService.ts";
 
 export async function compactContext(agent: Agent): Promise<void> {
   const chatService = agent.requireServiceByType(ChatService);
-  const modelRegistry = agent.requireServiceByType(ModelRegistry);
+  const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
 
   const messages = chatService.getChatMessages(agent);
   if (messages.length === 0) return;
@@ -22,7 +22,7 @@ export async function compactContext(agent: Agent): Promise<void> {
     agent,
   );
 
-  const client = await modelRegistry.chat.getFirstOnlineClient(
+  const client = await chatModelRegistry.getFirstOnlineClient(
     chatService.getModel(agent),
   );
 

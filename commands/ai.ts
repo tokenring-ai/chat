@@ -1,6 +1,6 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
-import ModelRegistry from "@tokenring-ai/ai-client/ModelRegistry";
+import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {FeatureOptions} from "@tokenring-ai/ai-client/ModelTypeRegistry";
 import {createChatRequest} from "../chatRequestBuilder/createChatRequest.ts";
 import ChatService from "../ChatService.ts";
@@ -157,8 +157,8 @@ async function handleFeatureSubcommand(args: string[], agent: Agent): Promise<vo
 
     // Show available features from the model spec
     try {
-      const modelRegistry = agent.requireServiceByType(ModelRegistry);
-      const client = await modelRegistry.chat.getFirstOnlineClient(base);
+      const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
+      const client = await chatModelRegistry.getFirstOnlineClient(base);
       const modelSpec = client.getModelSpec();
       const availableFeatures = modelSpec.features || {};
       const availableKeys = Object.keys(availableFeatures);

@@ -1,6 +1,6 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
-import ModelRegistry from "@tokenring-ai/ai-client/ModelRegistry";
+import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import ChatService from "../ChatService.ts";
 
 interface TreeNode {
@@ -15,7 +15,7 @@ const description: string =
 
 async function execute(remainder: string, agent: Agent): Promise<void> {
   debugger;
-  const modelRegistry = agent.requireServiceByType(ModelRegistry);
+  const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
 
   const model = chatService.getModel(agent);
@@ -31,7 +31,7 @@ async function execute(remainder: string, agent: Agent): Promise<void> {
   // If no remainder provided, show interactive tree selection grouped by provider
   const modelsByProvider = await agent.busyWhile(
     "Checking online status of models...",
-    modelRegistry.chat.getModelsByProvider(),
+    chatModelRegistry.getModelsByProvider(),
   );
 
   // Build tree structure for model selection
