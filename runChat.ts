@@ -2,6 +2,7 @@ import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
 import type {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 import ModelRegistry from "@tokenring-ai/ai-client/ModelRegistry";
+import omit from "@tokenring-ai/utility/object/omit";
 import {type ChatRequestConfig, createChatRequest,} from "./chatRequestBuilder/createChatRequest.ts";
 import ChatService from "./ChatService.ts";
 import {compactContext} from "./util/compactContext.ts";
@@ -42,11 +43,10 @@ export default async function runChat(
       client.streamChat(request, agent),
     );
 
-    const { tools, ...storedRequest } = request;
     // Update the current message to follow up to the previous
     chatService.pushChatMessage(
       {
-        request: storedRequest,
+        request: omit(request,["tools"]),
         response,
         createdAt: Date.now(),
         updatedAt: Date.now(),
