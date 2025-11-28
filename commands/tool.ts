@@ -13,7 +13,7 @@ import ChatService from "../ChatService.ts";
  */
 
 const description =
-  "/tools [enable|disable|set] <tool1> <tool2> ... - List, enable, disable, or set enabled tools for the chat session." as const;
+  "/tools - List, enable, disable, or set enabled tools for the chat session." as const;
 
 async function execute(
   remainder: string | undefined,
@@ -56,7 +56,11 @@ async function execute(
     }
 
     agent.infoLine(
-      `Enabled tools: ${joinDefault(", ", chatService.getEnabledTools(agent), "(none)")}`,
+      `Enabled tools: ${joinDefault(
+        ", ",
+        chatService.getEnabledTools(agent),
+        "(none)",
+      )}`,
     );
     return;
   }
@@ -108,7 +112,11 @@ async function execute(
   try {
     const selectedTools = await agent.askHuman({
       type: "askForMultipleTreeSelection",
-      message: `Current enabled tools: ${joinDefault(", ", enabledTools, "(none)")}. Choose tools to enable:`,
+      message: `Current enabled tools: ${joinDefault(
+        ", ",
+        enabledTools,
+        "(none)",
+      )}. Choose tools to enable:`,
       tree: buildToolTree(),
       initialSelection: enabledTools,
     });
@@ -116,7 +124,11 @@ async function execute(
     if (selectedTools) {
       chatService.setEnabledTools(selectedTools, agent);
       agent.infoLine(
-        `Enabled tools: ${joinDefault(", ", chatService.getEnabledTools(agent), "No tools selected.")}`,
+        `Enabled tools: ${joinDefault(
+          ", ",
+          chatService.getEnabledTools(agent),
+          "No tools selected.",
+        )}`,
       );
     } else {
       agent.infoLine("Tool selection cancelled. No changes made.");
@@ -126,18 +138,33 @@ async function execute(
   }
 }
 
-// noinspection JSUnusedGlobalSymbols
-function help(): string[] {
-  return [
-    "/tools [enable|disable|set] <tool1> <tool2> ...",
-    "  - With no arguments: Shows interactive tree selection for tools grouped by package",
-    "  - enable: Enable specific tools",
-    "  - disable: Disable specific tools",
-    "  - set: Set exactly which tools are enabled",
-  ];
-}
+const help: string = `# /tools [enable|disable|set] <tool1> <tool2> ...
+
+Manage available tools for your chat session. Tools provide additional capabilities like web search, code execution, file operations, etc.
+
+## Modes
+
+- \`/tools\` - Interactive tool selection (recommended)
+- \`/tools enable tool1 tool2\` - Enable specific tools
+- \`/tools disable tool1\` - Disable specific tools
+- \`/tools set tool1 tool2\` - Set exactly which tools are enabled
+
+## Examples
+
+/tools                    # Browse and select tools interactively
+/tools enable web-search  # Enable web search tool
+/tools disable calculator # Disable calculator tool
+/tools set web-search calculator # Only enable these two tools
+
+## Interactive Mode
+
+- Tools are grouped by package for easy browsing
+- Current selection is shown with checkmarks
+- Use spacebar to toggle selection, enter to confirm
+
+**Note:** Some tools may require additional setup or permissions.`;
 export default {
   description,
   execute,
   help,
-} as TokenRingAgentCommand
+} as TokenRingAgentCommand;

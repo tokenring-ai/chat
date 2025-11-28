@@ -11,7 +11,7 @@ interface TreeNode {
 }
 
 const description: string =
-  "/model [model_name] - Set or show the target model for chat";
+  "/model - Set or show the target model for chat";
 
 async function execute(remainder: string, agent: Agent): Promise<void> {
   debugger;
@@ -106,17 +106,43 @@ async function execute(remainder: string, agent: Agent): Promise<void> {
   }
 }
 
-// noinspection JSUnusedGlobalSymbols
-function help(): string[] {
-  return [
-    "/model [model_name]",
-    "  - With no arguments: Shows interactive tree selection for models grouped by provider",
-    "  - With model_name: Sets the target model for chat",
-    "  - Special values: auto|auto:reasoning|auto:frontier to auto-select model",
-  ];
-}
+const help: string = `# /model [model_name]
+
+Set or display the AI model used for chat responses. Choose from available models based on your needs for speed, quality, and cost.
+
+## Usage
+
+/model                    # Interactive model selection (recommended)
+/model gpt-4              # Set to specific model
+/model auto               # Auto-select best available model
+/model auto:reasoning     # Auto-select with reasoning capabilities
+/model auto:frontier      # Auto-select latest frontier model
+
+## Interactive Mode
+
+- Models are grouped by provider (OpenAI, Anthropic, etc.)
+- Status indicators show availability:
+  - ✅ Online - Ready for immediate use
+  - 🧊 Cold - May have startup delay
+  - 🔴 Offline - Currently unavailable
+- Current model is highlighted
+
+## Special Values
+
+- **auto** - Automatically selects best available model
+- **auto:reasoning** - Prefers models with advanced reasoning
+- **auto:frontier** - Prefers latest cutting-edge models
+
+## Examples
+
+/model                    # Browse and select model interactively
+/model gpt-4-turbo        # Use GPT-4 Turbo for better performance
+/model claude-3-sonnet    # Use Claude 3 Sonnet for balanced quality
+/model auto               # Let system choose best model
+
+**Note:** Model availability and performance may vary based on your subscription level and current server load.`;
 export default {
   description,
   execute,
   help,
-} as TokenRingAgentCommand
+} as TokenRingAgentCommand;

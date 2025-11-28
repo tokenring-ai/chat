@@ -5,8 +5,7 @@ import {FeatureOptions} from "@tokenring-ai/ai-client/ModelTypeRegistry";
 import {createChatRequest} from "../chatRequestBuilder/createChatRequest.ts";
 import ChatService from "../ChatService.ts";
 
-const description: string =
-  "/ai settings key=value [key=value...] - Update AI configuration settings | /ai context - Show context items | /ai feature <list|enable|disable> ...";
+const description: string = "/ai - Manage AI settings";
 
 async function execute(remainder: string, agent: Agent): Promise<void> {
   const chatService = agent.requireServiceByType(ChatService);
@@ -261,25 +260,94 @@ async function showContext(agent: Agent): Promise<void> {
   }
 }
 
-function help(): string[] {
-  return [
-    "/ai settings key=value [key=value...]",
-    "  - Update AI configuration settings",
-    "  - Available keys: model, systemPrompt, temperature, maxTokens, topP, frequencyPenalty, presencePenalty, stopSequences, autoCompact",
-    "  - Examples: /ai settings temperature=0.7 autoCompact=true",
-    "  - With no arguments: Shows current settings",
-    "/ai feature list",
-    "  - List currently enabled features and available features supported by the model",
-    "/ai feature enable key[=value] [key[=value] ...]",
-    "  - Enable or set feature flags. Booleans accept 1/0/true/false; numbers are parsed.",
-    "/ai feature disable key [key ...]",
-    "  - Disable/remove feature flags from the model string",
-    "/ai context",
-    "  - Show all context items that would be added to a chat request",
-  ];
-}
+const help: string = `# /ai - Manage AI settings
+
+## /ai settings key=value [key=value...]
+
+Configure AI model settings and behavior. These settings affect how the AI processes your requests and generates responses.
+
+### Available Settings
+
+- **temperature=0.7** - Controls randomness (0.0-2.0, default: 1.0)
+- **maxTokens=1000** - Maximum response length (integer)
+- **topP=0.9** - Nucleus sampling threshold (0.0-1.0)
+- **frequencyPenalty=0.0** - Reduce repetition (-2.0 to 2.0)
+- **presencePenalty=0.0** - Encourage new topics (-2.0 to 2.0)
+- **stopSequences=a,b,c** - Stop at these sequences
+- **autoCompact=true** - Enable automatic context compaction
+
+### Examples
+
+/ai settings temperature=0.5 maxTokens=2000
+/ai settings frequencyPenalty=0.2 presencePenalty=0.1
+/ai settings autoCompact=true
+
+With no arguments: Shows current AI configuration
+
+## /ai feature list
+
+List currently enabled model features and available features supported by your current model. Features enable special capabilities like reasoning, code execution, or specific output formats.
+
+### Output includes
+
+- Current model with enabled features
+- Base model name
+- All currently active feature flags
+- Available features from model specification
+
+## /ai feature enable key[=value] [key[=value] ...]
+
+Enable or set model feature flags. Features provide enhanced capabilities and behaviors for specific models. Feature values are automatically parsed based on type.
+
+### Value Types
+
+- **Boolean**: true/false, 1/0
+- **Number**: Numeric values (temperature, max tokens, etc.)
+- **String**: Text values (custom parameters)
+
+### Examples
+
+/ai feature enable reasoning          # Enable reasoning feature
+/ai feature enable temperature=0.7    # Set temperature via feature
+/ai feature enable custom_param=value # Set custom parameter
+
+## /ai feature disable key [key ...]
+
+Remove/disable specific feature flags from your current model. This simplifies the model string and removes unwanted capabilities.
+
+### Examples
+
+/ai feature disable reasoning         # Disable reasoning
+/ai feature disable temperature      # Remove temperature setting
+/ai feature disable custom_param     # Remove custom parameter
+
+## /ai context
+
+Display all context items that would be included in a chat request. This is useful for debugging and understanding what information the AI has access to during conversations.
+
+### Shows
+
+- Total number of context messages
+- System prompt configuration
+- Previous conversation messages (with preview)
+- Any context items or tools
+
+### Output Format
+
+- \`1. [role] message content preview\`
+- Long messages are truncated with '...'
+- Messages are numbered for easy reference
+
+### Common Use Cases
+
+- Debug context issues in long conversations
+- Verify system prompt is being used correctly
+- Check what previous messages are included
+- Understand token usage composition
+
+**Note:** Context display shows the exact data sent to the AI model.`;
 export default {
   description,
   execute,
   help,
-} as TokenRingAgentCommand
+} as TokenRingAgentCommand;

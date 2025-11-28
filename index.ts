@@ -3,7 +3,7 @@ import {AgentCommandService} from "@tokenring-ai/agent";
 import {TokenRingPlugin} from "@tokenring-ai/app";
 import {z} from "zod";
 
-import * as chatCommands from "./chatCommands.ts";
+import chatCommands from "./chatCommands.ts";
 import ChatService from "./ChatService.js";
 import packageJSON from "./package.json" with {type: "json"};
 
