@@ -14,7 +14,6 @@ const description: string =
   "/model - Set or show the target model for chat";
 
 async function execute(remainder: string, agent: Agent): Promise<void> {
-  debugger;
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
 
