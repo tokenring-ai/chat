@@ -7,6 +7,7 @@ import tool from "./commands/tool.ts";
 
 const initialContextItems = [
   { type: "system-message" },
+  { type: "tool-context" },
   { type: "prior-messages" },
   { type: "current-message" },
 ];
@@ -28,6 +29,7 @@ export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> =
   inputSchema: InputSchema;
   start?: (agent: Agent) => Promise<void>;
   stop?: (agent: Agent) => Promise<void>;
+  requiredContextHandlers?: string[];
 };
 
 export const ContextSourceSchema = z.looseObject({
