@@ -1,143 +1,50 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import {stepCountIs, type UserModelMessage} from "@tokenring-ai/ai-client";
-import type {ChatInputMessage, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
-import ChatService, {type ChatConfig} from "../ChatService.ts";
-
-export interface ChatRequestConfig {
-  input: string | ChatInputMessage | ChatInputMessage[];
-  systemPrompt: ChatConfig["systemPrompt"];
-  includeContextItems?: boolean;
-  includeTools?: boolean;
-  includePriorMessages?: boolean;
-  maxSteps?: number;
-  temperature?: number;
-  topP?: number;
-  topK?: number;
-  stopSequences?: string[];
-  presencePenalty?: number;
-  frequencyPenalty?: number;
-}
+import {stepCountIs} from "@tokenring-ai/ai-client";
+import type {ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
+import pick from "@tokenring-ai/utility/object/pick";
+import ChatService from "../ChatService.ts";
+import {ChatConfig, ContextItem} from "../types.ts";
 
 /**
  * Creates a chat request object.
  */
 export async function createChatRequest(
-  {
-    input,
-    systemPrompt,
-    includeContextItems = true,
-    includeTools = true,
-    includePriorMessages = true,
-    maxSteps = 15,
-    temperature,
-    topP,
-    topK,
-    stopSequences,
-    presencePenalty,
-    frequencyPenalty,
-  }: ChatRequestConfig,
+  input: string,
+  chatConfig: ChatConfig,
   agent: Agent,
 ): Promise<ChatRequest> {
   const chatService = agent.requireServiceByType(ChatService);
-  const lastMessage = chatService.getCurrentMessage(agent);
 
-  let currentMessages: ChatInputMessage[];
+  const lastMessage = chatService.getLastMessage(agent);
 
-  if (typeof input === "string") {
-    currentMessages = [
-      {
-        role: "user",
-        content: input,
-      },
-    ];
-  } else if (!Array.isArray(input)) {
-    currentMessages = [input];
-  } else {
-    currentMessages = input;
-  }
+  const messages: ContextItem[] = [];
 
-  if (!(currentMessages?.length > 0)) {
-    throw new Error(
-      "The input: parameter must be either a single item or an array with a length greater than 0",
-    );
-  }
+  for (const source of lastMessage ? chatConfig.context.followUp : chatConfig.context.initial) {
+    const handler = chatService.requireContextHandlerByName(source.type);
 
-  if (typeof systemPrompt === "function") {
-    systemPrompt = systemPrompt();
-  }
-
-  let systemMessages: ChatInputMessage[] = [
-    {
-      role: "system",
-      content: systemPrompt,
-    },
-  ];
-
-  let priorMessages: ChatInputMessage[] = [];
-
-  if (includePriorMessages && lastMessage) {
-    if (lastMessage.request.messages[0]?.role === "system") {
-      systemMessages = [lastMessage.request.messages[0]];
-      priorMessages = lastMessage.request.messages.slice(1);
-    } else {
-      priorMessages = [...lastMessage.request.messages];
-    }
-
-    // Add the AI response to maintain conversation context
-    if (lastMessage.response.messages?.length) {
-      priorMessages.push(...lastMessage.response.messages);
-    }
-  }
-
-  if (includeContextItems) {
-    for (const service of agent.app.getServices()) {
-      if (!service.getContextItems) continue;
-      for await (const {content, position} of service.getContextItems(
-        agent,
-      )) {
-        const message = {role: "user", content} as UserModelMessage;
-
-        if (position === "afterSystemMessage") {
-          if (
-            priorMessages.find(
-              (el) => el.role === "user" && el.content === content,
-            )
-          )
-            continue;
-          systemMessages.push(message);
-        } else if (position === "afterPriorMessages") {
-          if (
-            priorMessages.find(
-              (el) => el.role === "user" && el.content === content,
-            )
-          )
-            continue;
-          priorMessages.push(message);
-        } else if (position === "afterCurrentMessage") {
-          currentMessages.push(message);
-        }
-      }
+    for await (const item of handler(input, chatConfig, source, agent)) {
+      messages.push(item);
     }
   }
 
   const request: ChatRequest = {
-    messages: [...systemMessages, ...priorMessages, ...currentMessages],
+    messages,
     tools: {},
-    stopWhen: stepCountIs(maxSteps),
-    temperature,
-    topP,
-    topK,
-    stopSequences,
-    presencePenalty,
-    frequencyPenalty,
+    stopWhen: stepCountIs(chatConfig.maxSteps),
+    ...pick(chatConfig, [
+      "temperature",
+      "topP",
+      "topK",
+      "stopSequences",
+      "presencePenalty",
+      "frequencyPenalty",
+    ]),
   };
 
-  if (includeTools) {
-    for (const toolName of Object.values(chatService.getEnabledTools(agent))) {
-      const {name, tool} = chatService.requireTool(toolName);
-      const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, "_");
-      request.tools[sanitizedName] = tool;
-    }
+  for (const toolName of chatConfig.enabledTools ?? []) {
+    const {name, tool} = chatService.requireTool(toolName);
+    const sanitizedName = name.replace(/[^a-zA-Z0-9_-]/g, "_");
+    request.tools[sanitizedName] = tool;
   }
 
   return request;

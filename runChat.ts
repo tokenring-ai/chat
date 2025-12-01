@@ -3,28 +3,28 @@ import Agent from "@tokenring-ai/agent/Agent";
 import type {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import omit from "@tokenring-ai/utility/object/omit";
-import {type ChatRequestConfig, createChatRequest,} from "./chatRequestBuilder/createChatRequest.ts";
+import {createChatRequest,} from "./chatRequestBuilder/createChatRequest.ts";
 import ChatService from "./ChatService.ts";
+import {ChatConfig} from "./types.ts";
 import {compactContext} from "./util/compactContext.ts";
 
 /**
  * runChat tool: Runs a chat with the AI model, combining streamChat and runChat functionality.
  */
 export default async function runChat(
-  requestOptions: Omit<ChatRequestConfig, "systemPrompt"> & {
-    systemPrompt?: ChatRequestConfig["systemPrompt"];
-  },
+  input: string,
+  chatConfig: ChatConfig,
   agent: Agent,
 ): Promise<[string, AIResponse]> {
   const chatModelRegistry =
     agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
 
-  const defaultRequestOptions = chatService.getChatConfig(agent);
   const model = chatService.getModel(agent);
 
   const request = await createChatRequest(
-    {...defaultRequestOptions, ...requestOptions},
+    input,
+    chatConfig,
     agent,
   );
 

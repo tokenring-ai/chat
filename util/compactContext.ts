@@ -11,13 +11,10 @@ export async function compactContext(agent: Agent): Promise<void> {
   if (messages.length === 0) return;
 
   const request = await createChatRequest(
+    `Please provide a detailed summary of the prior conversation, including all important details, context, and what was being worked on`,
     {
-      input: `Please provide a detailed summary of the prior conversation, including all important details, context, and what was being worked on`,
-      systemPrompt:
-        "You are a helpful assistant that creates comprehensive summaries of conversations.",
-      includeContextItems: true,
-      includeTools: false,
-      includePriorMessages: true,
+      ...chatService.getChatConfig(agent),
+      enabledTools: []
     },
     agent,
   );

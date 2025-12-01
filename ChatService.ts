@@ -1,42 +1,16 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import type {AIResponse, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {TokenRingService} from "@tokenring-ai/app/types";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {ChatServiceState} from "./state/chatServiceState.js";
-import {NamedTool, TokenRingToolDefinition} from "./types.ts";
+import {
+  ChatConfig,
+  ChatConfigSchema,
+  ContextHandler,
+  NamedTool,
+  StoredChatMessage,
+  TokenRingToolDefinition
+} from "./types.ts";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
-
-import {z} from "zod";
-
-export const ChatConfigSchema = z.object({
-  model: z.string().optional(),
-  systemPrompt: z.union([z.string(), z.function({output: z.string()})]),
-  temperature: z.number().optional(),
-  maxTokens: z.number().optional(),
-  topP: z.number().optional(),
-  topK: z.number().optional(),
-  frequencyPenalty: z.number().optional(),
-  presencePenalty: z.number().optional(),
-  stopSequences: z.array(z.string()).optional(),
-  autoCompact: z.boolean().optional(),
-  enabledTools: z.array(z.string()).optional(),
-});
-
-export type ChatConfig = z.infer<typeof ChatConfigSchema>;
-
-/**
- * Represents a chat message in the storage system
- */
-export type StoredChatMessage = {
-  /** The AI request */
-  request: Omit<ChatRequest,"tools"> & { tools?: never};
-  /** The response from AI */
-  response: AIResponse;
-  /** The creation time in milliseconds since the epoch format */
-  createdAt: number;
-  /** The update time in milliseconds since the epoch format */
-  updatedAt: number;
-}
 
 export type ChatServiceOptions = {
   model: string;
@@ -48,6 +22,7 @@ export default class ChatService implements TokenRingService {
   model: string;
 
   private tools = new KeyedRegistry<NamedTool>();
+  private contextHandlers = new KeyedRegistry<ContextHandler>();
 
   requireTool = this.tools.requireItemByName;
   registerTool = this.tools.register;
@@ -56,12 +31,24 @@ export default class ChatService implements TokenRingService {
   getToolNamesLike = this.tools.getItemNamesLike;
   ensureToolNamesLike = this.tools.ensureItemNamesLike;
 
+  getContextHandlerByName = this.contextHandlers.getItemByName;
+  requireContextHandlerByName = this.contextHandlers.requireItemByName;
+  registerContextHandler = this.contextHandlers.register;
+  registerContextHandlers = this.contextHandlers.registerAll;
+
   constructor(options: ChatServiceOptions) {
     this.model = options.model;
   }
 
   async attach(agent: Agent): Promise<void> {
-    agent.initializeState(ChatServiceState, agent.getAgentConfigSlice('chat', ChatConfigSchema));
+    const { enabledTools, ...agentConfig} = agent.getAgentConfigSlice('chat', ChatConfigSchema);
+    agent.initializeState(ChatServiceState, agentConfig);
+
+    // The enabled tools can include wildcards, so they can't be set directly in the service state,
+    // they need to be processed via the setEnabledTools method.
+    if (enabledTools) {
+      this.setEnabledTools(enabledTools, agent);
+    }
   }
 
 
@@ -115,7 +102,7 @@ export default class ChatService implements TokenRingService {
   /**
    * Gets the current active message.
    */
-  getCurrentMessage(agent: Agent): StoredChatMessage | null {
+  getLastMessage(agent: Agent): StoredChatMessage | null {
     const messages = this.getChatMessages(agent);
     if (messages.length > 0) {
       return messages[messages.length - 1];
@@ -164,33 +151,30 @@ export default class ChatService implements TokenRingService {
   }
 
   setEnabledTools(toolNames: string[], agent: Agent): void {
-    this.tools.ensureItems(toolNames);
+    const matchedToolNames = toolNames.map(toolName => this.ensureToolNamesLike(toolName)).flat();
 
     agent.mutateState(ChatServiceState, (state) => {
-      state.currentConfig.enabledTools = toolNames;
+      state.currentConfig.enabledTools = matchedToolNames;
     })
   }
 
   enableTools(toolNames: string[], agent: Agent): void {
-    this.tools.ensureItems(toolNames);
+    const matchedToolNames = toolNames.map(toolName => this.ensureToolNamesLike(toolName)).flat();
 
     agent.mutateState(ChatServiceState, (state) => {
-      state.currentConfig.enabledTools ??= [];
-      for (const tool of toolNames) {
-        if (!state.currentConfig.enabledTools.includes(tool)) {
-          state.currentConfig.enabledTools.push(tool);
-        }
-      }
+      const newTools = new Set(matchedToolNames);
+      matchedToolNames.forEach(tool => newTools.add(tool));
+      state.currentConfig.enabledTools = Array.from(newTools.values());
     })
   }
 
   disableTools(toolNames: string[], agent: Agent): void {
-    this.tools.ensureItems(toolNames);
+    const matchedToolNames = toolNames.map(toolName => this.ensureToolNamesLike(toolName)).flat();
+
     agent.mutateState(ChatServiceState, (state) => {
-      state.currentConfig.enabledTools = (state.currentConfig.enabledTools ?? [])
-        .filter((tool) =>
-          toolNames.includes(tool)
-        )
+      const newTools = new Set(state.currentConfig.enabledTools);
+      matchedToolNames.forEach(tool => newTools.delete(tool));
+      state.currentConfig.enabledTools = Array.from(newTools.values());
     });
   }
 }

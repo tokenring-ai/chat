@@ -15,9 +15,9 @@ export function outputChatAnalytics(
   } = response.usage;
 
   const usage = [
-    `Input Tokens: ${inputTokens}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
-    `Output: ${outputTokens}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`,
-    `Total: ${totalTokens}`,
+    `Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
+    `Output: ${outputTokens?.toLocaleString() ?? "unknown"}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`,
+    `Total: ${totalTokens?.toLocaleString() ?? "unknown"}`,
   ];
 
   agent.infoLine(`[${pkgName}] ${usage.join(", ")}`);

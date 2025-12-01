@@ -1,7 +1,7 @@
 import type {ResetWhat} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentStateSlice} from "@tokenring-ai/agent/types";
 import async from "async";
-import type {ChatConfig, StoredChatMessage} from "../ChatService.ts"
+import {ChatConfig, StoredChatMessage} from "../types.ts";
 
 export class ChatServiceState implements AgentStateSlice {
   name = "ChatServiceState";
@@ -29,6 +29,7 @@ export class ChatServiceState implements AgentStateSlice {
       return await this.toolQueue.push(executeToolFunction);
     }
   }
+
 
   reset(what: ResetWhat[]): void {
     if (what.includes("settings")) {

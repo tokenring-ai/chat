@@ -1,9 +1,9 @@
-import TokenRingApp from "@tokenring-ai/app"; 
+import TokenRingApp, {TokenRingPlugin} from "@tokenring-ai/app";
 import {AgentCommandService} from "@tokenring-ai/agent";
-import {TokenRingPlugin} from "@tokenring-ai/app";
 import {z} from "zod";
 
 import chatCommands from "./chatCommands.ts";
+import contextHandlers from "./contextHandlers.ts";
 import ChatService from "./ChatService.js";
 import packageJSON from "./package.json" with {type: "json"};
 
@@ -21,9 +21,13 @@ export default {
     );
 
     const config = app.getConfigSlice("chat", ChatClientConfigSchema);
-    if (!config) return;
+    if (config) {
+      const chatService = new ChatService({model: config.defaultModel});
 
-    app.addServices(new ChatService({model: config.defaultModel}));
+      chatService.registerContextHandlers(contextHandlers);
+
+      app.addServices(chatService);
+    }
   },
 } as TokenRingPlugin;
 

@@ -5,14 +5,11 @@ import {TokenRingToolDefinition} from "../types.ts";
 
 
 
-export function tokenRingTool<inputSchemaType>({
-                                name,
-                                description,
-                                inputSchema,
-                                execute,
-                              }: TokenRingToolDefinition<any>) {
+export function tokenRingTool<inputSchemaType>(toolDefinition: TokenRingToolDefinition<any>) {
+  const {name, description, inputSchema, execute} = toolDefinition;
   return {
     name,
+    toolDefinition,
     tool: chatTool({
       description,
       inputSchema,
