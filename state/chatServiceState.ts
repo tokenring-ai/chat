@@ -8,6 +8,7 @@ export class ChatServiceState implements AgentStateSlice {
   readonly initialConfig: ChatConfig;
   currentConfig: ChatConfig;
   parallelTools = false;
+  persistToSubAgents = true;
   toolQueue = async.queue(
     async (task: () => Promise<string | object>) => task(),
     1,
