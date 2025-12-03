@@ -60,24 +60,20 @@ async function execute(remainder: string, agent: Agent): Promise<void> {
         value: modelName,
         name:
           model.status === "online"
-            ? `✅ ${model.modelSpec.modelId}`
+            ? model.modelSpec.modelId
             : model.status === "cold"
-              ? `🧊 ${model.modelSpec.modelId} (cold)`
-              : `🔴 ${model.modelSpec.modelId} (offline)`,
+              ? `${model.modelSpec.modelId} (cold)`
+              : `${model.modelSpec.modelId} (offline)`,
       }));
 
       // Count online models for provider display
       const onlineCount = Object.values(providerModels).filter(
         (m) => m.status === "online",
       ).length;
-      const coldCount = Object.values(providerModels).filter(
-        (m) => m.status === "cold",
-      ).length;
       const totalCount = Object.keys(providerModels).length;
-      const statusIcon = onlineCount > 0 ? "✅" : coldCount > 0 ? "🧊" : "🔴";
 
       tree.children?.push({
-        name: `${statusIcon} ${provider} (${onlineCount}/${totalCount} online)`,
+        name: `${provider} (${onlineCount}/${totalCount} online)`,
         hasChildren: true,
         children,
       });

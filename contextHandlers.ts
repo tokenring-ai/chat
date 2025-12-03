@@ -1,7 +1,7 @@
-import {default as currentMessage} from "./contextHandlers/currentMessage.ts";
-import {default as priorMessages} from "./contextHandlers/priorMessages.ts";
-import {default as systemMessage} from "./contextHandlers/systemMessage.ts";
-import {default as toolContext} from "./contextHandlers/toolContext.ts";
+import currentMessage from "./contextHandlers/currentMessage.ts";
+import priorMessages from "./contextHandlers/priorMessages.ts";
+import systemMessage from "./contextHandlers/systemMessage.ts";
+import toolContext from "./contextHandlers/toolContext.ts";
 import {ContextHandler} from "./types.ts";
 
 export default {
