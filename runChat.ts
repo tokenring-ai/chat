@@ -69,7 +69,7 @@ export default async function runChat(
 
       if (totalTokens > contextLength * 0.9) {
         const config = chatService.getChatConfig(agent);
-        if (config.autoCompact) {
+        if (config.autoCompact || agent.headless) {
           agent.infoLine(
             "Context is getting long. Automatically compacting context...",
           );
@@ -79,6 +79,8 @@ export default async function runChat(
             type: "askForConfirmation",
             message:
               "Context is getting long. Would you like to compact it to save tokens?",
+            default: true,
+            timeout: 30,
           });
 
           if (shouldCompact) {
