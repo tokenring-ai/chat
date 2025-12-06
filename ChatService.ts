@@ -42,7 +42,7 @@ export default class ChatService implements TokenRingService {
 
   async attach(agent: Agent): Promise<void> {
     const { enabledTools, ...agentConfig} = agent.getAgentConfigSlice('chat', ChatConfigSchema);
-    agent.initializeState(ChatServiceState, agentConfig);
+    agent.initializeState(ChatServiceState, { ...agentConfig, enabledTools: [] });
 
     // The enabled tools can include wildcards, so they can't be set directly in the service state,
     // they need to be processed via the setEnabledTools method.
@@ -162,7 +162,7 @@ export default class ChatService implements TokenRingService {
     const matchedToolNames = toolNames.map(toolName => this.ensureToolNamesLike(toolName)).flat();
 
     agent.mutateState(ChatServiceState, (state) => {
-      const newTools = new Set(matchedToolNames);
+      const newTools = new Set(state.currentConfig.enabledTools);
       matchedToolNames.forEach(tool => newTools.add(tool));
       state.currentConfig.enabledTools = Array.from(newTools.values());
     })
