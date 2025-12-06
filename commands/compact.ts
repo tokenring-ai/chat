@@ -6,11 +6,12 @@ const description =
   "/compact - Compact conversation context by summarizing prior messages";
 
 async function execute(remainder: string, agent: Agent): Promise<void> {
+  const focus = remainder.trim() || null
   agent.systemMessage("Compacting context...");
-  await compactContext(agent);
+  await compactContext(focus, agent);
 }
 
-const help: string = `# /compact
+const help: string = `# /compact [<focus>]
 
 Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and maintain context in long conversations.
 
@@ -37,8 +38,11 @@ Compress the conversation context by creating intelligent summaries of prior mes
 
 ## Example
 
-# After 50+ messages in a conversation
-/compact                    # Compresses all prior messages
+# Compresses all prior messages
+/compact                    
+
+# Gives more control over context compression
+/compact specifics of the task at hand, including the goal and expected outcome
 
 **Note:** Compaction is automatic in some cases, but manual compaction gives you control over when and how context is compressed.`;
 export default {

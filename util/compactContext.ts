@@ -3,7 +3,8 @@ import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {createChatRequest} from "../chatRequestBuilder/createChatRequest.js";
 import ChatService from "../ChatService.ts";
 
-export async function compactContext(agent: Agent): Promise<void> {
+export async function compactContext(focus: string | null, agent: Agent): Promise<void> {
+  focus ??= "important details, context, and what was being worked on"
   const chatService = agent.requireServiceByType(ChatService);
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
 
@@ -11,7 +12,7 @@ export async function compactContext(agent: Agent): Promise<void> {
   if (messages.length === 0) return;
 
   const request = await createChatRequest(
-    `Please provide a detailed summary of the prior conversation, including all important details, context, and what was being worked on`,
+    `Please provide a detailed and comprehensive summary of the prior conversation, focusing on ${focus}`,
     {
       ...chatService.getChatConfig(agent),
       enabledTools: []

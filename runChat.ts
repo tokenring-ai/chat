@@ -73,7 +73,7 @@ export default async function runChat(
           agent.infoLine(
             "Context is getting long. Automatically compacting context...",
           );
-          await compactContext(agent);
+          await compactContext(null, agent);
         } else {
           const shouldCompact = await agent.askHuman({
             type: "askForConfirmation",
@@ -85,7 +85,7 @@ export default async function runChat(
 
           if (shouldCompact) {
             agent.infoLine("Compacting context...");
-            await compactContext(agent);
+            await compactContext(null, agent);
           }
         }
       }
