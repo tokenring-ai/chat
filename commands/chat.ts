@@ -34,19 +34,13 @@ async function execute(remainder: string, agent: Agent): Promise<void> {
     return sendMessage(message, agent, chatService);
   }
 
-  // No subcommand - show help
-  if (!trimmed) {
-    agent.infoLine("Usage:");
-    agent.infoLine("  /chat send <message>     - Send a message to the AI");
-    agent.infoLine("  /chat settings [key=val] - View or update AI settings");
-    agent.infoLine("  /chat feature <action>   - Manage model features");
-    agent.infoLine("  /chat context            - Show current context");
-    agent.infoLine("\nType /help chat for detailed documentation.");
-    return;
-  }
-
-  // Default: treat as send command for convenience
-  return sendMessage(trimmed, agent, chatService);
+  // No subcommand or unknown subcommand - show help
+  agent.infoLine("Usage:");
+  agent.infoLine("  /chat send <message>     - Send a message to the AI");
+  agent.infoLine("  /chat settings [key=val] - View or update AI settings");
+  agent.infoLine("  /chat feature <action>   - Manage model features");
+  agent.infoLine("  /chat context            - Show current context");
+  agent.infoLine("\nType /help chat for detailed documentation.");
 }
 
 async function sendMessage(message: string, agent: Agent, chatService: ChatService): Promise<void> {
@@ -290,14 +284,13 @@ async function showContext(agent: Agent): Promise<void> {
 
 const help: string = `# /chat - Send messages and manage chat AI settings
 
-## /chat [message] or /chat send <message>
+## /chat send <message>
 
 Send a message to the AI chat service. This is the primary command for communicating with the AI, using your selected model and current context.
 
 ### Examples
 
-/chat Hello, how are you?          # Send a simple message
-/chat send Explain quantum computing  # Explicit send subcommand
+/chat send Hello, how are you?          # Send a simple message
 
 ### Features
 
