@@ -3,7 +3,6 @@ import Agent from "@tokenring-ai/agent/Agent";
 import type {Tool as AITool} from "@tokenring-ai/ai-client";
 import type {AIResponse, ChatInputMessage, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {z} from "zod";
-import tool from "./commands/tool.ts";
 
 const initialContextItems = [
   { type: "system-message" },
