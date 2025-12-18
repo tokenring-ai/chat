@@ -26,4 +26,4 @@ export default {
       app.addServices(chatService);
     }
   },
-} as TokenRingPlugin;
+} satisfies TokenRingPlugin;
