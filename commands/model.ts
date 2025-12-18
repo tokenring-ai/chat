@@ -86,7 +86,8 @@ async function execute(remainder: string, agent: Agent): Promise<void> {
   try {
     const selectedModel = await agent.askHuman({
       type: "askForSingleTreeSelection",
-      message: `Current model: ${model}. Choose a new model:`,
+      title: "Model Selection",
+      message: `Choose a new model:`,
       tree: buildModelTree(),
     });
 

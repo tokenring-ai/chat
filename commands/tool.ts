@@ -98,7 +98,7 @@ async function execute(
       }));
 
       tree.children.push({
-        name: `📦 ${packageName} (${tools.length} tools)`,
+        name: `📦 ${packageName}`,
         value: `${packageName}/*`,
         hasChildren: true,
         children,
@@ -112,11 +112,8 @@ async function execute(
   try {
     const selectedTools = await agent.askHuman({
       type: "askForMultipleTreeSelection",
-      message: `Current enabled tools: ${joinDefault(
-        ", ",
-        enabledTools,
-        "(none)",
-      )}. Choose tools to enable:`,
+      title: "Tool Selection",
+      message: `Choose the tools to enable for this agent:`,
       tree: buildToolTree(),
       initialSelection: enabledTools,
     });
