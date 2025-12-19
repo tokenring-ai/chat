@@ -1,14 +1,13 @@
+import {Agent} from "@tokenring-ai/agent";
 import type {ResetWhat} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentStateSlice} from "@tokenring-ai/agent/types";
 import async from "async";
 import {ChatConfig, StoredChatMessage} from "../types.ts";
-
 export class ChatServiceState implements AgentStateSlice {
   name = "ChatServiceState";
   readonly initialConfig: ChatConfig;
   currentConfig: ChatConfig;
   parallelTools = false;
-  persistToSubAgents = true;
   toolQueue = async.queue(
     async (task: () => Promise<string | object>) => task(),
     1,
@@ -31,6 +30,9 @@ export class ChatServiceState implements AgentStateSlice {
     }
   }
 
+  transferStateFromParent(parent: Agent): void {
+    this.currentConfig.model ??= parent.getState(ChatServiceState).currentConfig.model;
+  }
 
   reset(what: ResetWhat[]): void {
     if (what.includes("settings")) {
