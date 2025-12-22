@@ -16,7 +16,7 @@ const description =
   "/tools - List, enable, disable, or set enabled tools for the chat session." as const;
 
 async function execute(
-  remainder: string | undefined,
+  remainder: string,
   agent: Agent,
 ): Promise<void> {
   const chatService = agent.requireServiceByType(ChatService);
