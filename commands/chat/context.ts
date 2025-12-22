@@ -1,5 +1,4 @@
 import {Agent} from "@tokenring-ai/agent";
-import {createChatRequest} from "../../chatRequestBuilder/createChatRequest.ts";
 import ChatService from "../../ChatService.ts";
 
 export default async function context(_remainder: string, agent: Agent): Promise<void> {
@@ -7,19 +6,12 @@ export default async function context(_remainder: string, agent: Agent): Promise
     const chatService = agent.requireServiceByType(ChatService);
     const chatConfig = chatService.getChatConfig(agent);
 
-    const request = await createChatRequest(
-      "dummy_input",
-      {
-        ...chatConfig,
-        enabledTools: []
-      },
-      agent,
-    );
+    const messages = await chatService.buildChatMessages("input", chatConfig, agent);
 
     agent.infoLine("Context items that would be added to chat request:");
-    agent.infoLine(`Total messages: ${request.messages.length}`);
+    agent.infoLine(`Total messages: ${messages.length}`);
 
-    request.messages.slice(0, -1).forEach((msg, index) => {
+    messages.slice(0, -1).forEach((msg, index) => {
       const content =
         typeof msg.content === "string"
           ? msg.content

@@ -1,11 +1,13 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import agent from "@tokenring-ai/agent/rpc/agent";
 import {TokenRingService} from "@tokenring-ai/app/types";
+import pick from "@tokenring-ai/utility/object/pick";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {
   ChatConfig,
   ChatConfigSchema,
-  ContextHandler,
+  ContextHandler, ContextItem,
   NamedTool,
   StoredChatMessage,
   TokenRingToolDefinition
@@ -51,6 +53,32 @@ export default class ChatService implements TokenRingService {
     }
   }
 
+  async buildChatMessages(input: string, chatConfig: ChatConfig, agent: Agent) {
+    const lastMessage = this.getLastMessage(agent);
+
+    const messages: ContextItem[] = [];
+
+    for (const source of lastMessage ? chatConfig.context.followUp : chatConfig.context.initial) {
+      const handler = this.requireContextHandlerByName(source.type);
+
+      for await (const item of handler(input, chatConfig, source, agent)) {
+        messages.push(item);
+      }
+    }
+    return messages;
+  }
+
+  getChatPreferences(agent: Agent) {
+    const currentConfig = this.getChatConfig(agent);
+    return pick(currentConfig, [
+      "temperature",
+      "topP",
+      "topK",
+      "stopSequences",
+      "presencePenalty",
+      "frequencyPenalty",
+    ]);
+  }
 
   addTools(
     pkgName: string,

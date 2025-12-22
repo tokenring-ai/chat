@@ -2,8 +2,7 @@ import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
 import type {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
-import omit from "@tokenring-ai/utility/object/omit";
-import {createChatRequest,} from "./chatRequestBuilder/createChatRequest.ts";
+import {backoff} from "@tokenring-ai/utility/promise/backoff";
 import ChatService from "./ChatService.ts";
 import {ChatConfig} from "./types.ts";
 import {compactContext} from "./util/compactContext.ts";
@@ -22,12 +21,6 @@ export default async function runChat(
 
   const model = chatService.getModel(agent);
 
-  const request = await createChatRequest(
-    input,
-    chatConfig,
-    agent,
-  );
-
   const client = await agent.busyWhile(
     "Waiting for an an online model to respond...",
     chatModelRegistry.getFirstOnlineClient(model),
@@ -37,15 +30,30 @@ export default async function runChat(
 
   agent.infoLine(`[runChat] Using model ${client.getModelId()}`);
 
+
+  const requestMessages = await chatService.buildChatMessages(input, chatConfig, agent);
+  const request = {
+    messages: requestMessages,
+    ...chatService.getChatPreferences(agent)
+  };
+
   const [output, response] = await agent.busyWhile(
     "Waiting for response from AI...",
-    client.streamChat(request, agent),
+    client.streamChat({
+      ...request,
+      stopWhen: stepCountIs(chatConfig.maxSteps),
+      tools: Object.fromEntries(
+        chatConfig.enabledTools.map((toolName) =>
+          [toolName, chatService.requireTool(toolName).tool]
+        )
+      ),
+    }, agent),
   );
 
   // Update the current message to follow up to the previous
   chatService.pushChatMessage(
     {
-      request: omit(request,["tools"]),
+      request,
       response,
       createdAt: Date.now(),
       updatedAt: Date.now(),

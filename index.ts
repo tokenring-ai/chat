@@ -6,5 +6,4 @@ export const ChatClientConfigSchema = z.object({
 
 
 
-export {createChatRequest} from "./chatRequestBuilder/createChatRequest.ts";
 export {default as ChatService} from "./ChatService.ts";
