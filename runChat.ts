@@ -1,5 +1,6 @@
 import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
+import {stepCountIs} from "@tokenring-ai/ai-client";
 import type {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {backoff} from "@tokenring-ai/utility/promise/backoff";
@@ -23,7 +24,9 @@ export default async function runChat(
 
   const client = await agent.busyWhile(
     "Waiting for an an online model to respond...",
-    chatModelRegistry.getFirstOnlineClient(model),
+    backoff({ times: 5, interval: 1000, multiplier: 2}, () =>
+      chatModelRegistry.getFirstOnlineClient(model)
+    )
   );
 
   if (!client) throw new Error(`No online client found for model ${model}`);
