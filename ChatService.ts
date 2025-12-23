@@ -1,5 +1,4 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import agent from "@tokenring-ai/agent/rpc/agent";
 import {TokenRingService} from "@tokenring-ai/app/types";
 import pick from "@tokenring-ai/utility/object/pick";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
