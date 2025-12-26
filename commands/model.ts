@@ -1,118 +1,33 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
-import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
-import ChatService from "../ChatService.ts";
+import createSubcommandRouter from "@tokenring-ai/agent/util/subcommandRouter";
+import set from "./model/set.ts";
+import reset from "./model/reset.ts";
+import get from "./model/get.ts";
+import select from "./model/select.ts";
+import modelDefault from "./model/default.ts";
 
-interface TreeNode {
-  name: string;
-  value?: string;
-  children?: TreeNode[];
-  hasChildren?: boolean;
-}
+const description = "/model - Set or show the target model for chat";
 
-const description: string =
-  "/model - Set or show the target model for chat";
+const execute = createSubcommandRouter({
+  set,
+  reset,
+  get,
+  select,
+  default: modelDefault
+});
 
-async function execute(remainder: string, agent: Agent): Promise<void> {
-  const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
-  const chatService = agent.requireServiceByType(ChatService);
-
-  const model = chatService.getModel(agent);
-
-  // Handle direct model name input, e.g. /model gpt-4
-  const directModelName = remainder?.trim();
-  if (directModelName) {
-    chatService.setModel(directModelName, agent);
-    agent.infoLine(`Model set to ${directModelName}`);
-    return;
-  }
-
-  // If no remainder provided, show interactive tree selection grouped by provider
-  const modelsByProvider = await agent.busyWhile(
-    "Checking online status of models...",
-    chatModelRegistry.getModelsByProvider(),
-  );
-
-  // Build tree structure for model selection
-  const buildModelTree = (): TreeNode => {
-    const tree: TreeNode = {
-      name: "Model Selection",
-      children: [],
-    };
-
-    const sortedProviders = Object.entries(modelsByProvider).sort(([a], [b]) =>
-      a.localeCompare(b),
-    );
-
-    for (const [provider, providerModels] of sortedProviders) {
-      // Sort models by status (online first) then by name
-      const sortedModels = Object.entries(providerModels).sort(
-        ([, a], [, b]) => {
-          if (a.status === b.status) {
-            return a.modelSpec.modelId.localeCompare(b.modelSpec.modelId);
-          } else {
-            return a.status.localeCompare(b.status);
-          }
-        },
-      );
-
-      const children = sortedModels.map(([modelName, model]) => ({
-        value: modelName,
-        name:
-          model.status === "online"
-            ? model.modelSpec.modelId
-            : model.status === "cold"
-              ? `${model.modelSpec.modelId} (cold)`
-              : `${model.modelSpec.modelId} (offline)`,
-      }));
-
-      // Count online models for provider display
-      const onlineCount = Object.values(providerModels).filter(
-        (m) => m.status === "online",
-      ).length;
-      const totalCount = Object.keys(providerModels).length;
-
-      tree.children?.push({
-        name: `${provider} (${onlineCount}/${totalCount} online)`,
-        hasChildren: true,
-        children,
-      });
-    }
-
-    return tree;
-  };
-
-  // Interactive tree selection if no model name is provided in the command
-  try {
-    const selectedModel = await agent.askHuman({
-      type: "askForSingleTreeSelection",
-      title: "Model Selection",
-      message: `Choose a new model:`,
-      tree: buildModelTree(),
-    });
-
-    if (selectedModel) {
-      chatService.setModel(selectedModel, agent);
-      agent.infoLine(`Model set to ${selectedModel}`);
-    } else {
-      agent.infoLine("Model selection cancelled. No changes made.");
-    }
-  } catch (error) {
-    agent.errorLine(`Error during model selection:`, error as Error);
-  }
-}
-
-const help: string = `# /model [model_name]
+const help: string = `# /model <get|set|select|reset>
 
 Set or display the AI model used for chat responses. Choose from available models based on your needs for speed, quality, and cost.
 
 ## Usage
 
-/model                    # Interactive model selection (recommended)
-/model gpt-4              # Set to specific model
-/model auto               # Auto-select best available model
-/model auto:reasoning     # Auto-select with reasoning capabilities
-/model auto:frontier      # Auto-select latest frontier model
+/model                    # Show current model and open selector (unless headless)
+/model get                # Show current model
+/model set <model_name>   # Set to specific model
+/model select             # Interactive model selection
+/model set gpt-5.2        # Set to specific model
+/model reset              # Reset to initial configured model/
 
 ## Interactive Mode
 
@@ -131,12 +46,12 @@ Set or display the AI model used for chat responses. Choose from available model
 
 ## Examples
 
-/model                    # Browse and select model interactively
-/model gpt-4-turbo        # Use GPT-4 Turbo for better performance
-/model claude-3-sonnet    # Use Claude 3 Sonnet for balanced quality
-/model auto               # Let system choose best model
+/model                     # Show current model and open selector
+/model get                 # Show current model only
+/model select              # Browse and select model interactively
+/model set gpt-5.2         # Use GPT-5.2
+/model reset               # Reset to initial configured model.`;
 
-**Note:** Model availability and performance may vary based on your subscription level and current server load.`;
 export default {
   description,
   execute,
