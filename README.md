@@ -4,36 +4,40 @@ AI chat client for the Token Ring ecosystem
 
 ## Overview
 
-The Chat package provides a comprehensive chat interface for the Token Ring ecosystem, enabling AI-powered conversations with advanced features like context management, tool integration, and interactive command-line controls.
+The Chat package provides a comprehensive chat interface for the Token Ring ecosystem, enabling AI-powered conversations with advanced features like context management, tool integration, and interactive command-line controls. It integrates seamlessly with the Token Ring application framework and supports multiple AI providers.
 
 ## Key Features
 
 - **AI Chat Interface**: Seamless integration with multiple AI models and providers
-- **Context Management**: Intelligent context handling with automatic compaction
-- **Tool Integration**: Extensible tool system with plugin architecture
-- **Interactive Commands**: Rich command set for chat management and configuration
-- **State Preservation**: Persistent chat history and configuration
-- **Multi-Provider Support**: Works with various AI model providers
+- **Context Management**: Intelligent context handling with automatic compaction and customizable context sources
+- **Tool Integration**: Extensible tool system with plugin architecture and wildcard matching
+- **Interactive Commands**: Rich command set for chat management and configuration including `/chat`, `/model`, `/tools`, and `/compact`
+- **State Preservation**: Persistent chat history and configuration with undo/redo capabilities
+- **Multi-Provider Support**: Works with various AI model providers (OpenAI, Anthropic, etc.)
 - **Interactive Selection**: Tree-based UI for model and tool selection
+- **Feature Management**: Advanced model feature flags and capabilities
+- **Context Debugging**: Display and inspect chat context for transparency
 
 ## Core Components
 
 ### ChatService
 
 The main chat service class that manages:
+
 - AI model configuration and selection
 - Chat message history and state
 - Tool registration and management
 - Context handlers for building chat requests
+- Interactive command handling
 
 ```typescript
-import ChatService from "@tokenring-ai/chat";
+import {ChatService} from "@tokenring-ai/chat";
 
 // Create chat service with default model
-const chatService = new ChatService({ model: "default-model" });
+const chatService = new ChatService({model: "auto"});
 
 // Register tools
-chatService.addTools("package-name", {
+chatService.addTools("pkg-name", {
   toolName: {
     name: "tool-name",
     description: "Tool description",
@@ -57,9 +61,9 @@ Context handlers build the AI chat request by gathering relevant information:
 Interactive commands for chat management:
 
 - `/chat`: Send messages and manage chat settings
-- `/model`: Set or show the target AI model
+- `/model`: Set or show the target AI model with interactive selection
 - `/compact`: Compact conversation context by summarizing prior messages
-- `/tools`: List, enable, disable, or set enabled tools
+- `/tools`: List, enable, disable, or set enabled tools with tree-based UI
 
 ## Installation
 
@@ -82,7 +86,7 @@ import ChatService from "@tokenring-ai/chat";
 const app = new TokenRingApp();
 
 // Add chat service with default model
-app.addServices(new ChatService({ model: "gpt-4" }));
+app.addServices(new ChatService({model: "auto"}));
 
 // Start the application
 await app.start();
@@ -95,7 +99,7 @@ import {runChat} from "@tokenring-ai/chat";
 
 // Build chat configuration
 const chatConfig = {
-  model: "gpt-4",
+  model: "auto",
   systemPrompt: "You are a helpful assistant",
   temperature: 0.7,
   maxTokens: 1000,
@@ -113,7 +117,7 @@ const [response, aiResponse] = await runChat(
 ### Managing Tools
 
 ```typescript
-import ChatService from "@tokenring-ai/chat";
+import {ChatService} from "@tokenring-ai/chat";
 
 const chatService = agent.requireServiceByType(ChatService);
 
@@ -122,6 +126,9 @@ chatService.enableTools(["web-search", "calculator"], agent);
 
 // Get available tools
 const availableTools = chatService.getAvailableToolNames();
+
+// Set exact tool list
+chatService.setEnabledTools(["web-search", "calculator"], agent);
 ```
 
 ### Interactive Chat Commands
@@ -157,6 +164,13 @@ const availableTools = chatService.getAvailableToolNames();
 ```bash
 /model  # Interactive model selection
 /model gpt-4-turbo
+/model auto:reasoning
+```
+
+#### Context Debugging
+
+```bash
+/chat context
 ```
 
 ## Configuration
@@ -167,7 +181,7 @@ const availableTools = chatService.getAvailableToolNames();
 import {ChatConfigSchema} from "@tokenring-ai/chat";
 
 const chatConfig = {
-  model: "gpt-4",
+  model: "auto",
   systemPrompt: "You are a helpful assistant",
   temperature: 0.7,
   maxTokens: 1000,
@@ -176,7 +190,7 @@ const chatConfig = {
   topK: 40,
   frequencyPenalty: 0.0,
   presencePenalty: 0.0,
-  stopSequences: ["\\n\\n", "---"],
+  stopSequences: ["\n\n", "---"],
   autoCompact: true,
   enabledTools: [],
   context: {
@@ -196,7 +210,7 @@ const chatConfig = {
 
 ### Available Settings
 
-- `model`: AI model identifier
+- `model`: AI model identifier (supports "auto", "auto:reasoning", "auto:frontier", or specific model names)
 - `systemPrompt`: System instructions for the AI
 - `temperature`: Controls randomness (0.0-2.0)
 - `maxTokens`: Maximum response length
@@ -224,9 +238,12 @@ app.use(chatPlugin);
 ### Service Registration
 
 The plugin automatically registers:
+
 - `ChatService`: Main chat service
 - Context handlers for building chat requests
-- Interactive chat commands
+- Interactive chat commands (`/chat`, `/model`, `/tools`, `/compact`)
+- Model feature management
+- Context debugging tools
 
 ## API Reference
 
@@ -246,6 +263,8 @@ The plugin automatically registers:
 - `setEnabledTools(toolNames, agent)`: Set enabled tools
 - `enableTools(toolNames, agent)`: Enable additional tools
 - `disableTools(toolNames, agent)`: Disable tools
+- `buildChatMessages(input, chatConfig, agent)`: Build chat request messages
+- `getChatPreferences(agent)`: Get chat preferences
 
 ### runChat Function
 
@@ -262,7 +281,8 @@ async function runChat(
 ## State Management
 
 The chat service maintains state including:
-- Chat message history
+
+- Chat message history with full request/response pairs
 - Current configuration
 - Enabled tools
 - Context preferences
