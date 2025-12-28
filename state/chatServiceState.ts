@@ -3,6 +3,7 @@ import type {ResetWhat} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentStateSlice} from "@tokenring-ai/agent/types";
 import async from "async";
 import {ChatConfig, StoredChatMessage} from "../types.ts";
+
 export class ChatServiceState implements AgentStateSlice {
   name = "ChatServiceState";
   readonly initialConfig: ChatConfig;
@@ -56,16 +57,12 @@ export class ChatServiceState implements AgentStateSlice {
   }
 
   show(): string[] {
-    const lines = [
+    return [
       `Messages: ${this.messages.length}`,
       `Enabled Tools: ${this.currentConfig.enabledTools?.join(", ") || "None"}`,
+      `Auto Compact: ${this.currentConfig.autoCompact}`,
+      `Max Steps: ${this.currentConfig.maxSteps}`,
+      `System Prompt: ${this.currentConfig.systemPrompt}`,
     ];
-    if (this.currentConfig.temperature !== undefined) {
-      lines.push(`Temperature: ${this.currentConfig.temperature}`);
-    }
-    if (this.currentConfig.maxTokens !== undefined) {
-      lines.push(`Max Tokens: ${this.currentConfig.maxTokens}`);
-    }
-    return lines;
   }
 }

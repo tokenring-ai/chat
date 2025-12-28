@@ -67,18 +67,6 @@ export default class ChatService implements TokenRingService {
     return messages;
   }
 
-  getChatPreferences(agent: Agent) {
-    const currentConfig = this.getChatConfig(agent);
-    return pick(currentConfig, [
-      "temperature",
-      "topP",
-      "topK",
-      "stopSequences",
-      "presencePenalty",
-      "frequencyPenalty",
-    ]);
-  }
-
   addTools(
     pkgName: string,
     tools: Record<string, TokenRingToolDefinition<any>>,
