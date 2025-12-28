@@ -77,7 +77,7 @@ export default async function feature(remainder: string, agent: Agent): Promise<
     // Show available features from the model spec
     try {
       const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
-      const client = await chatModelRegistry.getFirstOnlineClient(base);
+      const client = await chatModelRegistry.getClient(base);
       const modelSpec = client.getModelSpec();
       const availableFeatures = modelSpec.features || {};
       const availableKeys = Object.keys(availableFeatures);

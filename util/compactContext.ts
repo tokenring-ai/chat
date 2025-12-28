@@ -16,7 +16,7 @@ export async function compactContext(focus: string | null, agent: Agent): Promis
     agent
   );
 
-  const client = await chatModelRegistry.getFirstOnlineClient(
+  const client = await chatModelRegistry.getClient(
     chatService.getModel(agent),
   );
 

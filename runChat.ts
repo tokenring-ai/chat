@@ -33,7 +33,7 @@ export default async function runChat(
   const client = await agent.busyWhile(
     "Waiting for an an online model to respond...",
     backoff({ times: 5, interval: 1000, multiplier: 2}, () =>
-      chatModelRegistry.getFirstOnlineClient(model)
+      chatModelRegistry.getClient(model)
     )
   );
 
