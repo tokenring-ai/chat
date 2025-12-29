@@ -12,7 +12,7 @@ export function outputChatAnalytics(
     outputTokens,
     reasoningTokens,
     totalTokens,
-  } = response.usage;
+  } = response.totalUsage;
 
   const usage = [
     `Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,

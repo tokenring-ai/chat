@@ -101,7 +101,7 @@ export default async function runChat(
 
   await agent.getServiceByType(AgentLifecycleService)?.executeHooks(agent, "afterChatCompletion", finalOutput, response);
 
-  if (shouldCompact(response.usage, client)) {
+  if (shouldCompact(response.lastStepUsage, client)) {
     const config = chatService.getChatConfig(agent);
     if (config.autoCompact || agent.headless || await agent.askHuman({
       type: "askForConfirmation",
@@ -126,9 +126,16 @@ export default async function runChat(
   }
 
   if (stopReason === "maxSteps") {
-
+    if (agent.headless) {
+      agent.infoLine("Agent stopped due to reaching the configured maxSteps")
+    } else {
+      await agent.askHuman({
+        type: "askForConfirmation",
+        message: "Agent stopped due to reaching the configured maxSteps. Would you like to continue?"
+      })
+      return await runChat("Continue", chatConfig, agent);
+    }
   }
-
 
   return [finalOutput, response]; // Return the full response object
   } finally {
