@@ -21,7 +21,6 @@ export default {
       agentCommandService.addAgentCommands(chatCommands)
     );
 
-    // const config = app.getConfigSlice("chat", ChatClientConfigSchema);
     if (config.chat) {
       const chatService = new ChatService({model: config.chat.defaultModel});
 
