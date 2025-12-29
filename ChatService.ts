@@ -20,7 +20,6 @@ export type ChatServiceOptions = {
 export default class ChatService implements TokenRingService {
   name = "ChatService";
   description = "A service for managing AI configuration";
-  model: string;
 
   private tools = new KeyedRegistry<NamedTool>();
   private contextHandlers = new KeyedRegistry<ContextHandler>();
@@ -37,19 +36,17 @@ export default class ChatService implements TokenRingService {
   registerContextHandler = this.contextHandlers.register;
   registerContextHandlers = this.contextHandlers.registerAll;
 
-  constructor(options: ChatServiceOptions) {
-    this.model = options.model;
-  }
+  constructor(readonly options: ChatServiceOptions) {}
 
   async attach(agent: Agent): Promise<void> {
     const { enabledTools, ...agentConfig} = agent.getAgentConfigSlice('chat', ChatConfigSchema);
-    agent.initializeState(ChatServiceState, { ...agentConfig, enabledTools: [] });
 
-    // The enabled tools can include wildcards, so they can't be set directly in the service state,
-    // they need to be processed via the setEnabledTools method.
-    if (enabledTools) {
-      this.setEnabledTools(enabledTools, agent);
-    }
+    // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
+
+    agent.initializeState(ChatServiceState, {
+      ...agentConfig,
+      enabledTools: enabledTools.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat()
+    });
   }
 
   async buildChatMessages(input: string, chatConfig: ChatConfig, agent: Agent) {
@@ -94,7 +91,7 @@ export default class ChatService implements TokenRingService {
   }
 
   getModel(agent: Agent): string {
-    return this.getChatConfig(agent).model ?? this.model;
+    return this.getChatConfig(agent).model ?? this.options.model;
   }
 
   getChatConfig(agent: Agent): ChatConfig {
@@ -165,31 +162,36 @@ export default class ChatService implements TokenRingService {
     return agent.getState(ChatServiceState).currentConfig.enabledTools ?? [];
   }
 
-  setEnabledTools(toolNames: string[], agent: Agent): void {
-    const matchedToolNames = toolNames.map(toolName => this.ensureToolNamesLike(toolName)).flat();
+  setEnabledTools(toolNames: string[], agent: Agent): string[] {
+    const matchedToolNames = toolNames.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat();
 
-    agent.mutateState(ChatServiceState, (state) => {
+    return agent.mutateState(ChatServiceState, (state) => {
       state.currentConfig.enabledTools = matchedToolNames;
+      return state.currentConfig.enabledTools;
     })
   }
 
-  enableTools(toolNames: string[], agent: Agent): void {
-    const matchedToolNames = toolNames.map(toolName => this.ensureToolNamesLike(toolName)).flat();
+  enableTools(toolNames: string[], agent: Agent): string[] {
+    const matchedToolNames = toolNames.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat();
 
-    agent.mutateState(ChatServiceState, (state) => {
+    return agent.mutateState(ChatServiceState, (state) => {
       const newTools = new Set(state.currentConfig.enabledTools);
       matchedToolNames.forEach(tool => newTools.add(tool));
       state.currentConfig.enabledTools = Array.from(newTools.values());
+
+      return state.currentConfig.enabledTools;
     })
   }
 
-  disableTools(toolNames: string[], agent: Agent): void {
-    const matchedToolNames = toolNames.map(toolName => this.ensureToolNamesLike(toolName)).flat();
+  disableTools(toolNames: string[], agent: Agent): string[] {
+    const matchedToolNames = toolNames.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat();
 
-    agent.mutateState(ChatServiceState, (state) => {
+    return agent.mutateState(ChatServiceState, (state) => {
       const newTools = new Set(state.currentConfig.enabledTools);
       matchedToolNames.forEach(tool => newTools.delete(tool));
       state.currentConfig.enabledTools = Array.from(newTools.values());
+
+      return state.currentConfig.enabledTools;
     });
   }
 }
