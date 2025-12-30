@@ -1,7 +1,7 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {ChatService} from "../index.ts";
-import {ChatConfig} from "../types.ts";
+import {ChatConfig} from "../schema.ts";
 
 export default async function * getContextItems(input: string, chatConfig: ChatConfig, params: any, agent: Agent): AsyncGenerator<ChatInputMessage> {
   const chatService = agent.requireServiceByType(ChatService);

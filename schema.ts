@@ -63,3 +63,6 @@ export type StoredChatMessage = {
   /** The update time in milliseconds since the epoch format */
   updatedAt: number;
 }
+export const ChatClientConfigSchema = z.object({
+  defaultModels: z.array(z.string()),
+});

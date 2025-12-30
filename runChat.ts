@@ -4,7 +4,7 @@ import AIChatClient, {AIResponse} from "@tokenring-ai/ai-client/client/AIChatCli
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {backoff} from "@tokenring-ai/utility/promise/backoff";
 import ChatService from "./ChatService.ts";
-import {ChatConfig} from "./types.ts";
+import {ChatConfig} from "./schema.ts";
 import {compactContext} from "./util/compactContext.ts";
 
 type StopReason = "finished" | "longContext" | "maxSteps";
@@ -28,7 +28,7 @@ export default async function runChat(
     agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
 
-  const model = chatService.getModel(agent);
+  const model = chatService.requireModel(agent);
 
   const client = await agent.busyWhile(
     "Waiting for an an online model to respond...",
@@ -80,9 +80,10 @@ export default async function runChat(
         return false;
       },
       tools: Object.fromEntries(
-        chatConfig.enabledTools.map((toolName) =>
-          [toolName, chatService.requireTool(toolName).tool]
-        )
+        chatConfig.enabledTools.map((toolName) => {
+          const toolDefinition = chatService.requireTool(toolName);
+          return [toolDefinition.name, toolDefinition.tool]
+        })
       ),
     }, agent);
 

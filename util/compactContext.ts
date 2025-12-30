@@ -17,7 +17,7 @@ export async function compactContext(focus: string | null, agent: Agent): Promis
   );
 
   const client = await chatModelRegistry.getClient(
-    chatService.getModel(agent),
+    chatService.requireModel(agent),
   );
 
   const [output, response] = await agent.busyWhile(

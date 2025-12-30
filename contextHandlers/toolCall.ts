@@ -1,7 +1,7 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {ChatService} from "../index.ts";
-import {ChatConfig} from "../types.ts";
+import {ChatConfig} from "../schema.ts";
 import z from "zod";
 
 const toolCallParamsSchema = z.object({

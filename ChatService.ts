@@ -1,17 +1,20 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {TokenRingService} from "@tokenring-ai/app/types";
-import pick from "@tokenring-ai/utility/object/pick";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
+import {z} from "zod";
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {
+  ChatClientConfigSchema,
   ChatConfig,
   ChatConfigSchema,
   ContextHandler, ContextItem,
   NamedTool,
   StoredChatMessage,
   TokenRingToolDefinition
-} from "./types.ts";
+} from "./schema.ts";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
+import TokenRingApp from "@tokenring-ai/app";
 
 export type ChatServiceOptions = {
   model: string;
@@ -36,13 +39,26 @@ export default class ChatService implements TokenRingService {
   registerContextHandler = this.contextHandlers.register;
   registerContextHandlers = this.contextHandlers.registerAll;
 
-  constructor(readonly options: ChatServiceOptions) {}
+  constructor(readonly app: TokenRingApp, readonly options: z.output<typeof ChatClientConfigSchema>) {}
 
   async attach(agent: Agent): Promise<void> {
-    const { enabledTools, ...agentConfig} = agent.getAgentConfigSlice('chat', ChatConfigSchema);
+    let { enabledTools, ...agentConfig} = agent.getAgentConfigSlice('chat', ChatConfigSchema);
+
+    if (! agentConfig.model) {
+      const chatModelRegistry = this.app.requireService(ChatModelRegistry);
+      for (const modelName of this.options.defaultModels) {
+        agentConfig.model = chatModelRegistry.getCheapestModelByRequirements({nameLike: modelName}) ?? undefined;
+        if (agentConfig.model) break;
+      }
+    }
+
+    if (agentConfig.model) {
+      agent.infoLine(`Using model ${agentConfig.model} for chat`);
+    } else {
+      agent.warningLine(`None of the default or selected models appear to be available for chat, please manually select a model with /model`);
+    }
 
     // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
-
     agent.initializeState(ChatServiceState, {
       ...agentConfig,
       enabledTools: enabledTools.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat()
@@ -90,8 +106,10 @@ export default class ChatService implements TokenRingService {
     this.updateChatConfig({model}, agent);
   }
 
-  getModel(agent: Agent): string {
-    return this.getChatConfig(agent).model ?? this.options.model;
+  requireModel(agent: Agent): string {
+    const model = this.getChatConfig(agent).model;
+    if (! model) throw new Error(`No model selected`);
+    return model;
   }
 
   getChatConfig(agent: Agent): ChatConfig {

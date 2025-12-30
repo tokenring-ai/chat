@@ -47,7 +47,7 @@ function serializeModel(base: string, features: FeatureOptions): string {
 
 export default async function feature(remainder: string, agent: Agent): Promise<void> {
   const chatService = agent.requireServiceByType(ChatService);
-  const currentModel = chatService.getModel(agent);
+  const currentModel = chatService.requireModel(agent);
   const {base, features} = parseModelAndFeatures(currentModel);
 
   const args = remainder?.trim()?.split(/\s+/);

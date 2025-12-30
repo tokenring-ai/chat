@@ -2,7 +2,7 @@ import type Agent from "@tokenring-ai/agent/Agent";
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
 import z from "zod";
 import ChatService from "../ChatService.ts";
-import {ChatConfig} from "../types.ts";
+import {ChatConfig} from "../schema.ts";
 
 const priorMessagesParamsSchema = z.object({
   maxMessages: z.number().min(4).default(1000),

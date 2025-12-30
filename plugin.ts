@@ -1,15 +1,17 @@
 import {AgentCommandService} from "@tokenring-ai/agent";
+import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {TokenRingPlugin} from "@tokenring-ai/app";
+import {find} from "async";
 import {z} from "zod";
 
 import chatCommands from "./chatCommands.ts";
 import ChatService from "./ChatService.js";
 import contextHandlers from "./contextHandlers.ts";
-import {ChatClientConfigSchema} from "./index.ts";
 import packageJSON from "./package.json" with {type: "json"};
+import {ChatClientConfigSchema} from "./schema.ts";
 
 const packageConfigSchema = z.object({
-  chat: ChatClientConfigSchema.optional(),
+  chat: ChatClientConfigSchema
 });
 
 export default {
@@ -22,7 +24,7 @@ export default {
     );
 
     if (config.chat) {
-      const chatService = new ChatService({model: config.chat.defaultModel});
+      const chatService = new ChatService(app, config.chat);
 
       chatService.registerContextHandlers(contextHandlers);
 

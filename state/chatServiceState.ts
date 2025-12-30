@@ -2,7 +2,7 @@ import {Agent} from "@tokenring-ai/agent";
 import type {ResetWhat} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentStateSlice} from "@tokenring-ai/agent/types";
 import async from "async";
-import {ChatConfig, StoredChatMessage} from "../types.ts";
+import {ChatConfig, StoredChatMessage} from "../schema.ts";
 
 export class ChatServiceState implements AgentStateSlice {
   name = "ChatServiceState";
