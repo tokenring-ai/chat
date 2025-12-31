@@ -106,6 +106,10 @@ export default class ChatService implements TokenRingService {
     this.updateChatConfig({model}, agent);
   }
 
+  getModel(agent: Agent): string | null {
+    return this.getChatConfig(agent).model ?? null;
+  }
+
   requireModel(agent: Agent): string {
     const model = this.getChatConfig(agent).model;
     if (! model) throw new Error(`No model selected`);

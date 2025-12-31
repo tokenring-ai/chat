@@ -46,6 +46,7 @@ export default async function runChat(
 
   let stepCount: number = 0;
   let stopReason = "finished" as StopReason;
+  let maxSteps = chatConfig.maxSteps;
 
   agent.setBusyWith("Sending request to AI...");
   try {
@@ -60,18 +61,21 @@ export default async function runChat(
           }
         }
 
-        if (stepCount > chatConfig.maxSteps) {
+        if (stepCount > maxSteps) {
           if (agent.headless) {
             stopReason = "maxSteps";
             return true;
           }
 
-          if (! await agent.askHuman({
+          if (await agent.askHuman({
             type: "askForConfirmation",
             message: `The agent has completed ${options.steps.length} steps, which is longer than your configured limit of ${chatConfig.maxSteps}. Would you like to continue?`,
             default: false,
             timeout: 60
           })) {
+            maxSteps += chatConfig.maxSteps;
+            return false;
+          } else {
             stopReason = "maxSteps";
             return true;
           }

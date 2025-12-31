@@ -4,9 +4,9 @@ import select from "./select.ts";
 
 export default async function show(_remainder: string, agent: Agent): Promise<void> {
   const chatService = agent.requireServiceByType(ChatService);
-  const model = chatService.requireModel(agent);
+  const model = chatService.getModel(agent);
   
-  agent.infoLine(`Current model: ${model}`);
+  agent.infoLine(`Current model: ${model ?? "(none)"}`);
   
   if (!agent.headless) {
     await select("", agent);
