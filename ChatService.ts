@@ -1,13 +1,14 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {TokenRingService} from "@tokenring-ai/app/types";
+import deepMerge from "@tokenring-ai/utility/object/deepMerge";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {z} from "zod";
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {
-  ChatClientConfigSchema,
+  ChatServiceConfigSchema,
   ChatConfig,
-  ChatConfigSchema,
+  ChatAgentConfigSchema,
   ContextHandler, ContextItem,
   NamedTool,
   StoredChatMessage,
@@ -39,23 +40,33 @@ export default class ChatService implements TokenRingService {
   registerContextHandler = this.contextHandlers.register;
   registerContextHandlers = this.contextHandlers.registerAll;
 
-  constructor(readonly app: TokenRingApp, readonly options: z.output<typeof ChatClientConfigSchema>) {}
+  constructor(readonly app: TokenRingApp, readonly options: z.output<typeof ChatServiceConfigSchema>) {}
 
   async attach(agent: Agent): Promise<void> {
-    let { enabledTools, ...agentConfig} = agent.getAgentConfigSlice('chat', ChatConfigSchema);
+    let { enabledTools, ...agentConfig} = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice('chat', ChatAgentConfigSchema));
 
-    if (! agentConfig.model) {
-      const chatModelRegistry = this.app.requireService(ChatModelRegistry);
+    const chatModelRegistry = this.app.requireService(ChatModelRegistry);
+
+    if (agentConfig.model === 'auto') {
+      let autoSelectedModel : string | null = null;
       for (const modelName of this.options.defaultModels) {
-        agentConfig.model = chatModelRegistry.getCheapestModelByRequirements({nameLike: modelName}) ?? undefined;
-        if (agentConfig.model) break;
+        autoSelectedModel = chatModelRegistry.getCheapestModelByRequirements({nameLike: modelName});
+        if (autoSelectedModel) break;
       }
-    }
 
-    if (agentConfig.model) {
-      agent.infoLine(`Using model ${agentConfig.model} for chat`);
+      if (autoSelectedModel) {
+        agent.infoLine(`Auto-selected model ${autoSelectedModel} for chat`);
+        agentConfig.model = autoSelectedModel;
+      } else {
+        agent.warningLine(`The model for the agent was set to auto, and none of the default models appear to be available for chat, please manually select a model with /model`);
+      }
     } else {
-      agent.warningLine(`None of the default or selected models appear to be available for chat, please manually select a model with /model`);
+      const selectedModel = chatModelRegistry.getCheapestModelByRequirements({nameLike: agentConfig.model});
+      if (selectedModel) {
+        agent.infoLine(`Using model ${agentConfig.model} for chat`);
+      } else {
+        agent.warningLine(`The model ${agentConfig.model} is currently selected for chat, but it is not available. Please manually select a new model with /model`);
+      }
     }
 
     // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike

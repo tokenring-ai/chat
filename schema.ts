@@ -35,18 +35,39 @@ export const ContextSourceSchema = z.looseObject({
   type: z.string(),
 });
 
-export const ChatConfigSchema = z.object({
+export const ChatAgentConfigSchema = z.object({
   model: z.string().optional(),
   systemPrompt: z.union([z.string(), z.function({output: z.string()})]),
-  maxSteps: z.number().default(30),
-  autoCompact: z.boolean().default(true),
-  enabledTools: z.array(z.string()).default([]),
+  maxSteps: z.number().optional(),
+  autoCompact: z.boolean().optional(),
+  enabledTools: z.array(z.string()).optional(),
   context: z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),
-  }).default({initial: initialContextItems, followUp: followUpContextItems}),
+  }).optional(),
 });
-export type ChatConfig = z.output<typeof ChatConfigSchema>;
+
+const ChatAgentDefaultConfig = z.object({
+  model: z.string().default('auto'),
+  autoCompact: z.boolean().default(true),
+  enabledTools: z.array(z.string()).default([]),
+  maxSteps: z.number().default(30),
+  context: z.object({
+    initial: z.array(ContextSourceSchema).default(initialContextItems),
+    followUp: z.array(ContextSourceSchema).default(followUpContextItems),
+  }).prefault({}),
+});
+
+export const ChatServiceConfigSchema = z.object({
+  defaultModels: z.array(z.string()),
+  agentDefaults: ChatAgentDefaultConfig.prefault({}),
+});
+
+export const ChatConfigMergedSchema = z.object({
+  ...ChatAgentConfigSchema.shape,
+  ...ChatAgentDefaultConfig.shape,
+});
+export type ChatConfig = z.output<typeof ChatConfigMergedSchema>;
 export type ContextItem = ChatInputMessage;
 export type ContextHandler = (input: string, chatConfig: ChatConfig, sourceParams: z.infer<typeof ContextSourceSchema>, agent: Agent) => AsyncGenerator<ContextItem>;
 
@@ -63,6 +84,3 @@ export type StoredChatMessage = {
   /** The update time in milliseconds since the epoch format */
   updatedAt: number;
 }
-export const ChatClientConfigSchema = z.object({
-  defaultModels: z.array(z.string()),
-});

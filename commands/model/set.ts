@@ -1,5 +1,4 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import ChatService from "../../ChatService.ts";
 
 export default async function set(remainder: string, agent: Agent): Promise<void> {
