@@ -24,7 +24,7 @@ export type NamedTool = {
 export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> = {
   name: string;
   description: string;
-  execute: (input: z.infer<InputSchema>, agent: Agent) => Promise<string | object>;
+  execute: (input: z.output<InputSchema>, agent: Agent) => Promise<string | object>;
   inputSchema: InputSchema;
   start?: (agent: Agent) => Promise<void>;
   stop?: (agent: Agent) => Promise<void>;
