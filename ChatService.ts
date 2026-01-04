@@ -42,7 +42,7 @@ export default class ChatService implements TokenRingService {
 
   constructor(readonly app: TokenRingApp, readonly options: z.output<typeof ChatServiceConfigSchema>) {}
 
-  async attach(agent: Agent): Promise<void> {
+  attach(agent: Agent): void {
     let { enabledTools, ...agentConfig} = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice('chat', ChatAgentConfigSchema));
 
     const chatModelRegistry = this.app.requireService(ChatModelRegistry);
