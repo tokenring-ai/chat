@@ -11,34 +11,35 @@ export function outputChatAnalytics(
     cachedInputTokens,
     outputTokens,
     reasoningTokens,
-    totalTokens,
   } = response.totalUsage;
 
   const usage = [
-    `Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
-    `Output: ${outputTokens?.toLocaleString() ?? "unknown"}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`,
-    `Total: ${totalTokens?.toLocaleString() ?? "unknown"}`,
+    `- Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
+    `- Output Tokens: ${outputTokens?.toLocaleString() ?? "unknown"}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`
   ];
 
-  agent.infoLine(`[${pkgName}] ${usage.join(", ")}`);
+  if (response.lastStepUsage.inputTokens && response.lastStepUsage.outputTokens) {
+    usage.push(`- Context Length: ${(response.lastStepUsage.inputTokens + response.lastStepUsage.outputTokens).toLocaleString()}`);
+  }
 
   const {input, cachedInput, output, reasoning, total} = response.cost;
   if (total) {
-    const cost = [
-      `Input Cost: \$${input ? input.toFixed(4) : "unknown"}${cachedInput ? ` (+\$${cachedInput.toFixed(4)} cached)` : ""}`,
-      `Output: \$${output ? output.toFixed(4) : "unknown"}${reasoning ? ` (+\$${reasoning.toFixed(4)} reasoning)` : ""}`,
-      `Total: \$${total.toFixed(4)}`,
-    ];
+    usage.push(
+      `- Input Cost: \$${input ? input.toFixed(4) : "unknown"}${cachedInput ? ` (+\$${cachedInput.toFixed(4)} cached)` : ""}`,
+      `- Output Cost: \$${output ? output.toFixed(4) : "unknown"}${reasoning ? ` (+\$${reasoning.toFixed(4)} reasoning)` : ""}`,
+    );
 
-    agent.infoLine(`[${pkgName}] ${cost.join(", ")}`);
   }
 
   const {elapsedMs, tokensPerSec} = response.timing;
 
   const seconds = (elapsedMs / 1000).toFixed(2);
-  const tps = tokensPerSec ? tokensPerSec.toFixed(2) : "N/A";
+  const tps = tokensPerSec ? tokensPerSec.toFixed(0) : "N/A";
 
-  agent.infoLine(
-    `[${pkgName}] Time: ${seconds}s, Throughput: ${tps} tokens/sec`,
-  );
+  usage.push(`- Run Time: ${seconds}s`);
+  if (tps) {
+    usage.push(`- Throughput: ${tps} tk/s`);
+  }
+
+  agent.infoLine(`${pkgName}\n${usage.join("\n")}`);
 }
