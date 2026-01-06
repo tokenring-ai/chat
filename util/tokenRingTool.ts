@@ -21,11 +21,37 @@ export function tokenRingTool<inputSchemaType>(toolDefinition: TokenRingToolDefi
 
         const executeToolFunction = async (): Promise<string> => {
           try {
-            agent.infoLine(`Calling tool ${name}`);
             const value = await execute(args, agent);
-            return typeof value === "string"
+
+            // Output an artifact showing the request JSON and response
+            const requestJson = JSON.stringify(args, null, 2);
+            const responseText = typeof value === "string"
               ? value
               : JSON.stringify(value, null, 1);
+
+            const artifactBody = `### Tool Call: ${name}
+
+**Request JSON:**
+
+\`\`\`json
+${requestJson}
+\`\`\`
+
+**Response:**
+
+\`\`\`
+${responseText}
+\`\`\`
+`;
+
+            agent.artifactOutput({
+              name: `Tool Call (${name})`,
+              encoding: "text",
+              mimeType: "text/markdown",
+              body: artifactBody,
+            });
+
+            return responseText;
           } catch (err: any) {
             agent.errorLine(
               `Error calling tool ${name}(${JSON.stringify(args)}): ${err}`,
