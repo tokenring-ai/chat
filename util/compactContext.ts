@@ -20,7 +20,7 @@ export async function compactContext(focus: string | null, agent: Agent): Promis
     chatService.requireModel(agent),
   );
 
-  const [output, response] = await agent.busyWhile(
+  const response = await agent.busyWhile(
     "Waiting for response from AI...",
     client.streamChat({
       messages: requestMessages,

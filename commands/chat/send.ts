@@ -12,6 +12,6 @@ export default async function send(message: string, agent: Agent): Promise<void>
 
 
   const chatConfig = chatService.getChatConfig(agent);
-  const [_output, response] = await runChat(message, chatConfig, agent);
+  const response = await runChat(message, chatConfig, agent);
   outputChatAnalytics(response, agent);
 }

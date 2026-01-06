@@ -23,7 +23,7 @@ export default async function runChat(
   input: string,
   chatConfig: ChatConfig,
   agent: Agent,
-): Promise<[string, AIResponse]> {
+): Promise<AIResponse> {
   const chatModelRegistry =
     agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
@@ -50,7 +50,7 @@ export default async function runChat(
 
   agent.setBusyWith("Sending request to AI...");
   try {
-    const [output, response] = await client.streamChat({
+    const response = await client.streamChat({
       messages: requestMessages,
       async stopWhen(options) {
         stepCount = options.steps.length;
@@ -91,58 +91,56 @@ export default async function runChat(
       ),
     }, agent);
 
-  // Update the current message to follow up to the previous
-  chatService.pushChatMessage(
-    {
-      request: { messages: requestMessages },
-      response,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    },
-    agent,
-  );
+    // Update the current message to follow up to the previous
+    chatService.pushChatMessage(
+      {
+        request: { messages: requestMessages },
+        response,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      },
+      agent,
+    );
 
-  const finalOutput: string = output ?? "";
+    await agent.getServiceByType(AgentLifecycleService)?.executeHooks(agent, "afterChatCompletion", response);
 
-  await agent.getServiceByType(AgentLifecycleService)?.executeHooks(agent, "afterChatCompletion", finalOutput, response);
-
-  if (shouldCompact(response.lastStepUsage, client)) {
-    const config = chatService.getChatConfig(agent);
-    if (config.autoCompact || agent.headless || await agent.askHuman({
-      type: "askForConfirmation",
-      message:
-        "Context is getting long. Would you like to compact it to save tokens?",
-      default: true,
-      timeout: 30,
-    })) {
-      agent.infoLine(
-        "Context is getting long. Compacting context...",
-      );
-      agent.setBusyWith("Compacting context...");
-      await compactContext(null, agent);
-      if (stopReason === "longContext") {
-        const remainingSteps = chatConfig.maxSteps - stepCount;
-        if (remainingSteps > 0) {
-          agent.infoLine("Context compacted, and agent still has work to do. Continuing work...");
-          return await runChat("Continue", {...chatConfig, maxSteps: remainingSteps}, agent);
+    if (shouldCompact(response.lastStepUsage, client)) {
+      const config = chatService.getChatConfig(agent);
+      if (config.autoCompact || agent.headless || await agent.askHuman({
+        type: "askForConfirmation",
+        message:
+          "Context is getting long. Would you like to compact it to save tokens?",
+        default: true,
+        timeout: 30,
+      })) {
+        agent.infoLine(
+          "Context is getting long. Compacting context...",
+        );
+        agent.setBusyWith("Compacting context...");
+        await compactContext(null, agent);
+        if (stopReason === "longContext") {
+          const remainingSteps = chatConfig.maxSteps - stepCount;
+          if (remainingSteps > 0) {
+            agent.infoLine("Context compacted, and agent still has work to do. Continuing work...");
+            return await runChat("Continue", {...chatConfig, maxSteps: remainingSteps}, agent);
+          }
         }
       }
     }
-  }
 
-  if (stopReason === "maxSteps") {
-    if (agent.headless) {
-      agent.infoLine("Agent stopped due to reaching the configured maxSteps")
-    } else {
-      await agent.askHuman({
-        type: "askForConfirmation",
-        message: "Agent stopped due to reaching the configured maxSteps. Would you like to continue?"
-      })
-      return await runChat("Continue", chatConfig, agent);
+    if (stopReason === "maxSteps") {
+      if (agent.headless) {
+        agent.infoLine("Agent stopped due to reaching the configured maxSteps")
+      } else {
+        await agent.askHuman({
+          type: "askForConfirmation",
+          message: "Agent stopped due to reaching the configured maxSteps. Would you like to continue?"
+        })
+        return await runChat("Continue", chatConfig, agent);
+      }
     }
-  }
 
-  return [finalOutput, response]; // Return the full response object
+    return response; // Return the full response object
   } finally {
     agent.setBusyWith(null);
   }
