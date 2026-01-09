@@ -45,7 +45,7 @@ export const ChatAgentConfigSchema = z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),
   }).optional(),
-});
+}).strict();
 
 const ChatAgentDefaultConfig = z.object({
   model: z.string().default('auto'),
@@ -56,7 +56,7 @@ const ChatAgentDefaultConfig = z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),
   }).prefault({}),
-});
+}).strict();
 
 export const ChatServiceConfigSchema = z.object({
   defaultModels: z.array(z.string()),
