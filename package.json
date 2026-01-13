@@ -13,7 +13,7 @@
     "async": "^3.2.6"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/coverage-v8": "^4.0.17",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
