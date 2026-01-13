@@ -50,7 +50,7 @@ export default class ChatService implements TokenRingService {
     if (agentConfig.model === 'auto') {
       let autoSelectedModel : string | null = null;
       for (const modelName of this.options.defaultModels) {
-        autoSelectedModel = chatModelRegistry.getCheapestModelByRequirements({nameLike: modelName});
+        autoSelectedModel = chatModelRegistry.getCheapestModelByRequirements(modelName);
         if (autoSelectedModel) break;
       }
 
@@ -61,7 +61,7 @@ export default class ChatService implements TokenRingService {
         agent.warningLine(`The model for the agent was set to auto, and none of the default models appear to be available for chat, please manually select a model with /model`);
       }
     } else {
-      const selectedModel = chatModelRegistry.getCheapestModelByRequirements({nameLike: agentConfig.model});
+      const selectedModel = chatModelRegistry.getCheapestModelByRequirements(agentConfig.model);
       if (selectedModel) {
         agent.infoLine(`Using model ${agentConfig.model} for chat`);
       } else {
