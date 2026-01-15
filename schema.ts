@@ -67,9 +67,14 @@ export const ChatConfigMergedSchema = z.object({
   ...ChatAgentConfigSchema.shape,
   ...ChatAgentDefaultConfig.shape,
 });
-export type ChatConfig = z.output<typeof ChatConfigMergedSchema>;
+
+export type ChatAgentConfig = {
+  chat: z.input<typeof ChatAgentConfigSchema>
+};
+
+export type ParsedChatConfig = z.output<typeof ChatConfigMergedSchema>;
 export type ContextItem = ChatInputMessage;
-export type ContextHandler = (input: string, chatConfig: ChatConfig, sourceParams: z.infer<typeof ContextSourceSchema>, agent: Agent) => AsyncGenerator<ContextItem>;
+export type ContextHandler = (input: string, chatConfig: ParsedChatConfig, sourceParams: z.infer<typeof ContextSourceSchema>, agent: Agent) => AsyncGenerator<ContextItem>;
 
 /**
  * Represents a chat message in the storage system

@@ -1,21 +1,22 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
+import TokenRingApp from "@tokenring-ai/app";
 import {TokenRingService} from "@tokenring-ai/app/types";
 import deepMerge from "@tokenring-ai/utility/object/deepMerge";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {z} from "zod";
-import {ChatServiceState} from "./state/chatServiceState.js";
 import {
-  ChatServiceConfigSchema,
-  ChatConfig,
   ChatAgentConfigSchema,
-  ContextHandler, ContextItem,
+  ChatServiceConfigSchema,
+  ContextHandler,
+  ContextItem,
   NamedTool,
+  ParsedChatConfig,
   StoredChatMessage,
   TokenRingToolDefinition
 } from "./schema.ts";
+import {ChatServiceState} from "./state/chatServiceState.js";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
-import TokenRingApp from "@tokenring-ai/app";
 
 export type ChatServiceOptions = {
   model: string;
@@ -76,7 +77,7 @@ export default class ChatService implements TokenRingService {
     });
   }
 
-  async buildChatMessages(input: string, chatConfig: ChatConfig, agent: Agent) {
+  async buildChatMessages(input: string, chatConfig: ParsedChatConfig, agent: Agent) {
     const lastMessage = this.getLastMessage(agent);
 
     const messages: ContextItem[] = [];
@@ -127,11 +128,11 @@ export default class ChatService implements TokenRingService {
     return model;
   }
 
-  getChatConfig(agent: Agent): ChatConfig {
+  getChatConfig(agent: Agent): ParsedChatConfig {
     return agent.getState(ChatServiceState).currentConfig;
   }
 
-  updateChatConfig(aiConfig: Partial<ChatConfig>, agent: Agent): void {
+  updateChatConfig(aiConfig: Partial<ParsedChatConfig>, agent: Agent): void {
     agent.mutateState(ChatServiceState, (state) => {
       state.currentConfig = {...state.currentConfig, ...aiConfig};
     });

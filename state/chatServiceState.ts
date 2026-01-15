@@ -2,12 +2,12 @@ import {Agent} from "@tokenring-ai/agent";
 import type {ResetWhat} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentStateSlice} from "@tokenring-ai/agent/types";
 import async from "async";
-import {ChatConfig, StoredChatMessage} from "../schema.ts";
+import {ParsedChatConfig, StoredChatMessage} from "../schema.ts";
 
 export class ChatServiceState implements AgentStateSlice {
   name = "ChatServiceState";
-  readonly initialConfig: ChatConfig;
-  currentConfig: ChatConfig;
+  readonly initialConfig: ParsedChatConfig;
+  currentConfig: ParsedChatConfig;
   parallelTools = false;
   toolQueue = async.queue(
     async (task: () => Promise<string | object>) => task(),
@@ -16,7 +16,7 @@ export class ChatServiceState implements AgentStateSlice {
   /** History of chat messages */
   messages: StoredChatMessage[] = [];
 
-  constructor(initialConfig: ChatConfig) {
+  constructor(initialConfig: ParsedChatConfig) {
     this.initialConfig = initialConfig;
     this.currentConfig = {...initialConfig};
   }

@@ -4,7 +4,7 @@ import AIChatClient, {AIResponse} from "@tokenring-ai/ai-client/client/AIChatCli
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {backoff} from "@tokenring-ai/utility/promise/backoff";
 import ChatService from "./ChatService.ts";
-import {ChatConfig} from "./schema.ts";
+import {ParsedChatConfig} from "./schema.ts";
 import {compactContext} from "./util/compactContext.ts";
 
 type StopReason = "finished" | "longContext" | "maxSteps";
@@ -21,7 +21,7 @@ function shouldCompact({ inputTokens, outputTokens}: { inputTokens?: number, out
  */
 export default async function runChat(
   input: string,
-  chatConfig: ChatConfig,
+  chatConfig: ParsedChatConfig,
   agent: Agent,
 ): Promise<AIResponse> {
   const chatModelRegistry =

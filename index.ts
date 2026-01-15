@@ -4,7 +4,7 @@ export {ChatServiceState} from "./state/chatServiceState.ts";
 export {
   ChatServiceConfigSchema,
   ChatAgentConfigSchema,
-  type ChatConfig,
+  type ParsedChatConfig,
   type ContextHandler,
   type ContextItem,
   type NamedTool,
