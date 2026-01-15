@@ -2,13 +2,13 @@ import type Agent from "@tokenring-ai/agent/Agent";
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
 import z from "zod";
 import ChatService from "../ChatService.ts";
-import {ChatConfig} from "../schema.ts";
+import {ParsedChatConfig} from "../schema.ts";
 
 const priorMessagesParamsSchema = z.object({
   maxMessages: z.number().min(4).default(1000),
 })
 
-export default async function * getContextItems(input: string, chatConfig: ChatConfig, params: any, agent: Agent): AsyncGenerator<ChatInputMessage> {
+export default async function* getContextItems(input: string, chatConfig: ParsedChatConfig, params: any, agent: Agent): AsyncGenerator<ChatInputMessage> {
   const safeParams = priorMessagesParamsSchema.parse(params);
   const chatService = agent.requireServiceByType(ChatService);
   const lastMessage = chatService.getLastMessage(agent);

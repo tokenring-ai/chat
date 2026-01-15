@@ -1,8 +1,8 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
-import {ChatService} from "../index.ts";
-import {ChatConfig} from "../schema.ts";
 import z from "zod";
+import {ChatService} from "../index.ts";
+import {ParsedChatConfig} from "../schema.ts";
 
 const toolCallParamsSchema = z.object({
   role: z.enum(["system", "user"]),
@@ -11,7 +11,7 @@ const toolCallParamsSchema = z.object({
   toolInput: z.record(z.string(), z.any()),
 })
 
-export default async function * getContextItems(input: string, chatConfig: ChatConfig, params: any, agent: Agent): AsyncGenerator<ChatInputMessage> {
+export default async function* getContextItems(input: string, chatConfig: ParsedChatConfig, params: any, agent: Agent): AsyncGenerator<ChatInputMessage> {
   const validatedParams = toolCallParamsSchema.parse(params);
 
   const chatService = agent.requireServiceByType(ChatService);
