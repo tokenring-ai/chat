@@ -8,8 +8,8 @@ export default async function reset(_remainder: string, agent: Agent): Promise<v
   
   if (initialModel) {
     chatService.setModel(initialModel, agent);
-    agent.infoLine(`Model reset to ${initialModel}`);
+    agent.infoMessage(`Model reset to ${initialModel}`);
   } else {
-    agent.errorLine("No initial model configured");
+    agent.errorMessage("No initial model configured");
   }
 }

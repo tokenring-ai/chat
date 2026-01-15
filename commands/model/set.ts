@@ -6,10 +6,10 @@ export default async function set(remainder: string, agent: Agent): Promise<void
   const modelName = remainder?.trim();
   
   if (!modelName) {
-    agent.errorLine("Model name required. Usage: /model set <model_name>");
+    agent.errorMessage("Model name required. Usage: /model set <model_name>");
     return;
   }
 
   chatService.setModel(modelName, agent);
-  agent.infoLine(`Model set to ${modelName}`);
+  agent.infoMessage(`Model set to ${modelName}`);
 }

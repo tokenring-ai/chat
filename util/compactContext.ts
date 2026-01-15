@@ -45,5 +45,5 @@ export async function compactContext(focus: string | null, agent: Agent): Promis
     agent,
   );
 
-  agent.infoLine("Context compacted successfully");
+  agent.infoMessage("Context compacted successfully");
 }

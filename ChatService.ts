@@ -56,17 +56,17 @@ export default class ChatService implements TokenRingService {
       }
 
       if (autoSelectedModel) {
-        agent.infoLine(`Auto-selected model ${autoSelectedModel} for chat`);
+        agent.infoMessage(`Auto-selected model ${autoSelectedModel} for chat`);
         agentConfig.model = autoSelectedModel;
       } else {
-        agent.warningLine(`The model for the agent was set to auto, and none of the default models appear to be available for chat, please manually select a model with /model`);
+        agent.warningMessage(`The model for the agent was set to auto, and none of the default models appear to be available for chat, please manually select a model with /model`);
       }
     } else {
       const selectedModel = chatModelRegistry.getCheapestModelByRequirements(agentConfig.model);
       if (selectedModel) {
-        agent.infoLine(`Using model ${agentConfig.model} for chat`);
+        agent.infoMessage(`Using model ${agentConfig.model} for chat`);
       } else {
-        agent.warningLine(`The model ${agentConfig.model} is currently selected for chat, but it is not available. Please manually select a new model with /model`);
+        agent.warningMessage(`The model ${agentConfig.model} is currently selected for chat, but it is not available. Please manually select a new model with /model`);
       }
     }
 

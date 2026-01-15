@@ -39,7 +39,7 @@ export default async function runChat(
 
   if (!client) throw new Error(`No online client found for model ${model}`);
 
-  agent.infoLine(`[runChat] Using model ${client.getModelId()}`);
+  agent.infoMessage(`[runChat] Using model ${client.getModelId()}`);
 
 
   const requestMessages = await chatService.buildChatMessages(input, chatConfig, agent);
@@ -113,7 +113,7 @@ export default async function runChat(
         default: true,
         timeout: 30,
       })) {
-        agent.infoLine(
+        agent.infoMessage(
           "Context is getting long. Compacting context...",
         );
         agent.setBusyWith("Compacting context...");
@@ -121,7 +121,7 @@ export default async function runChat(
         if (stopReason === "longContext") {
           const remainingSteps = chatConfig.maxSteps - stepCount;
           if (remainingSteps > 0) {
-            agent.infoLine("Context compacted, and agent still has work to do. Continuing work...");
+            agent.infoMessage("Context compacted, and agent still has work to do. Continuing work...");
             return await runChat("Continue", {...chatConfig, maxSteps: remainingSteps}, agent);
           }
         }
@@ -130,7 +130,7 @@ export default async function runChat(
 
     if (stopReason === "maxSteps") {
       if (agent.headless) {
-        agent.infoLine("Agent stopped due to reaching the configured maxSteps")
+        agent.infoMessage("Agent stopped due to reaching the configured maxSteps")
       } else {
         await agent.askHuman({
           type: "askForConfirmation",

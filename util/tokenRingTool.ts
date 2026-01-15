@@ -53,7 +53,7 @@ ${responseText}
 
             return responseText;
           } catch (err: any) {
-            agent.errorLine(
+            agent.errorMessage(
               `Error calling tool ${name}(${JSON.stringify(args)}): ${err}`,
             );
             return `Error calling tool: ${err.message || err}. Please check your tool call for correctness and retry the function call.`;

@@ -73,8 +73,8 @@ export default async function select(_remainder: string, agent: Agent): Promise<
 
   if (selectedModel) {
     chatService.setModel(selectedModel, agent);
-    agent.infoLine(`Model set to ${selectedModel}`);
+    agent.infoMessage(`Model set to ${selectedModel}`);
   } else {
-    agent.infoLine("Model selection cancelled. No changes made.");
+    agent.infoMessage("Model selection cancelled. No changes made.");
   }
 }

@@ -5,5 +5,5 @@ export default async function show(_remainder: string, agent: Agent): Promise<vo
   const chatService = agent.requireServiceByType(ChatService);
   const model = chatService.getModel(agent);
   
-  agent.infoLine(`Current model: ${model ?? "(none)"}`);
+  agent.infoMessage(`Current model: ${model ?? "(none)"}`);
 }

@@ -1,6 +1,7 @@
 import {Agent} from "@tokenring-ai/agent";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {FeatureOptions} from "@tokenring-ai/ai-client/ModelTypeRegistry";
+import markdownList from "@tokenring-ai/utility/string/markdownList";
 import ChatService from "../../ChatService.ts";
 
 function parseModelAndFeatures(model: string): { base: string; features: FeatureOptions } {
@@ -53,25 +54,26 @@ export default async function feature(remainder: string, agent: Agent): Promise<
   const args = remainder?.trim()?.split(/\s+/);
   const action = args[0];
   if (!action || !["list", "enable", "disable"].includes(action)) {
-    agent.errorLine(
+    agent.errorMessage(
       "Usage: /chat feature <list|enable|disable> [key[=value] ...]",
     );
     return;
   }
 
   if (action === "list") {
-    agent.infoLine(`Current model: ${currentModel}`);
-    agent.infoLine(`Base model: ${base}`);
+    const lines: string[] = [
+      `Current model: ${currentModel}`,
+      `Base model: ${base}`
+    ];
 
     // Show enabled features
     const keys = Object.keys(features);
     if (keys.length === 0) {
-      agent.infoLine("Enabled features: (none)");
+      lines.push("Enabled features: (none)");
     } else {
-      agent.infoLine("Enabled features:");
-      for (const k of keys.sort()) {
-        agent.infoLine(`  ${k}: ${features[k]}`);
-      }
+      lines.push("Enabled features:");
+      const enabledFeatures = keys.sort().map(k => `${k}: ${features[k]}`);
+      lines.push(markdownList(enabledFeatures));
     }
 
     // Show available features from the model spec
@@ -83,23 +85,23 @@ export default async function feature(remainder: string, agent: Agent): Promise<
       const availableKeys = Object.keys(availableFeatures);
 
       if (availableKeys.length === 0) {
-        agent.infoLine("Available features: (none)");
+        lines.push("Available features: (none)");
       } else {
-        agent.infoLine("Available features:");
-        for (const k of availableKeys.sort()) {
-          agent.infoLine(`  ${k}`);
-        }
+        lines.push("Available features:");
+        const sortedKeys = availableKeys.sort();
+        lines.push(markdownList(sortedKeys));
       }
     } catch (error) {
-      agent.infoLine(`Available features: (could not fetch model spec: ${error})`);
+      lines.push(`Available features: (could not fetch model spec: ${error})`);
     }
 
+    agent.infoMessage(lines.join("\n"));
     return;
   }
 
   if (action === "enable") {
     if (args.length < 2) {
-      agent.errorLine("/chat feature enable requires at least one key or key=value");
+      agent.errorMessage("/chat feature enable requires at least one key or key=value");
       return;
     }
     for (let i = 1; i < args.length; i++) {
@@ -111,7 +113,7 @@ export default async function feature(remainder: string, agent: Agent): Promise<
         const key = token.substring(0, eq);
         const val = token.substring(eq + 1);
         if (!key) {
-          agent.errorLine(`Invalid feature token: ${token}`);
+          agent.errorMessage(`Invalid feature token: ${token}`);
           continue;
         }
         features[key] = coerceFeatureValue(val);
@@ -119,13 +121,13 @@ export default async function feature(remainder: string, agent: Agent): Promise<
     }
     const newModel = serializeModel(base, features);
     chatService.setModel(newModel, agent);
-    agent.infoLine(`Enabled features. New model: ${newModel}`);
+    agent.infoMessage(`Enabled features. New model: ${newModel}`);
     return;
   }
 
   // disable
   if (args.length < 2) {
-    agent.errorLine("/chat feature disable requires at least one key");
+    agent.errorMessage("/chat feature disable requires at least one key");
     return;
   }
   for (let i = 1; i < args.length; i++) {
@@ -135,5 +137,5 @@ export default async function feature(remainder: string, agent: Agent): Promise<
   }
   const newModel = serializeModel(base, features);
   chatService.setModel(newModel, agent);
-  agent.infoLine(`Disabled features. New model: ${newModel}`);
+  agent.infoMessage(`Disabled features. New model: ${newModel}`);
 }

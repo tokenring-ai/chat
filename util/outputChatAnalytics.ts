@@ -41,5 +41,5 @@ export function outputChatAnalytics(
     usage.push(`- Throughput: ${tps} tk/s`);
   }
 
-  agent.infoLine(`${pkgName}\n${usage.join("\n")}`);
+  agent.infoMessage(`${pkgName}\n${usage.join("\n")}`);
 }

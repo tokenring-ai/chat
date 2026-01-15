@@ -8,8 +8,10 @@ export default async function context(_remainder: string, agent: Agent): Promise
 
     const messages = await chatService.buildChatMessages("input", chatConfig, agent);
 
-    agent.infoLine("Context items that would be added to chat request:");
-    agent.infoLine(`Total messages: ${messages.length}`);
+    const lines: string[] = [
+      "Context items that would be added to chat request:",
+      `Total messages: ${messages.length}`
+    ];
 
     messages.slice(0, -1).forEach((msg, index) => {
       const content =
@@ -22,9 +24,11 @@ export default async function context(_remainder: string, agent: Agent): Promise
           : JSON.stringify(msg.content);
       const preview =
         content.length > 100 ? content.substring(0, 130) + "..." : content;
-      agent.infoLine(`${index + 1}. [${msg.role}] ${preview}`);
+      lines.push(`${index + 1}. [${msg.role}] ${preview}`);
     });
+
+    agent.infoMessage(lines.join("\n"));
   } catch (error) {
-    agent.errorLine(`Error building context: ${error}`);
+    agent.errorMessage(`Error building context: ${error}`);
   }
 }

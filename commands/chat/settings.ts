@@ -1,4 +1,5 @@
 import {Agent} from "@tokenring-ai/agent";
+import markdownList from "@tokenring-ai/utility/string/markdownList";
 import ChatService from "../../ChatService.ts";
 
 export default async function settings(
@@ -10,10 +11,10 @@ export default async function settings(
   if (args.length === 0) {
     // Show current settings
     const config = chatService.getChatConfig(agent);
-    agent.infoLine("Current AI settings:");
-    Object.entries(config).forEach(([key, value]) => {
-      agent.infoLine(`  ${key}: ${value}`);
-    });
+    const lines: string[] = ["Current AI settings:"];
+    const entries = Object.entries(config).map(([key, value]) => `${key}: ${value}`);
+    lines.push(markdownList(entries));
+    agent.infoMessage(lines.join("\n"));
     return;
   }
 
@@ -23,7 +24,7 @@ export default async function settings(
     const [key, value] = part.split("=");
 
     if (!key || value === undefined) {
-      agent.errorLine(`Invalid format: ${part}. Use key=value`);
+      agent.errorMessage(`Invalid format: ${part}. Use key=value`);
       continue;
     }
 
@@ -37,13 +38,13 @@ export default async function settings(
     ) {
       parsedValue = parseFloat(value);
       if (isNaN(parsedValue)) {
-        agent.errorLine(`Invalid number for ${key}: ${value}`);
+        agent.errorMessage(`Invalid number for ${key}: ${value}`);
         continue;
       }
     } else if (key === "maxTokens") {
       parsedValue = parseInt(value);
       if (isNaN(parsedValue)) {
-        agent.errorLine(`Invalid integer for ${key}: ${value}`);
+        agent.errorMessage(`Invalid integer for ${key}: ${value}`);
         continue;
       }
     } else if (key === "stopSequences") {
@@ -57,6 +58,6 @@ export default async function settings(
 
   if (Object.keys(updates).length > 0) {
     chatService.updateChatConfig(updates, agent);
-    agent.infoLine(`Updated AI settings: ${Object.keys(updates).join(", ")}`);
+    agent.infoMessage(`Updated AI settings: ${Object.keys(updates).join(", ")}`);
   }
 }

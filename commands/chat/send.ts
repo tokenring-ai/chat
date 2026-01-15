@@ -5,7 +5,7 @@ import {outputChatAnalytics} from "../../util/outputChatAnalytics.ts";
 
 export default async function send(message: string, agent: Agent): Promise<void> {
   if (!message) {
-    agent.infoLine("Please enter a message to send to AI, or type /help chat for available commands.");
+    agent.infoMessage("Please enter a message to send to AI, or type /help chat for available commands.");
     return;
   }
   const chatService = agent.requireServiceByType(ChatService);

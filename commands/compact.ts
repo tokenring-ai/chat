@@ -7,7 +7,7 @@ const description =
 
 async function execute(remainder: string, agent: Agent): Promise<void> {
   const focus = remainder.trim() || null
-  agent.systemMessage("Compacting context...");
+  agent.infoMessage("Compacting context...");
   await compactContext(focus, agent);
 }
 

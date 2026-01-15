@@ -32,7 +32,7 @@ async function execute(
     const toolNames = parts.slice(1);
 
     if (!["enable", "disable", "set"].includes(operation)) {
-      agent.errorLine(
+      agent.errorMessage(
         "Unknown operation. Usage: /tools [enable|disable|set] <tool1> <tool2> ...",
       );
       return;
@@ -55,7 +55,7 @@ async function execute(
       }
     }
 
-    agent.infoLine(
+    agent.infoMessage(
       `Enabled tools: ${joinDefault(
         ", ",
         chatService.getEnabledTools(agent),
@@ -120,7 +120,7 @@ async function execute(
 
     if (selectedTools) {
       chatService.setEnabledTools(selectedTools, agent);
-      agent.infoLine(
+      agent.infoMessage(
         `Enabled tools: ${joinDefault(
           ", ",
           chatService.getEnabledTools(agent),
@@ -128,10 +128,10 @@ async function execute(
         )}`,
       );
     } else {
-      agent.infoLine("Tool selection cancelled. No changes made.");
+      agent.infoMessage("Tool selection cancelled. No changes made.");
     }
   } catch (error) {
-    agent.errorLine(`Error during tool selection:`, error as Error);
+    agent.errorMessage(`Error during tool selection:`, error as Error);
   }
 }
 
