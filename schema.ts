@@ -59,7 +59,7 @@ const ChatAgentDefaultConfig = z.object({
 }).strict();
 
 export const ChatServiceConfigSchema = z.object({
-  defaultModels: z.array(z.string()),
+  defaultModels: z.array(z.string()).default([]),
   agentDefaults: ChatAgentDefaultConfig.prefault({}),
 });
 

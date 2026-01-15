@@ -21,13 +21,11 @@ export default {
       agentCommandService.addAgentCommands(chatCommands)
     );
 
-    if (config.chat) {
-      const chatService = new ChatService(app, config.chat);
+    const chatService = new ChatService(app, config.chat);
 
-      chatService.registerContextHandlers(contextHandlers);
+    chatService.registerContextHandlers(contextHandlers);
 
-      app.addServices(chatService);
-    }
+    app.addServices(chatService);
   },
   config: packageConfigSchema
 } satisfies TokenRingPlugin<typeof packageConfigSchema>;
