@@ -1,13 +1,7 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import ChatService from "../../ChatService.ts";
+import type {TreeLeaf} from "@tokenring-ai/agent/question";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
-
-interface TreeNode {
-  name: string;
-  value?: string;
-  children?: TreeNode[];
-  hasChildren?: boolean;
-}
+import ChatService from "../../ChatService.ts";
 
 export default async function select(_remainder: string, agent: Agent): Promise<void> {
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
@@ -18,11 +12,8 @@ export default async function select(_remainder: string, agent: Agent): Promise<
     chatModelRegistry.getModelsByProvider(),
   );
 
-  const buildModelTree = (): TreeNode => {
-    const tree: TreeNode = {
-      name: "Model Selection",
-      children: [],
-    };
+  const buildModelTree = (): TreeLeaf[] => {
+    const roots: TreeLeaf[] = [];
 
     const sortedProviders = Object.entries(modelsByProvider).sort(([a], [b]) =>
       a.localeCompare(b),
@@ -54,24 +45,29 @@ export default async function select(_remainder: string, agent: Agent): Promise<
       ).length;
       const totalCount = Object.keys(providerModels).length;
 
-      tree.children?.push({
+      roots.push({
         name: `${provider} (${onlineCount}/${totalCount} online)`,
-        hasChildren: true,
         children,
       });
     }
 
-    return tree;
+    return roots;
   };
 
-  const selectedModel = await agent.askHuman({
-    type: "askForSingleTreeSelection",
-    title: "Model Selection",
+  const selection = await agent.askQuestion({
     message: `Choose a new model:`,
-    tree: buildModelTree(),
+    question: {
+      type: 'treeSelect',
+      label: "Model Selection",
+      key: "result",
+      minimumSelections: 1,
+      maximumSelections: 1,
+      tree: buildModelTree(),
+    }
   });
 
-  if (selectedModel) {
+  if (selection) {
+    const selectedModel = selection[0];
     chatService.setModel(selectedModel, agent);
     agent.infoMessage(`Model set to ${selectedModel}`);
   } else {

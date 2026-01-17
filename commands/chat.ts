@@ -1,9 +1,9 @@
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import createSubcommandRouter from "@tokenring-ai/agent/util/subcommandRouter";
+import context from "./chat/context.ts";
 import feature from "./chat/feature.ts";
 import send from "./chat/send.ts";
 import settings from "./chat/settings.ts";
-import context from "./chat/context.ts";
 
 const description =
   "/chat - Send messages and manage chat AI settings";

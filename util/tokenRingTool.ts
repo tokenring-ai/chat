@@ -1,9 +1,7 @@
 import {Agent} from "@tokenring-ai/agent";
 import {chatTool} from "@tokenring-ai/ai-client";
-import {ChatServiceState} from "../state/chatServiceState.ts";
 import {TokenRingToolDefinition} from "../schema.ts";
-
-
+import {ChatServiceState} from "../state/chatServiceState.ts";
 
 export function tokenRingTool<inputSchemaType>(toolDefinition: TokenRingToolDefinition<any>) {
   const {name, description, inputSchema, execute} = toolDefinition;

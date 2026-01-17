@@ -1,4 +1,5 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import type {TreeLeaf} from "@tokenring-ai/agent/question";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../ChatService.ts";
@@ -81,11 +82,8 @@ async function execute(
   }
 
   // Build tree structure for tool selection
-  const buildToolTree = () => {
-    const tree: any = {
-      name: "Tool Selection",
-      children: [],
-    };
+  const buildToolTree = () : TreeLeaf[] => {
+    const tree: TreeLeaf[] = []
     const sortedPackages = Object.keys(toolsByPackage).sort((a, b) =>
       a.localeCompare(b),
     );
@@ -97,10 +95,9 @@ async function execute(
         value: toolName,
       }));
 
-      tree.children.push({
+      tree.push({
         name: `📦 ${packageName}`,
         value: `${packageName}/*`,
-        hasChildren: true,
         children,
       });
     }
@@ -108,18 +105,21 @@ async function execute(
     return tree;
   };
 
-  // Interactive tree selection if no operation is provided in the command
   try {
-    const selectedTools = await agent.askHuman({
-      type: "askForMultipleTreeSelection",
-      title: "Tool Selection",
+    const selection = await agent.askQuestion({
       message: `Choose the tools to enable for this agent:`,
-      tree: buildToolTree(),
-      initialSelection: enabledTools,
+      question: {
+        type: 'treeSelect',
+        label: "Tool Selection",
+        key: "result",
+        defaultValue: enabledTools,
+        minimumSelections: 0,
+        tree: buildToolTree(),
+      }
     });
 
-    if (selectedTools) {
-      chatService.setEnabledTools(selectedTools, agent);
+    if (selection) {
+      chatService.setEnabledTools(selection, agent);
       agent.infoMessage(
         `Enabled tools: ${joinDefault(
           ", ",

@@ -1,10 +1,10 @@
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import createSubcommandRouter from "@tokenring-ai/agent/util/subcommandRouter";
-import set from "./model/set.ts";
-import reset from "./model/reset.ts";
-import get from "./model/get.ts";
-import select from "./model/select.ts";
 import modelDefault from "./model/default.ts";
+import get from "./model/get.ts";
+import reset from "./model/reset.ts";
+import select from "./model/select.ts";
+import set from "./model/set.ts";
 
 const description = "/model - Set or show the target model for chat";
 
