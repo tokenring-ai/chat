@@ -1,11 +1,18 @@
 import {Agent} from "@tokenring-ai/agent";
 import type {ResetWhat} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentStateSlice} from "@tokenring-ai/agent/types";
+import {z} from "zod";
 import async from "async";
-import {ParsedChatConfig, StoredChatMessage} from "../schema.ts";
+import {ChatAgentConfigSchema, ChatConfigMergedSchema, ParsedChatConfig, StoredChatMessage} from "../schema.ts";
 
-export class ChatServiceState implements AgentStateSlice {
+const serializationSchema = z.object({
+  currentConfig: ChatConfigMergedSchema,
+  messages: z.array(z.any())
+});
+
+export class ChatServiceState implements AgentStateSlice<typeof serializationSchema> {
   name = "ChatServiceState";
+  serializationSchema = serializationSchema;
   readonly initialConfig: ParsedChatConfig;
   currentConfig: ParsedChatConfig;
   parallelTools = false;
@@ -44,14 +51,14 @@ export class ChatServiceState implements AgentStateSlice {
     }
   }
 
-  serialize(): object {
+  serialize(): z.output<typeof serializationSchema> {
     return {
       currentConfig: this.currentConfig,
       messages: this.messages,
     };
   }
 
-  deserialize(data: any): void {
+  deserialize(data: z.output<typeof serializationSchema>): void {
     this.currentConfig = data.currentConfig || {...this.initialConfig};
     this.messages = data.messages || [];
   }
