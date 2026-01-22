@@ -61,7 +61,7 @@ export default async function runChat(
           }
         }
 
-        if (stepCount > maxSteps) {
+        if (maxSteps > 0 && stepCount > maxSteps) {
           if (agent.headless) {
             stopReason = "maxSteps";
             return true;

@@ -4,7 +4,7 @@ import {TokenRingToolDefinition} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 
 export function tokenRingTool<inputSchemaType>(toolDefinition: TokenRingToolDefinition<any>) {
-  const {name, description, inputSchema, execute} = toolDefinition;
+  const {name, description, inputSchema, execute, skipArtifactOutput} = toolDefinition;
   return {
     name,
     toolDefinition,
@@ -27,8 +27,8 @@ export function tokenRingTool<inputSchemaType>(toolDefinition: TokenRingToolDefi
               ? value
               : JSON.stringify(value, null, 1);
 
-            const artifactBody = `### Tool Call: ${name}
-
+            if (! skipArtifactOutput) {
+              const artifactBody = `
 **Request JSON:**
 
 \`\`\`json
@@ -40,14 +40,15 @@ ${requestJson}
 \`\`\`
 ${responseText}
 \`\`\`
-`;
+`.trim();
 
-            agent.artifactOutput({
-              name: `Tool Call (${name})`,
-              encoding: "text",
-              mimeType: "text/markdown",
-              body: artifactBody,
-            });
+              agent.artifactOutput({
+                name: `Tool Call (${name})`,
+                encoding: "text",
+                mimeType: "text/markdown",
+                body: artifactBody,
+              });
+            }
 
             return responseText;
           } catch (err: any) {

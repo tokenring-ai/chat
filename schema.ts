@@ -29,6 +29,7 @@ export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> =
   start?: (agent: Agent) => Promise<void>;
   stop?: (agent: Agent) => Promise<void>;
   requiredContextHandlers?: string[];
+  skipArtifactOutput?: boolean;
 };
 
 export const ContextSourceSchema = z.looseObject({
@@ -51,7 +52,7 @@ const ChatAgentDefaultConfig = z.object({
   model: z.string().default('auto'),
   autoCompact: z.boolean().default(true),
   enabledTools: z.array(z.string()).default([]),
-  maxSteps: z.number().default(30),
+  maxSteps: z.number().default(0),
   context: z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),
