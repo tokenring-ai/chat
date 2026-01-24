@@ -23,7 +23,7 @@ async function execute(
   const chatService = agent.requireServiceByType(ChatService);
   const enabledTools = chatService.getEnabledTools(agent);
 
-  const availableTools = chatService.getAvailableToolNames();
+  const availableTools = chatService.getAvailableTools();
 
   // Handle direct tool operations, e.g. /tools enable foo bar
   const directOperation = remainder?.trim();
@@ -66,38 +66,31 @@ async function execute(
     return;
   }
 
-  const toolsByPackage: Record<string, string[]> = {};
+  const toolsByCategory: Record<string, Array<{ displayName: string, toolName: string }>> = {};
 
-  for (const toolName of availableTools) {
-    let [, packageName] = toolName.match(/^(.*)\//) ?? [null, "un"];
+  for (const [toolName, tool] of Object.entries(availableTools)) {
+    let [, category, displayName] = tool.toolDefinition?.displayName.match(/^(.*)\/(.*)/) ?? [null, "Unknown", tool.toolDefinition?.displayName ?? toolName];
 
-    if (!toolsByPackage[packageName]) {
-      toolsByPackage[packageName] = [];
-    }
-    toolsByPackage[packageName].push(toolName);
-  }
-
-  for (const packageName in toolsByPackage) {
-    toolsByPackage[packageName].sort((a, b) => a.localeCompare(b));
+    (toolsByCategory[category] ??= []).push({ displayName, toolName });
   }
 
   // Build tree structure for tool selection
   const buildToolTree = () : TreeLeaf[] => {
     const tree: TreeLeaf[] = []
-    const sortedPackages = Object.keys(toolsByPackage).sort((a, b) =>
+    const sortedCategories = Object.keys(toolsByCategory).sort((a, b) =>
       a.localeCompare(b),
     );
 
-    for (const packageName of sortedPackages) {
-      const tools = toolsByPackage[packageName];
-      const children = tools.map((toolName) => ({
-        name: `🔧 ${toolName}`,
-        value: toolName,
+    for (const category of sortedCategories) {
+      const tools = toolsByCategory[category];
+      const children = tools.map((tool) => ({
+        name: `🔧 ${tool.displayName}`,
+        value: tool.toolName,
       }));
 
       tree.push({
-        name: `📦 ${packageName}`,
-        value: `${packageName}/*`,
+        name: `📦 ${category}`,
+        value: `${category}/*`,
         children,
       });
     }

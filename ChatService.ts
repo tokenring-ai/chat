@@ -1,6 +1,6 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
-import TokenRingApp from "@tokenring-ai/app";
+import TokenRingApp, {type TokenRingPlugin} from "@tokenring-ai/app";
 import {TokenRingService} from "@tokenring-ai/app/types";
 import deepMerge from "@tokenring-ai/utility/object/deepMerge";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
@@ -32,6 +32,7 @@ export default class ChatService implements TokenRingService {
   requireTool = this.tools.requireItemByName;
   registerTool = this.tools.register;
   getAvailableToolNames = this.tools.getAllItemNames;
+  getAvailableTools = this.tools.getAllItems;
 
   getToolNamesLike = this.tools.getItemNamesLike;
   ensureToolNamesLike = this.tools.ensureItemNamesLike;
@@ -93,20 +94,17 @@ export default class ChatService implements TokenRingService {
   }
 
   addTools(
-    pkgName: string,
     tools: Record<string, TokenRingToolDefinition<any>>,
   ) {
-    for (const toolName in tools) {
-      const fullName = `${pkgName}/${toolName}`;
-
+    for (const tool of Object.values(tools)) {
       // Check for duplicate tool registration
-      if (this.tools.getItemByName(fullName)) {
-        throw new Error(`Tool "${fullName}" is already registered`);
+      if (this.tools.getItemByName(tool.name)) {
+        throw new Error(`Tool "${tool.name}" is already registered`);
       }
 
       this.tools.register(
-        fullName,
-        tokenRingTool({...tools[toolName]}),
+        tool.name,
+        tokenRingTool(tool)
       );
     }
   }

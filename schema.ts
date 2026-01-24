@@ -2,6 +2,7 @@ import Agent from "@tokenring-ai/agent/Agent";
 
 import type {Tool as AITool} from "@tokenring-ai/ai-client";
 import type {AIResponse, ChatInputMessage, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
+import type {TokenRingPlugin} from "@tokenring-ai/app";
 import {z} from "zod";
 
 const initialContextItems = [
@@ -22,7 +23,10 @@ export type NamedTool = {
   toolDefinition?: TokenRingToolDefinition<any>;
 };
 export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> = {
+  /* The name of the tool, as seen by the model */
   name: string;
+  /* The display name of the tool, as seen by the user */
+  displayName: string;
   description: string;
   execute: (input: z.output<InputSchema>, agent: Agent) => Promise<string | object>;
   inputSchema: InputSchema;

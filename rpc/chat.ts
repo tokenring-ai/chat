@@ -7,8 +7,13 @@ import ChatRpcSchema from "./schema.ts";
 export default createJsonRPCEndpoint(ChatRpcSchema, {
   getAvailableTools(_args, app: TokenRingApp) {
     const chatService = app.requireService(ChatService);
+    const tools = chatService.getAvailableTools()
     return {
-      tools: chatService.getAvailableToolNames()
+      tools: Object.fromEntries(
+        Object.entries(tools).map(([toolName, tool]) => [
+          toolName, { displayName: tool.toolDefinition?.displayName || toolName },
+        ])
+      )
     };
   },
 

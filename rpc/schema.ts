@@ -8,7 +8,7 @@ export default {
       type: "query",
       input: z.object({}),
       result: z.object({
-        tools: z.array(z.string())
+        tools: z.record(z.string(), z.object({ displayName: z.string() }))
       })
     },
     getModel: {
