@@ -1,6 +1,6 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
-import TokenRingApp, {type TokenRingPlugin} from "@tokenring-ai/app";
+import TokenRingApp from "@tokenring-ai/app";
 import {TokenRingService} from "@tokenring-ai/app/types";
 import deepMerge from "@tokenring-ai/utility/object/deepMerge";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";

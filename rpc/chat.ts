@@ -1,10 +1,10 @@
 import TokenRingApp from "@tokenring-ai/app";
-import {createJsonRPCEndpoint} from "@tokenring-ai/web-host/jsonrpc/createJsonRPCEndpoint";
+import {createRPCEndpoint} from "@tokenring-ai/rpc/createRPCEndpoint";
 import AgentManager from "@tokenring-ai/agent/services/AgentManager";
 import ChatService from "../ChatService.js";
 import ChatRpcSchema from "./schema.ts";
 
-export default createJsonRPCEndpoint(ChatRpcSchema, {
+export default createRPCEndpoint(ChatRpcSchema, {
   getAvailableTools(_args, app: TokenRingApp) {
     const chatService = app.requireService(ChatService);
     const tools = chatService.getAvailableTools()

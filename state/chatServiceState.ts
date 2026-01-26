@@ -3,7 +3,7 @@ import type {ResetWhat} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentStateSlice} from "@tokenring-ai/agent/types";
 import {z} from "zod";
 import async from "async";
-import {ChatAgentConfigSchema, ChatConfigMergedSchema, ParsedChatConfig, StoredChatMessage} from "../schema.ts";
+import {ChatConfigMergedSchema, ParsedChatConfig, StoredChatMessage} from "../schema.ts";
 
 const serializationSchema = z.object({
   currentConfig: ChatConfigMergedSchema,

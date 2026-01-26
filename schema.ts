@@ -2,7 +2,6 @@ import Agent from "@tokenring-ai/agent/Agent";
 
 import type {Tool as AITool} from "@tokenring-ai/ai-client";
 import type {AIResponse, ChatInputMessage, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
-import type {TokenRingPlugin} from "@tokenring-ai/app";
 import {z} from "zod";
 
 const initialContextItems = [

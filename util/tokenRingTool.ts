@@ -1,6 +1,5 @@
 import {Agent} from "@tokenring-ai/agent";
 import {chatTool} from "@tokenring-ai/ai-client";
-import type {TokenRingPlugin} from "@tokenring-ai/app";
 import {TokenRingToolDefinition} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 

@@ -1,7 +1,8 @@
-import {JsonRPCSchema} from "@tokenring-ai/web-host/jsonrpc/types";
+import {RPCSchema} from "@tokenring-ai/rpc/types";
 import {z} from "zod";
 
 export default {
+  name: "Chat RPC",
   path: "/rpc/chat",
   methods: {
     getAvailableTools: {
@@ -93,4 +94,4 @@ export default {
       })
     }
   }
-} satisfies JsonRPCSchema;
+} satisfies RPCSchema;
