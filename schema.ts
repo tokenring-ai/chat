@@ -21,13 +21,37 @@ export type NamedTool = {
   tool: AITool;
   toolDefinition?: TokenRingToolDefinition<any>;
 };
+
+export type TokenRingToolTextResult = string | {
+  type: 'text',
+  text: string,
+}
+export type TokenRingToolMediaResult = {
+  type: 'media',
+  mediaType: string,
+  data: string,
+}
+
+type AsJson<T> =
+  T extends string | number | boolean | null ? T :
+  T extends Function ? never :
+  T extends object ? { [K in keyof T]: AsJson<T[K]> } :
+    never;
+
+export type TokenRingToolJSONResult<T> = {
+  type: 'json',
+  data: AsJson<T>;
+}
+
+export type TokenRingToolResult = TokenRingToolTextResult | TokenRingToolMediaResult | TokenRingToolJSONResult<any>;
+
 export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> = {
   /* The name of the tool, as seen by the model */
   name: string;
   /* The display name of the tool, as seen by the user */
   displayName: string;
   description: string;
-  execute: (input: z.output<InputSchema>, agent: Agent) => Promise<string | object>;
+  execute: (input: z.output<InputSchema>, agent: Agent) => Promise<TokenRingToolResult>;
   inputSchema: InputSchema;
   start?: (agent: Agent) => Promise<void>;
   stop?: (agent: Agent) => Promise<void>;
