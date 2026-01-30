@@ -18,10 +18,6 @@ import {
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
 
-export type ChatServiceOptions = {
-  model: string;
-};
-
 export default class ChatService implements TokenRingService {
   name = "ChatService";
   description = "A service for managing AI configuration";
