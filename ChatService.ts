@@ -19,7 +19,7 @@ import {ChatServiceState} from "./state/chatServiceState.js";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
 
 export default class ChatService implements TokenRingService {
-  name = "ChatService";
+  readonly name = "ChatService";
   description = "A service for managing AI configuration";
 
   private tools = new KeyedRegistry<NamedTool>();

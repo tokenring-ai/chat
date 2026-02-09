@@ -11,7 +11,7 @@ const serializationSchema = z.object({
 });
 
 export class ChatServiceState implements AgentStateSlice<typeof serializationSchema> {
-  name = "ChatServiceState";
+  readonly name = "ChatServiceState";
   serializationSchema = serializationSchema;
   currentConfig: ParsedChatConfig;
   parallelTools = false;
