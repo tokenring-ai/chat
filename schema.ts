@@ -1,4 +1,5 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {OutputArtifactSchema} from "@tokenring-ai/agent/AgentEvents";
 
 import type {Tool as AITool} from "@tokenring-ai/ai-client";
 import type {AIResponse, ChatInputMessage, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
@@ -16,6 +17,8 @@ const followUpContextItems = [
   { type: "current-message" },
 ]
 
+type ToolArtifact = Omit<z.input<typeof OutputArtifactSchema>, "type" | "timestamp">
+
 export type NamedTool = {
   name: string;
   tool: AITool;
@@ -25,11 +28,13 @@ export type NamedTool = {
 export type TokenRingToolTextResult = string | {
   type: 'text',
   text: string,
+  artifact?: ToolArtifact,
 }
 export type TokenRingToolMediaResult = {
   type: 'media',
   mediaType: string,
   data: string,
+  artifact?: ToolArtifact,
 }
 
 type AsJson<T> =
@@ -41,6 +46,7 @@ type AsJson<T> =
 export type TokenRingToolJSONResult<T> = {
   type: 'json',
   data: AsJson<T>;
+  artifact?: ToolArtifact,
 }
 
 export type TokenRingToolResult = TokenRingToolTextResult | TokenRingToolMediaResult | TokenRingToolJSONResult<any>;
@@ -56,7 +62,6 @@ export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> =
   start?: (agent: Agent) => Promise<void>;
   stop?: (agent: Agent) => Promise<void>;
   requiredContextHandlers?: string[];
-  skipArtifactOutput?: boolean;
 };
 
 export const ContextSourceSchema = z.looseObject({

@@ -5,7 +5,7 @@ import {TokenRingToolDefinition, type TokenRingToolResult} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 
 export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>) {
-  const {name, displayName, description, inputSchema, execute, skipArtifactOutput} = toolDefinition;
+  const {name, displayName, description, inputSchema, execute} = toolDefinition;
   return {
     name,
     displayName,
@@ -23,7 +23,9 @@ export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>) {
           try {
             const result = await execute(args, agent);
 
-            if (!skipArtifactOutput) {
+            if (typeof result !== "string" && result.artifact) {
+              agent.artifactOutput(result.artifact);
+            } else {
               generateArtifact(name, args, result, agent);
             }
             return result;

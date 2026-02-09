@@ -67,7 +67,7 @@ export default async function runChat(
             return true;
           }
 
-          if (await agent.askForConfirmation({
+          if (await agent.askForApproval({
             message: `The agent has completed ${options.steps.length} steps, which is longer than your configured limit of ${chatConfig.maxSteps}. Would you like to continue?`,
             default: false,
             timeout: 60
@@ -105,7 +105,7 @@ export default async function runChat(
 
     if (shouldCompact(response.lastStepUsage, client)) {
       const config = chatService.getChatConfig(agent);
-      if (config.autoCompact || agent.headless || await agent.askForConfirmation({
+      if (config.autoCompact || agent.headless || await agent.askForApproval({
         message:
           "Context is getting long. Would you like to compact it to save tokens?",
         default: true,
@@ -130,7 +130,7 @@ export default async function runChat(
       if (agent.headless) {
         agent.infoMessage("Agent stopped due to reaching the configured maxSteps")
       } else {
-        await agent.askForConfirmation({
+        await agent.askForApproval({
           message: "Agent stopped due to reaching the configured maxSteps. Would you like to continue?"
         })
         return await runChat("Continue", chatConfig, agent);
