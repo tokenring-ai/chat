@@ -28,7 +28,7 @@ export default class ChatService implements TokenRingService {
   requireTool = this.tools.requireItemByName;
   registerTool = this.tools.register;
   getAvailableToolNames = this.tools.getAllItemNames;
-  getAvailableTools = this.tools.getAllItems;
+  getAvailableToolEntries = this.tools.entries;
 
   getToolNamesLike = this.tools.getItemNamesLike;
   ensureToolNamesLike = this.tools.ensureItemNamesLike;

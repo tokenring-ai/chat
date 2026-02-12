@@ -7,10 +7,10 @@ import ChatRpcSchema from "./schema.ts";
 export default createRPCEndpoint(ChatRpcSchema, {
   getAvailableTools(_args, app: TokenRingApp) {
     const chatService = app.requireService(ChatService);
-    const tools = chatService.getAvailableTools()
+    const tools = chatService.getAvailableToolEntries()
     return {
       tools: Object.fromEntries(
-        Object.entries(tools).map(([toolName, tool]) => [
+        tools.map(([toolName, tool]) => [
           toolName, { displayName: tool.toolDefinition?.displayName || toolName },
         ])
       )

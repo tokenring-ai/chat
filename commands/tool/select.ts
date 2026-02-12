@@ -6,11 +6,10 @@ import ChatService from "../../ChatService.ts";
 export default async function select(_remainder: string, agent: Agent): Promise<void> {
   const chatService = agent.requireServiceByType(ChatService);
   const enabledTools = chatService.getEnabledTools(agent);
-  const availableTools = chatService.getAvailableTools();
 
   const toolsByCategory: Record<string, Array<{ displayName: string, toolName: string }>> = {};
 
-  for (const [toolName, tool] of Object.entries(availableTools)) {
+  for (const [toolName, tool] of chatService.getAvailableToolEntries()) {
     let [, category, displayName] = tool.toolDefinition?.displayName.match(/^(.*)\/(.*)/) ?? [null, "Unknown", tool.toolDefinition?.displayName ?? toolName];
     (toolsByCategory[category] ??= []).push({ displayName, toolName });
   }
