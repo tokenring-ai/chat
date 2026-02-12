@@ -39,8 +39,7 @@ export default async function runChat(
 
   if (!client) throw new Error(`No online client found for model ${model}`);
 
-  agent.infoMessage(`[runChat] Using model ${client.getModelId()}`);
-
+  agent.infoMessage(`Using model ${client.getModelId()}`);
 
   const requestMessages = await chatService.buildChatMessages(input, chatConfig, agent);
 
