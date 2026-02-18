@@ -81,7 +81,7 @@ export const ChatAgentConfigSchema = z.object({
 }).strict();
 
 const ChatAgentDefaultConfig = z.object({
-  model: z.string().default('auto'),
+  model: z.string().optional(),
   autoCompact: z.boolean().default(true),
   enabledTools: z.array(z.string()).default([]),
   maxSteps: z.number().default(0),

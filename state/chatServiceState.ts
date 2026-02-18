@@ -36,10 +36,6 @@ export class ChatServiceState implements AgentStateSlice<typeof serializationSch
     }
   }
 
-  transferStateFromParent(parent: Agent): void {
-    this.currentConfig.model = parent.getState(ChatServiceState).currentConfig.model;
-  }
-
   reset(what: ResetWhat[]): void {
     if (what.includes("settings")) {
       this.currentConfig = {...this.initialConfig};

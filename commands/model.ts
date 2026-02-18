@@ -1,6 +1,7 @@
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import createSubcommandRouter from "@tokenring-ai/agent/util/subcommandRouter";
 import modelDefault from "./model/default.ts";
+import settings from "./model/settings.ts";
 import get from "./model/get.ts";
 import reset from "./model/reset.ts";
 import select from "./model/select.ts";
@@ -13,6 +14,7 @@ const execute = createSubcommandRouter({
   reset,
   get,
   select,
+  settings,
   default: modelDefault
 });
 
@@ -27,7 +29,8 @@ Set or display the AI model used for chat responses. Choose from available model
 /model set <model_name>   # Set to specific model
 /model select             # Interactive model selection
 /model set gpt-5.2        # Set to specific model
-/model reset              # Reset to initial configured model/
+/model reset              # Reset to initial configured model
+/model settings           # Manage model feature flags
 
 ## Interactive Mode
 
@@ -50,7 +53,30 @@ Set or display the AI model used for chat responses. Choose from available model
 /model get                 # Show current model only
 /model select              # Browse and select model interactively
 /model set gpt-5.2         # Use GPT-5.2
-/model reset               # Reset to initial configured model.`;
+/model reset               # Reset to initial configured model.
+
+# /model settings <show|set|select|enable|disable>
+
+Manage feature flags on the current model.
+
+## Usage
+
+/model settings                             # Show settings (default)
+/model settings show                        # Show enabled and available settings
+/model settings set <key[=value]>           # Set a single feature flag
+/model settings select                      # Interactive feature selection
+/model settings enable <key[=value]> ...    # Enable one or more feature flags
+/model settings disable <key> ...           # Disable feature flags
+
+## Examples
+
+/model settings show
+/model settings set websearch
+/model settings set temperature=0.7
+/model settings select
+/model settings enable reasoning
+/model settings disable reasoning
+`;
 
 export default {
   description,

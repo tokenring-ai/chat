@@ -38,12 +38,47 @@ export default class ChatService implements TokenRingService {
   registerContextHandler = this.contextHandlers.register;
   registerContextHandlers = this.contextHandlers.registerAll;
 
+  defaultModel: string | null = null;
   constructor(readonly app: TokenRingApp, readonly options: z.output<typeof ChatServiceConfigSchema>) {}
 
-  attach(agent: Agent): void {
-    let { enabledTools, ...agentConfig} = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice('chat', ChatAgentConfigSchema));
-
+  start() {
     const chatModelRegistry = this.app.requireService(ChatModelRegistry);
+
+    for (const modelName of this.options.defaultModels) {
+      this.defaultModel = chatModelRegistry.getCheapestModelByRequirements(modelName);
+      if (this.defaultModel) break;
+    }
+
+    if (this.defaultModel) {
+      this.app.serviceOutput(`Selected ${this.defaultModel} as default model for chat`);
+    } else {
+      this.app.serviceError(`No default model was selected for chat'`);
+    }
+  }
+
+  attach(agent: Agent): void {
+    let {enabledTools, ...agentConfig} = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice('chat', ChatAgentConfigSchema));
+
+    // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
+    agent.initializeState(ChatServiceState, {
+      ...agentConfig,
+      enabledTools: enabledTools.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat()
+    });
+
+    const selectedModel = agentConfig.model ?? this.defaultModel;
+    if (selectedModel) {
+      agent.infoMessage(`Using model ${selectedModel} for chat`);
+    } else {
+      agent.warningMessage(`No model was selected for chat, please manually select a model with /model`);
+    }
+  }
+
+  /*
+
+    if (agentConfig.model === 'inherit') {
+      if (this.)
+
+    }
 
     if (agentConfig.model === 'auto') {
       let autoSelectedModel : string | null = null;
@@ -73,7 +108,7 @@ export default class ChatService implements TokenRingService {
       enabledTools: enabledTools.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat()
     });
   }
-
+*/
   async buildChatMessages(input: string, chatConfig: ParsedChatConfig, agent: Agent) {
     const lastMessage = this.getLastMessage(agent);
 
@@ -113,11 +148,11 @@ export default class ChatService implements TokenRingService {
   }
 
   getModel(agent: Agent): string | null {
-    return this.getChatConfig(agent).model ?? null;
+    return this.getChatConfig(agent).model ?? this.defaultModel;
   }
 
   requireModel(agent: Agent): string {
-    const model = this.getChatConfig(agent).model;
+    const model = this.getChatConfig(agent).model ?? this.defaultModel;
     if (! model) throw new Error(`No model selected`);
     return model;
   }

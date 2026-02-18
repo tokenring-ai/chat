@@ -1,7 +1,6 @@
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import createSubcommandRouter from "@tokenring-ai/agent/util/subcommandRouter";
 import context from "./chat/context.ts";
-import feature from "./chat/feature.ts";
 import send from "./chat/send.ts";
 import settings from "./chat/settings.ts";
 
@@ -11,7 +10,6 @@ const description =
 
 const execute = createSubcommandRouter({
   settings,
-  feature,
   context,
   send,
 });
@@ -63,7 +61,7 @@ Manage model feature flags that enable special capabilities.
 
 ### /chat feature list
 
-List currently enabled and available features for your model.
+List currently enabled and available settings for your model.
 
 ### /chat feature enable key[=value] [...]
 
