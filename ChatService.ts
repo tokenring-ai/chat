@@ -17,6 +17,7 @@ import {
 } from "./schema.ts";
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
+import { getModelAndSettings } from "@tokenring-ai/ai-client/util/modelSettings";
 
 export default class ChatService implements TokenRingService {
   readonly name = "ChatService";
@@ -155,6 +156,10 @@ export default class ChatService implements TokenRingService {
     const model = this.getChatConfig(agent).model ?? this.defaultModel;
     if (! model) throw new Error(`No model selected`);
     return model;
+  }
+
+  getModelAndSettings(agent: Agent) {
+    return getModelAndSettings(this,agent);
   }
 
   getChatConfig(agent: Agent): ParsedChatConfig {

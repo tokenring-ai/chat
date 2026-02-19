@@ -12,7 +12,7 @@ type StopReason = "finished" | "longContext" | "maxSteps";
 function shouldCompact({ inputTokens, outputTokens}: { inputTokens?: number, outputTokens?: number }, chatClient: AIChatClient) {
   //TODO: make the compaction threshold configurable
   const totalTokens = (inputTokens ?? 0) + (outputTokens ?? 0);
-  return totalTokens > chatClient.getModelSpec().contextLength * 0.9;
+  return totalTokens > chatClient.getModelSpec().maxContextLength * 0.9;
 }
 
 

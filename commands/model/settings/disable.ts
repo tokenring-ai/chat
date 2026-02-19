@@ -1,5 +1,6 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import {getModelAndSettings, serializeModel} from "./util.ts";
+import {serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
+import {ChatService} from "../../../index.ts";
 
 export default async function disable(remainder: string, agent: Agent): Promise<void> {
   const keys = remainder?.trim().split(/\s+/).filter(Boolean);
@@ -8,8 +9,10 @@ export default async function disable(remainder: string, agent: Agent): Promise<
     return;
   }
 
-  const {chatService, base, settings} = getModelAndSettings(agent);
-  for (const key of keys) delete settings[key];
+  const chatService = agent.requireServiceByType(ChatService);
+  const {base, settings} = chatService.getModelAndSettings(agent);
+
+  for (const key of keys) settings.delete(key)
 
   const newModel = serializeModel(base, settings);
   chatService.setModel(newModel, agent);

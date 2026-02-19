@@ -1,20 +1,17 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import type {TreeLeaf} from "@tokenring-ai/agent/question";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
-import {getModelAndSettings, serializeModel} from "./util.ts";
+import {serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
+import {ChatService} from "../../../index.ts";
 
 export default async function select(_remainder: string, agent: Agent): Promise<void> {
-  const {chatService, base, settings} = getModelAndSettings(agent);
+  const chatService = agent.requireServiceByType(ChatService);
+  const {base, settings} = chatService.getModelAndSettings(agent);
 
   let availableKeys: string[] = [];
-  try {
-    const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
-    const client = await chatModelRegistry.getClient(base);
-    availableKeys = Object.keys(client.getModelSpec().settings || {});
-  } catch {
-    agent.errorMessage("Could not fetch available settings for this model.");
-    return;
-  }
+  const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
+  const client = await chatModelRegistry.getClient(base);
+  availableKeys = Object.keys(client.getModelSpec().settings || {});
 
   if (availableKeys.length === 0) {
     agent.infoMessage("No selectable settings available for this model.");
@@ -22,7 +19,7 @@ export default async function select(_remainder: string, agent: Agent): Promise<
   }
 
   const tree: TreeLeaf[] = availableKeys.sort().map(k => ({ name: k, value: k }));
-  const currentEnabled = Object.keys(settings).filter(k => settings[k] === true);
+  const currentEnabled = Object.keys(settings).filter(k => settings.get(k) === true);
 
   const selection = await agent.askQuestion({
     message: "Choose settings to enable:",
