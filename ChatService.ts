@@ -1,4 +1,5 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import type {AgentCreationContext} from "@tokenring-ai/agent/types";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import TokenRingApp from "@tokenring-ai/app";
 import {TokenRingService} from "@tokenring-ai/app/types";
@@ -57,7 +58,7 @@ export default class ChatService implements TokenRingService {
     }
   }
 
-  attach(agent: Agent): void {
+  attach(agent: Agent, creationContext: AgentCreationContext): void {
     let {enabledTools, ...agentConfig} = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice('chat', ChatAgentConfigSchema));
 
     // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
@@ -68,8 +69,11 @@ export default class ChatService implements TokenRingService {
 
     const selectedModel = agentConfig.model ?? this.defaultModel;
     if (selectedModel) {
-      agent.infoMessage(`Using model ${selectedModel} for chat`);
+      creationContext.items.push(`Chat Model: ${selectedModel}`);
+
+      //agent.infoMessage(`Using model ${selectedModel} for chat`);
     } else {
+      creationContext.items.push(`Chat Model: No model selected`);
       agent.warningMessage(`No model was selected for chat, please manually select a model with /model`);
     }
   }

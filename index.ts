@@ -11,6 +11,6 @@ export {
   type StoredChatMessage,
   type TokenRingToolDefinition,
 } from "./schema.ts";
-export {outputChatAnalytics} from "./util/outputChatAnalytics.ts";
+export {getChatAnalytics} from "./util/getChatAnalytics.ts";
 export {tokenRingTool} from "./util/tokenRingTool.ts";
 export {compactContext} from "./util/compactContext.ts";

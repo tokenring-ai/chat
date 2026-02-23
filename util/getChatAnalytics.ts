@@ -1,10 +1,8 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import type {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 
-export function outputChatAnalytics(
+export function getChatAnalytics(
   response: AIResponse,
-  agent: Agent,
-  pkgName: string = "Chat Complete",
 ) {
   const {
     inputTokens,
@@ -41,5 +39,5 @@ export function outputChatAnalytics(
     usage.push(`- Throughput: ${tps} tk/s`);
   }
 
-  agent.infoMessage(`${pkgName}\n${usage.join("\n")}`);
+  return usage.join("\n");
 }
