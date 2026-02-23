@@ -1,9 +1,9 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import ChatService from "../../ChatService.ts";
 
-export default async function show(_remainder: string, agent: Agent): Promise<void> {
+export default async function show(_remainder: string, agent: Agent): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const model = chatService.getModel(agent);
   
-  agent.infoMessage(`Current model: ${model ?? "(none)"}`);
+  return `Current model: ${model ?? "(none)"}`;
 }

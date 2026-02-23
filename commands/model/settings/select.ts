@@ -4,7 +4,7 @@ import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
 import {ChatService} from "../../../index.ts";
 
-export default async function select(_remainder: string, agent: Agent): Promise<void> {
+export default async function select(_remainder: string, agent: Agent): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const {base, settings} = chatService.getModelAndSettings(agent);
 
@@ -14,8 +14,7 @@ export default async function select(_remainder: string, agent: Agent): Promise<
   availableKeys = Object.keys(client.getModelSpec().settings || {});
 
   if (availableKeys.length === 0) {
-    agent.infoMessage("No selectable settings available for this model.");
-    return;
+    return "No selectable settings available for this model.";
   }
 
   const tree: TreeLeaf[] = availableKeys.sort().map(k => ({ name: k, value: k }));
@@ -38,8 +37,8 @@ export default async function select(_remainder: string, agent: Agent): Promise<
     for (const k of selection) newSettings[k] = true;
     const newModel = serializeModel(base, newSettings);
     chatService.setModel(newModel, agent);
-    agent.infoMessage(`Settings updated. New model: ${newModel}`);
+    return `Settings updated. New model: ${newModel}`;
   } else {
-    agent.infoMessage("Feature selection cancelled. No changes made.");
+    return "Feature selection cancelled. No changes made.";
   }
 }

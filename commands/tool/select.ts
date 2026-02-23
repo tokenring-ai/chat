@@ -3,7 +3,7 @@ import type {TreeLeaf} from "@tokenring-ai/agent/question";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../../ChatService.ts";
 
-export default async function select(_remainder: string, agent: Agent): Promise<void> {
+export default async function select(_remainder: string, agent: Agent): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const enabledTools = chatService.getEnabledTools(agent);
 
@@ -49,10 +49,8 @@ export default async function select(_remainder: string, agent: Agent): Promise<
 
   if (selection) {
     chatService.setEnabledTools(selection, agent);
-    agent.infoMessage(
-      `Enabled tools: ${joinDefault(", ", chatService.getEnabledTools(agent), "No tools selected.")}`,
-    );
+    return `Enabled tools: ${joinDefault(", ", chatService.getEnabledTools(agent), "No tools selected.")}`;
   } else {
-    agent.infoMessage("Tool selection cancelled. No changes made.");
+    return "Tool selection cancelled. No changes made.";
   }
 }

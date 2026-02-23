@@ -1,14 +1,19 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
 import {compactContext} from "../util/compactContext.ts";
 
 const description =
   "/compact - Compact conversation context by summarizing prior messages";
 
-async function execute(remainder: string, agent: Agent): Promise<void> {
+async function execute(remainder: string, agent: Agent): Promise<string> {
   const focus = remainder.trim() || null
-  agent.infoMessage("Compacting context...");
-  await compactContext(focus, agent);
+  try {
+    await compactContext(focus, agent);
+    return "Context compacted successfully.";
+  } catch (error) {
+    throw new CommandFailedError(`Failed to compact context: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 const help: string = `# /compact [<focus>]

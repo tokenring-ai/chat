@@ -1,13 +1,13 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
 import {coerceFeatureValue, serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
 import ChatService from "../../../ChatService.ts";
 
-export default async function set(remainder: string, agent: Agent): Promise<void> {
+export default async function set(remainder: string, agent: Agent): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const token = remainder?.trim();
   if (!token) {
-    agent.errorMessage("/model settings set requires a key or key=value");
-    return;
+    throw new CommandFailedError("/model settings set requires a key or key=value");
   }
 
   const {base, settings} = chatService.getModelAndSettings(agent);
@@ -17,13 +17,12 @@ export default async function set(remainder: string, agent: Agent): Promise<void
   } else {
     const key = token.substring(0, eq);
     if (!key) {
-      agent.errorMessage(`Invalid feature token: ${token}`);
-      return;
+      throw new CommandFailedError(`Invalid feature token: ${token}`);
     }
     settings.set(key, coerceFeatureValue(token.substring(eq + 1)));
   }
 
   const newModel = serializeModel(base, settings);
   chatService.setModel(newModel, agent);
-  agent.infoMessage(`Set feature. New model: ${newModel}`);
+  return `Set feature. New model: ${newModel}`;
 }

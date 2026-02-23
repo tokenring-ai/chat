@@ -3,7 +3,7 @@ import type {TreeLeaf} from "@tokenring-ai/agent/question";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import ChatService from "../../ChatService.ts";
 
-export default async function select(_remainder: string, agent: Agent): Promise<void> {
+export default async function select(_remainder: string, agent: Agent): Promise<string> {
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
 
@@ -69,8 +69,8 @@ export default async function select(_remainder: string, agent: Agent): Promise<
   if (selection) {
     const selectedModel = selection[0];
     chatService.setModel(selectedModel, agent);
-    agent.infoMessage(`Model set to ${selectedModel}`);
+    return `Model set to ${selectedModel}`;
   } else {
-    agent.infoMessage("Model selection cancelled. No changes made.");
+    return "Model selection cancelled. No changes made.";
   }
 }

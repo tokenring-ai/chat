@@ -1,15 +1,16 @@
 import Agent from "@tokenring-ai/agent/Agent";
+import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
 import ChatService from "../../ChatService.ts";
 import {ChatServiceState} from "../../state/chatServiceState.ts";
 
-export default async function reset(_remainder: string, agent: Agent): Promise<void> {
+export default async function reset(_remainder: string, agent: Agent): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const initialModel = agent.getState(ChatServiceState).initialConfig.model;
   
-  if (initialModel) {
-    chatService.setModel(initialModel, agent);
-    agent.infoMessage(`Model reset to ${initialModel}`);
-  } else {
-    agent.errorMessage("No initial model configured");
+  if (!initialModel) {
+    throw new CommandFailedError("No initial model configured");
   }
+  
+  chatService.setModel(initialModel, agent);
+  return `Model reset to ${initialModel}`;
 }

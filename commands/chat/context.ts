@@ -1,7 +1,8 @@
 import {Agent} from "@tokenring-ai/agent";
+import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
 import ChatService from "../../ChatService.ts";
 
-export default async function context(_remainder: string, agent: Agent): Promise<void> {
+export default async function context(_remainder: string, agent: Agent): Promise<string> {
   try {
     const chatService = agent.requireServiceByType(ChatService);
     const chatConfig = chatService.getChatConfig(agent);
@@ -27,8 +28,8 @@ export default async function context(_remainder: string, agent: Agent): Promise
       lines.push(`${index + 1}. [${msg.role}] ${preview}`);
     });
 
-    agent.infoMessage(lines.join("\n"));
+    return lines.join("\n");
   } catch (error) {
-    agent.errorMessage(`Error building context: ${error}`);
+    throw new CommandFailedError(`Error building context: ${error}`);
   }
 }
