@@ -52,9 +52,9 @@ export default class ChatService implements TokenRingService {
     }
 
     if (this.defaultModel) {
-      this.app.serviceOutput(`Selected ${this.defaultModel} as default model for chat`);
+      this.app.serviceOutput(this, `Selected ${this.defaultModel} as default model for chat`);
     } else {
-      this.app.serviceError(`No default model was selected for chat'`);
+      this.app.serviceError(this, `No default model was selected for chat'`);
     }
   }
 
