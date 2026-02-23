@@ -5,14 +5,16 @@ import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {backoff} from "@tokenring-ai/utility/promise/backoff";
 import ChatService from "./ChatService.ts";
 import {ParsedChatConfig} from "./schema.ts";
+import {ChatServiceState} from "./state/chatServiceState.ts";
 import {compactContext} from "./util/compactContext.ts";
 
 type StopReason = "finished" | "longContext" | "maxSteps";
 
-function shouldCompact({ inputTokens, outputTokens}: { inputTokens?: number, outputTokens?: number }, chatClient: AIChatClient) {
-  //TODO: make the compaction threshold configurable
+function shouldCompact({ inputTokens, outputTokens}: { inputTokens?: number, outputTokens?: number }, chatClient: AIChatClient, agent: Agent) {
+  const { compactionThreshold } = agent.getState(ChatServiceState).currentConfig;
+
   const totalTokens = (inputTokens ?? 0) + (outputTokens ?? 0);
-  return totalTokens > chatClient.getModelSpec().maxContextLength * 0.9;
+  return totalTokens > chatClient.getModelSpec().maxContextLength * compactionThreshold;
 }
 
 
@@ -54,7 +56,7 @@ export default async function runChat(
       async stopWhen(options) {
         stepCount = options.steps.length;
         if (stepCount > 0) {
-          if (shouldCompact(options.steps[stepCount - 1].usage, client)) {
+          if (shouldCompact(options.steps[stepCount - 1].usage, client, agent)) {
             stopReason = "longContext";
             return true;
           }
@@ -102,7 +104,7 @@ export default async function runChat(
 
     await agent.getServiceByType(AgentLifecycleService)?.executeHooks(agent, "afterChatCompletion", response);
 
-    if (shouldCompact(response.lastStepUsage, client)) {
+    if (shouldCompact(response.lastStepUsage, client, agent)) {
       const config = chatService.getChatConfig(agent);
       if (config.autoCompact || agent.headless || await agent.askForApproval({
         message:

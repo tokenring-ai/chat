@@ -74,6 +74,7 @@ export const ChatAgentConfigSchema = z.object({
   maxSteps: z.number().optional(),
   autoCompact: z.boolean().optional(),
   enabledTools: z.array(z.string()).optional(),
+  compactionThreshold: z.number().optional(),
   context: z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),
@@ -85,6 +86,7 @@ const ChatAgentDefaultConfig = z.object({
   autoCompact: z.boolean().default(true),
   enabledTools: z.array(z.string()).default([]),
   maxSteps: z.number().default(0),
+  compactionThreshold: z.number().default(0.7),
   context: z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),
