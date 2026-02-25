@@ -61,7 +61,8 @@ export class ChatServiceState implements AgentStateSlice<typeof serializationSch
     return [
       `Messages: ${this.messages.length}`,
       `Enabled Tools: ${this.currentConfig.enabledTools?.join(", ") || "None"}`,
-      `Auto Compact: ${this.currentConfig.autoCompact}`,
+      `Compaction Policy: ${this.currentConfig.compaction.policy}`,
+      `Compaction Threshold: ${this.currentConfig.compaction.compactionThreshold}`,
       `Max Steps: ${this.currentConfig.maxSteps}`,
       `System Prompt: ${this.currentConfig.systemPrompt}`,
     ];

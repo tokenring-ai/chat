@@ -57,7 +57,7 @@ export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> =
   /* The display name of the tool, as seen by the user */
   displayName: string;
   description: string;
-  execute: (input: z.output<InputSchema>, agent: Agent) => Promise<TokenRingToolResult>;
+  execute: (input: z.output<InputSchema>, agent: Agent) => Promise<TokenRingToolResult> | TokenRingToolResult;
   inputSchema: InputSchema;
   start?: (agent: Agent) => Promise<void>;
   stop?: (agent: Agent) => Promise<void>;
@@ -72,9 +72,14 @@ export const ChatAgentConfigSchema = z.object({
   model: z.string().optional(),
   systemPrompt: z.union([z.string(), z.function({output: z.string()})]),
   maxSteps: z.number().optional(),
-  autoCompact: z.boolean().optional(),
+  compaction: z.object({
+    policy: z.enum(["automatic", "ask", "never"]).optional(),
+    compactionThreshold: z.number().optional(),
+    windowThreshold: z.number().optional(),
+    backtrack: z.number().optional(),
+    background: z.boolean().optional()
+  }).prefault({}),
   enabledTools: z.array(z.string()).optional(),
-  compactionThreshold: z.number().optional(),
   context: z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),
@@ -83,10 +88,15 @@ export const ChatAgentConfigSchema = z.object({
 
 const ChatAgentDefaultConfig = z.object({
   model: z.string().optional(),
-  autoCompact: z.boolean().default(true),
   enabledTools: z.array(z.string()).default([]),
   maxSteps: z.number().default(0),
-  compactionThreshold: z.number().default(0.7),
+  compaction: z.object({
+    policy: z.enum(["automatic", "ask", "never"]).default("ask"),
+    compactionThreshold: z.number().default(0.5),
+    windowThreshold: z.number().default(0.7),
+    backtrack: z.number().default(1),
+    background: z.boolean().default(false),
+  }).prefault({}),
   context: z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),

@@ -11,7 +11,7 @@ import {compactContext} from "./util/compactContext.ts";
 type StopReason = "finished" | "longContext" | "maxSteps";
 
 function shouldCompact({ inputTokens, outputTokens}: { inputTokens?: number, outputTokens?: number }, chatClient: AIChatClient, agent: Agent) {
-  const { compactionThreshold } = agent.getState(ChatServiceState).currentConfig;
+  const { compactionThreshold } = agent.getState(ChatServiceState).currentConfig.compaction;
 
   const totalTokens = (inputTokens ?? 0) + (outputTokens ?? 0);
   return totalTokens > chatClient.getModelSpec().maxContextLength * compactionThreshold;
@@ -104,14 +104,14 @@ export default async function runChat(
 
     await agent.getServiceByType(AgentLifecycleService)?.executeHooks(agent, "afterChatCompletion", response);
 
-    if (shouldCompact(response.lastStepUsage, client, agent)) {
+    if (stopReason === "longContext" || shouldCompact(response.lastStepUsage, client, agent)) {
       const config = chatService.getChatConfig(agent);
-      if (config.autoCompact || agent.headless || await agent.askForApproval({
+      if ( config.compaction.policy === "automatic" || (config.compaction.policy === "ask" && (agent.headless && await agent.askForApproval({
         message:
           "Context is getting long. Would you like to compact it to save tokens?",
         default: true,
         timeout: 30,
-      })) {
+      })))) {
         agent.infoMessage(
           "Context is getting long. Compacting context...",
         );
