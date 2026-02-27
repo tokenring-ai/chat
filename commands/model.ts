@@ -79,6 +79,7 @@ Manage feature flags on the current model.
 `;
 
 export default {
+  name: "model",
   description,
   execute,
   help,

@@ -3,7 +3,7 @@ import {TokenRingPlugin} from "@tokenring-ai/app";
 import {RpcService} from "@tokenring-ai/rpc";
 import {z} from "zod";
 
-import chatCommands from "./chatCommands.ts";
+import agentCommands from "./commands.ts";
 import ChatService from "./ChatService.js";
 import chatRPC from "./rpc/chat.ts";
 import contextHandlers from "./contextHandlers.ts";
@@ -20,7 +20,7 @@ export default {
   description: packageJSON.description,
   install(app, config) {
     app.waitForService(AgentCommandService, agentCommandService =>
-      agentCommandService.addAgentCommands(chatCommands)
+      agentCommandService.addAgentCommands(agentCommands)
     );
 
     const chatService = new ChatService(app, config.chat);

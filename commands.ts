@@ -3,9 +3,9 @@ import compact from "./commands/compact.ts";
 import model from "./commands/model.ts";
 import tool from "./commands/tool.ts";
 
-export default {
+export default [
   chat,
   model,
   compact,
   tool,
-};
+];

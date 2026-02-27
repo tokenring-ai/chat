@@ -47,6 +47,7 @@ Manage available tools for your chat session. Tools provide additional capabilit
 
 **Note:** Some tools may require additional setup or permissions.`;
 export default {
+  name: "tool",
   description,
   execute,
   help,

@@ -51,6 +51,7 @@ Compress the conversation context by creating intelligent summaries of prior mes
 
 **Note:** Compaction is automatic in some cases, but manual compaction gives you control over when and how context is compressed.`;
 export default {
+  name: "compact",
   description,
   execute,
   help,

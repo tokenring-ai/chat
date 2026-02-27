@@ -44,6 +44,7 @@ Display all context items that would be included in a chat request. Useful for d
 **Note:** Context display shows the exact data sent to the AI model.`;
 
 export default {
+  name: "chat",
   description,
   execute,
   help,
