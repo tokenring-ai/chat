@@ -1,5 +1,5 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import {OutputArtifactSchema} from "@tokenring-ai/agent/AgentEvents";
+import {type InputAttachment, OutputArtifactSchema} from "@tokenring-ai/agent/AgentEvents";
 
 import type {Tool as AITool} from "@tokenring-ai/ai-client";
 import type {AIResponse, ChatInputMessage, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
@@ -119,8 +119,15 @@ export type ChatAgentConfig = {
 
 export type ParsedChatConfig = z.output<typeof ChatConfigMergedSchema>;
 export type ContextItem = ChatInputMessage;
-export type ContextHandler = (input: string, chatConfig: ParsedChatConfig, sourceParams: z.infer<typeof ContextSourceSchema>, agent: Agent) => AsyncGenerator<ContextItem>;
 
+export type ContextHandlerOptions = {
+  input: string;
+  attachments?: InputAttachment[];
+  chatConfig: ParsedChatConfig;
+  sourceConfig: z.infer<typeof ContextSourceSchema>;
+  agent: Agent;
+};
+export type ContextHandler = (options: ContextHandlerOptions) => AsyncGenerator<ContextItem>;
 /**
  * Represents a chat message in the storage system
  */

@@ -10,11 +10,11 @@ export async function compactContext(focus: string | null, agent: Agent): Promis
   const messages = chatService.getChatMessages(agent);
   if (messages.length === 0) return;
 
-  const requestMessages = await chatService.buildChatMessages(
-    `Please provide a detailed and comprehensive summary of the prior conversation, focusing on ${focus}`,
-    chatService.getChatConfig(agent),
+  const requestMessages = await chatService.buildChatMessages({
+    input: `Please provide a detailed and comprehensive summary of the prior conversation, focusing on ${focus}`,
+    chatConfig: chatService.getChatConfig(agent),
     agent
-  );
+  });
 
   const client = await chatModelRegistry.getClient(
     chatService.requireModel(agent),

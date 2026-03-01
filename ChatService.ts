@@ -19,6 +19,14 @@ import {
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
 import { getModelAndSettings } from "@tokenring-ai/ai-client/util/modelSettings";
+import { InputAttachment } from "@tokenring-ai/agent/AgentEvents";
+
+export type BuildChatMessagesOptions = {
+  input: string;
+  attachments?: InputAttachment[];
+  chatConfig: ParsedChatConfig;
+  agent: Agent;
+};
 
 export default class ChatService implements TokenRingService {
   readonly name = "ChatService";
@@ -78,51 +86,15 @@ export default class ChatService implements TokenRingService {
     }
   }
 
-  /*
-
-    if (agentConfig.model === 'inherit') {
-      if (this.)
-
-    }
-
-    if (agentConfig.model === 'auto') {
-      let autoSelectedModel : string | null = null;
-      for (const modelName of this.options.defaultModels) {
-        autoSelectedModel = chatModelRegistry.getCheapestModelByRequirements(modelName);
-        if (autoSelectedModel) break;
-      }
-
-      if (autoSelectedModel) {
-        agent.infoMessage(`Auto-selected model ${autoSelectedModel} for chat`);
-        agentConfig.model = autoSelectedModel;
-      } else {
-        agent.warningMessage(`The model for the agent was set to auto, and none of the default models appear to be available for chat, please manually select a model with /model`);
-      }
-    } else {
-      const selectedModel = chatModelRegistry.getCheapestModelByRequirements(agentConfig.model);
-      if (selectedModel) {
-        agent.infoMessage(`Using model ${agentConfig.model} for chat`);
-      } else {
-        agent.warningMessage(`The model ${agentConfig.model} is currently selected for chat, but it is not available. Please manually select a new model with /model`);
-      }
-    }
-
-    // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
-    agent.initializeState(ChatServiceState, {
-      ...agentConfig,
-      enabledTools: enabledTools.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat()
-    });
-  }
-*/
-  async buildChatMessages(input: string, chatConfig: ParsedChatConfig, agent: Agent) {
+  async buildChatMessages({input, attachments, chatConfig, agent} : BuildChatMessagesOptions) {
     const lastMessage = this.getLastMessage(agent);
 
     const messages: ContextItem[] = [];
 
-    for (const source of lastMessage ? chatConfig.context.followUp : chatConfig.context.initial) {
-      const handler = this.requireContextHandlerByName(source.type);
+    for (const sourceConfig of lastMessage ? chatConfig.context.followUp : chatConfig.context.initial) {
+      const handler = this.requireContextHandlerByName(sourceConfig.type);
 
-      for await (const item of handler(input, chatConfig, source, agent)) {
+      for await (const item of handler({input, attachments, chatConfig, sourceConfig, agent})) {
         messages.push(item);
       }
     }

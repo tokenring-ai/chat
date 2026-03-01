@@ -1,8 +1,8 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
-import {ParsedChatConfig} from "../schema.ts";
+import {type ContextHandlerOptions, ParsedChatConfig} from "../schema.ts";
 
-export default async function* getContextItems(input: string, chatConfig: ParsedChatConfig, params: {}, agent: Agent): AsyncGenerator<ChatInputMessage> {
+export default async function* getContextItems({chatConfig}: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
   if (typeof chatConfig.systemPrompt === 'function') {
     yield {role: "system", content: chatConfig.systemPrompt()};
   } else {

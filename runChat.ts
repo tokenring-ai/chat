@@ -1,5 +1,6 @@
 import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
+import type {InputAttachment} from "@tokenring-ai/agent/AgentEvents";
 import AIChatClient, {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {backoff} from "@tokenring-ai/utility/promise/backoff";
@@ -17,15 +18,22 @@ function shouldCompact({ inputTokens, outputTokens}: { inputTokens?: number, out
   return totalTokens > chatClient.getModelSpec().maxContextLength * compactionThreshold;
 }
 
+export type RunChatOptions = {
+  input: string;
+  attachments?: InputAttachment[];
+  chatConfig: ParsedChatConfig;
+  agent: Agent;
+};
 
 /**
  * runChat tool: Runs a chat with the AI model, combining streamChat and runChat functionality.
  */
-export default async function runChat(
-  input: string,
-  chatConfig: ParsedChatConfig,
-  agent: Agent,
-): Promise<AIResponse> {
+export default async function runChat({
+                                        input,
+                                        attachments,
+                                        chatConfig,
+                                        agent,
+                                      } : RunChatOptions): Promise<AIResponse> {
   const chatModelRegistry =
     agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
@@ -43,7 +51,7 @@ export default async function runChat(
 
   //agent.infoMessage(`Using model ${client.getModelId()}`);
 
-  const requestMessages = await chatService.buildChatMessages(input, chatConfig, agent);
+  const requestMessages = await chatService.buildChatMessages({input, attachments, chatConfig, agent });
 
   let stepCount: number = 0;
   let stopReason = "finished" as StopReason;
@@ -121,7 +129,7 @@ export default async function runChat(
           const remainingSteps = chatConfig.maxSteps - stepCount;
           if (remainingSteps > 0) {
             agent.infoMessage("Context compacted, and agent still has work to do. Continuing work...");
-            return await runChat("Continue", {...chatConfig, maxSteps: remainingSteps}, agent);
+            return await runChat({ input: "Continue", chatConfig: {...chatConfig, maxSteps: remainingSteps}, agent});
           }
         }
       }
@@ -134,7 +142,7 @@ export default async function runChat(
         await agent.askForApproval({
           message: "Agent stopped due to reaching the configured maxSteps. Would you like to continue?"
         })
-        return await runChat("Continue", chatConfig, agent);
+        return await runChat({ input: "Continue", chatConfig, agent });
       }
     }
 

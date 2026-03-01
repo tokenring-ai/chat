@@ -1,9 +1,8 @@
-import type Agent from "@tokenring-ai/agent/Agent";
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {ChatService} from "../index.ts";
-import {ParsedChatConfig} from "../schema.ts";
+import {type ContextHandlerOptions} from "../schema.ts";
 
-export default async function* getContextItems(input: string, chatConfig: ParsedChatConfig, params: any, agent: Agent): AsyncGenerator<ChatInputMessage> {
+export default async function* getContextItems({input, chatConfig, agent}: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
   const chatService = agent.requireServiceByType(ChatService);
   const requiredContextHandlers = new Set<string>();
 
@@ -17,6 +16,6 @@ export default async function* getContextItems(input: string, chatConfig: Parsed
 
   for (const type of requiredContextHandlers) {
     const contextHandler = chatService.requireContextHandlerByName(type);
-    yield * contextHandler(input, chatConfig, { type }, agent);
+    yield * contextHandler({input, chatConfig, sourceConfig: { type }, agent});
   }
 }

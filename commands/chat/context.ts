@@ -1,13 +1,17 @@
 import {Agent} from "@tokenring-ai/agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
-export default async function context(_remainder: string, agent: Agent): Promise<string> {
+const description =
+  "/chat context - Show the current context for the chat session";
+
+async function execute(_remainder: string, agent: Agent): Promise<string> {
   try {
     const chatService = agent.requireServiceByType(ChatService);
     const chatConfig = chatService.getChatConfig(agent);
 
-    const messages = await chatService.buildChatMessages("input", chatConfig, agent);
+    const messages = await chatService.buildChatMessages({input: "input", chatConfig, agent});
 
     const lines: string[] = [
       "Context items that would be added to chat request:",
@@ -33,3 +37,24 @@ export default async function context(_remainder: string, agent: Agent): Promise
     throw new CommandFailedError(`Error building context: ${error}`);
   }
 }
+
+
+const help: string = `
+## /chat context
+
+Display all context items that would be included in a chat request. Useful for debugging and understanding what information the AI has access to.
+
+### Shows
+
+- Total number of context messages
+- System prompt configuration
+- Previous conversation messages (with preview)
+
+**Note:** Context display shows the exact data sent to the AI model.`.trim();
+
+export default {
+  name: "chat context",
+  description,
+  execute,
+  help,
+} satisfies TokenRingAgentCommand;
