@@ -1,56 +1,37 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import type {TreeLeaf} from "@tokenring-ai/agent/question";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../../ChatService.ts";
 
-export default async function select(_remainder: string, agent: Agent): Promise<string> {
+async function execute(_remainder: string, agent: Agent): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const enabledTools = chatService.getEnabledTools(agent);
-
-  const toolsByCategory: Record<string, Array<{ displayName: string, toolName: string }>> = {};
-
+  const toolsByCategory: Record<string, Array<{displayName: string, toolName: string}>> = {};
   for (const [toolName, tool] of chatService.getAvailableToolEntries()) {
     let [, category, displayName] = tool.toolDefinition?.displayName.match(/^(.*)\/(.*)/) ?? [null, "Unknown", tool.toolDefinition?.displayName ?? toolName];
-    (toolsByCategory[category] ??= []).push({ displayName, toolName });
+    (toolsByCategory[category] ??= []).push({displayName, toolName});
   }
-
-  const buildToolTree = (): TreeLeaf[] => {
-    const tree: TreeLeaf[] = [];
-    const sortedCategories = Object.keys(toolsByCategory).sort((a, b) => a.localeCompare(b));
-
-    for (const category of sortedCategories) {
-      const tools = toolsByCategory[category];
-      const children = tools.map((tool) => ({
-        name: `🔧 ${tool.displayName}`,
-        value: tool.toolName,
-      }));
-
-      tree.push({
-        name: `📦 ${category}`,
-        value: `${category}/*`,
-        children,
-      });
-    }
-
-    return tree;
-  };
-
+  const tree: TreeLeaf[] = Object.keys(toolsByCategory).sort().map(category => ({
+    name: `📦 ${category}`,
+    value: `${category}/*`,
+    children: toolsByCategory[category].map(t => ({ name: `🔧 ${t.displayName}`, value: t.toolName })),
+  }));
   const selection = await agent.askQuestion({
     message: "Choose the tools to enable for this agent:",
-    question: {
-      type: 'treeSelect',
-      label: "Tool Selection",
-      key: "result",
-      defaultValue: enabledTools,
-      minimumSelections: 0,
-      tree: buildToolTree(),
-    }
+    question: { type: 'treeSelect', label: "Tool Selection", key: "result", defaultValue: enabledTools, minimumSelections: 0, tree },
   });
-
   if (selection) {
     chatService.setEnabledTools(selection, agent);
     return `Enabled tools: ${joinDefault(", ", chatService.getEnabledTools(agent), "No tools selected.")}`;
-  } else {
-    return "Tool selection cancelled. No changes made.";
   }
+  return "Tool selection cancelled. No changes made.";
 }
+
+export default { name: "tool select", description: "/tool select - Interactively select tools", help: `# /tools select
+
+Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by package.
+
+## Example
+
+/tools select`, execute } satisfies TokenRingAgentCommand;

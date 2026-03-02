@@ -1,10 +1,10 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {compactContext} from "../util/compactContext.ts";
+import {compactContext} from "../../util/compactContext.ts";
 
 const description =
-  "/compact - Compact conversation context by summarizing prior messages";
+  "/chat compact - Compact conversation context by summarizing prior messages";
 
 async function execute(remainder: string, agent: Agent): Promise<string> {
   const focus = remainder.trim() || null
@@ -16,7 +16,7 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
   }
 }
 
-const help: string = `# /compact [<focus>]
+const help: string = `# /chat compact [<focus>]
 
 Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and maintain context in long conversations.
 
@@ -44,14 +44,14 @@ Compress the conversation context by creating intelligent summaries of prior mes
 ## Example
 
 # Compresses all prior messages
-/compact                    
+/chat compact                    
 
 # Gives more control over context compression
-/compact specifics of the task at hand, including the goal and expected outcome
+/chat compact specifics of the task at hand, including the goal and expected outcome
 
 **Note:** Compaction is automatic in some cases, but manual compaction gives you control over when and how context is compressed.`;
 export default {
-  name: "compact",
+  name: "chat compact",
   description,
   execute,
   help,

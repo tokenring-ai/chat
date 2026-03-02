@@ -1,76 +1,43 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import type {TreeLeaf} from "@tokenring-ai/agent/question";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
-export default async function select(_remainder: string, agent: Agent): Promise<string> {
+async function execute(_remainder: string, agent: Agent): Promise<string> {
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
-
-  const modelsByProvider = await agent.busyWhile(
-    "Checking online status of models...",
-    chatModelRegistry.getModelsByProvider(),
-  );
-
-  const buildModelTree = (): TreeLeaf[] => {
-    const roots: TreeLeaf[] = [];
-
-    const sortedProviders = Object.entries(modelsByProvider).sort(([a], [b]) =>
-      a.localeCompare(b),
-    );
-
-    for (const [provider, providerModels] of sortedProviders) {
-      const sortedModels = Object.entries(providerModels).sort(
-        ([, a], [, b]) => {
-          if (a.status === b.status) {
-            return a.modelSpec.modelId.localeCompare(b.modelSpec.modelId);
-          } else {
-            return a.status.localeCompare(b.status);
-          }
-        },
+  const modelsByProvider = await agent.busyWhile("Checking online status of models...", chatModelRegistry.getModelsByProvider());
+  const tree: TreeLeaf[] = Object.entries(modelsByProvider)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([provider, providerModels]) => {
+      const sorted = Object.entries(providerModels).sort(([, a], [, b]) =>
+        a.status === b.status ? a.modelSpec.modelId.localeCompare(b.modelSpec.modelId) : a.status.localeCompare(b.status)
       );
-
-      const children = sortedModels.map(([modelName, model]) => ({
-        value: modelName,
-        name:
-          model.status === "online"
-            ? model.modelSpec.modelId
-            : model.status === "cold"
-              ? `${model.modelSpec.modelId} (cold)`
-              : `${model.modelSpec.modelId} (offline)`,
-      }));
-
-      const onlineCount = Object.values(providerModels).filter(
-        (m) => m.status === "online",
-      ).length;
-      const totalCount = Object.keys(providerModels).length;
-
-      roots.push({
-        name: `${provider} (${onlineCount}/${totalCount} online)`,
-        children,
-      });
-    }
-
-    return roots;
-  };
-
+      const onlineCount = Object.values(providerModels).filter(m => m.status === "online").length;
+      return {
+        name: `${provider} (${onlineCount}/${Object.keys(providerModels).length} online)`,
+        children: sorted.map(([modelName, model]) => ({
+          value: modelName,
+          name: model.status === "online" ? model.modelSpec.modelId : `${model.modelSpec.modelId} (${model.status})`,
+        })),
+      };
+    });
   const selection = await agent.askQuestion({
     message: `Choose a new model:`,
-    question: {
-      type: 'treeSelect',
-      label: "Model Selection",
-      key: "result",
-      minimumSelections: 1,
-      maximumSelections: 1,
-      tree: buildModelTree(),
-    }
+    question: { type: 'treeSelect', label: "Model Selection", key: "result", minimumSelections: 1, maximumSelections: 1, tree },
   });
-
   if (selection) {
-    const selectedModel = selection[0];
-    chatService.setModel(selectedModel, agent);
-    return `Model set to ${selectedModel}`;
-  } else {
-    return "Model selection cancelled. No changes made.";
+    chatService.setModel(selection[0], agent);
+    return `Model set to ${selection[0]}`;
   }
+  return "Model selection cancelled. No changes made.";
 }
+
+export default { name: "model select", description: "/model select - Interactively select a model", help: `# /model select
+
+Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
+
+## Example
+
+/model select`, execute } satisfies TokenRingAgentCommand;
