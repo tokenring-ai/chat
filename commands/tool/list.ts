@@ -5,7 +5,8 @@ import ChatService from "../../ChatService.ts";
 
 export default {
   name: "tool list",
-  description: "/tool list - List enabled tools",
+  description: "/tools list - List enabled tools",
+  aliases: ["tools list"],
   help: `# /tools list
 
 List all currently enabled tools.

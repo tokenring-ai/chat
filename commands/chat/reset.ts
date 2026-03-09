@@ -1,5 +1,5 @@
+import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
-import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 import {ChatServiceState} from "../../state/chatServiceState.ts";
@@ -15,9 +15,7 @@ Reset the chat context, clearing prior messages and starting a new conversation.
 
 /chat reset`,
   execute: async (_remainder: string, agent: Agent): Promise<string> => {
-    agent.mutateState(ChatServiceState, state => {
-      state.messages = [];
-    })
+    agent.requireServiceByType(ChatService).clearChatMessages(agent);
     return `Chat context reset`;
   },
 } satisfies TokenRingAgentCommand;

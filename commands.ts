@@ -1,6 +1,7 @@
 import chatContext from './commands/chat/context.ts';
 import chatSend from './commands/chat/send.ts';
 import chatCompact from './commands/chat/compact.ts';
+import chatReset from './commands/chat/reset.ts';
 import modelGet from './commands/model/get.ts';
 import modelReset from './commands/model/reset.ts';
 import modelSelect from './commands/model/select.ts';
@@ -17,7 +18,7 @@ import toolSelect from './commands/tool/select.ts';
 import toolSet from './commands/tool/set.ts';
 
 export default [
-  chatSend, chatContext, chatCompact,
+  chatSend, chatContext, chatCompact, chatReset,
   modelGet, modelSet, modelSelect, modelReset,
   modelSettingsShow, modelSettingsSet, modelSettingsSelect, modelSettingsEnable, modelSettingsDisable,
   toolList, toolEnable, toolDisable, toolSet, toolSelect,

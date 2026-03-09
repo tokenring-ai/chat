@@ -62,6 +62,7 @@ export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> =
   start?: (agent: Agent) => Promise<void>;
   stop?: (agent: Agent) => Promise<void>;
   requiredContextHandlers?: string[];
+  autoActivate?: (agent: Agent) => boolean | Promise<boolean>;
 };
 
 export const ContextSourceSchema = z.looseObject({
@@ -77,9 +78,11 @@ export const ChatAgentConfigSchema = z.object({
     compactionThreshold: z.number().optional(),
     windowThreshold: z.number().optional(),
     backtrack: z.number().optional(),
-    background: z.boolean().optional()
+    background: z.boolean().optional(),
+    focus: z.string().optional(),
   }).prefault({}),
   enabledTools: z.array(z.string()).optional(),
+  hiddenTools: z.array(z.string()).optional(),
   context: z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),
     followUp: z.array(ContextSourceSchema).default(followUpContextItems),
@@ -89,6 +92,7 @@ export const ChatAgentConfigSchema = z.object({
 const ChatAgentDefaultConfig = z.object({
   model: z.string().optional(),
   enabledTools: z.array(z.string()).default([]),
+  hiddenTools: z.array(z.string()).default([]),
   maxSteps: z.number().default(0),
   compaction: z.object({
     policy: z.enum(["automatic", "ask", "never"]).default("ask"),
@@ -96,6 +100,14 @@ const ChatAgentDefaultConfig = z.object({
     windowThreshold: z.number().default(0.7),
     backtrack: z.number().default(1),
     background: z.boolean().default(false),
+    focus: z.string().default(`
+- Important Details
+- Resources, files, or URLs that were referenced
+- A clear description of the current task
+- A summary of the previous steps taken
+- Key details about the current task
+- Any other relevant information that might be useful for the current task
+    `.trim())
   }).prefault({}),
   context: z.object({
     initial: z.array(ContextSourceSchema).default(initialContextItems),

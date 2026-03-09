@@ -28,7 +28,11 @@ async function execute(_remainder: string, agent: Agent): Promise<string> {
   return "Tool selection cancelled. No changes made.";
 }
 
-export default { name: "tool select", description: "/tool select - Interactively select tools", help: `# /tools select
+export default {
+  name: "tools select",
+  description: "/tools select - Interactively select tools",
+  aliases: ["tool select"],
+  help: `# /tools select
 
 Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by package.
 

@@ -20,6 +20,7 @@ AI chat client for the Token Ring ecosystem, providing a comprehensive chat inte
 - **Tool Call Artifacts**: Automatic output of tool call requests and responses as artifacts
 - **Parallel/Sequential Tool Execution**: Configurable tool execution mode with queue-based processing
 - **Token Usage Analytics**: Detailed breakdown of input/output tokens, costs, and timing
+- **Hook System**: Extensible lifecycle hooks for post-chat completion processing
 
 ## Installation
 
@@ -46,7 +47,24 @@ const chatService = new ChatService(app, options);
 | `app` | TokenRingApp | The application instance |
 | `options` | `z.output<typeof ChatServiceConfigSchema>` | Configuration options |
 
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `"ChatService"` | Service name identifier |
+| `description` | `string` | Service description |
+| `app` | `TokenRingApp` | Application instance reference |
+| `options` | `ParsedChatConfig` | Configuration options |
+| `defaultModel` | `string \| null` | Selected default model |
+
 #### Methods
+
+##### Service Lifecycle
+
+| Method | Description |
+|--------|-------------|
+| `start()` | Initialize the service and select default model |
+| `attach(agent, creationContext)` | Attach service to agent with state initialization |
 
 ##### Model Management
 
@@ -119,7 +137,8 @@ The state management class that tracks chat state for each agent:
 - `serialize()`: Serialize state for persistence
 - `deserialize(data)`: Deserialize state from persistence
 - `show()`: Return array of strings for display in agent UI
-- `reset(what)`: Reset state based on reset type (settings, chat)
+- `resetSettings()`: Reset configuration to initial values
+- `resetChat()`: Clear all chat messages
 - `runToolMaybeInParallel(executeToolFunction)`: Execute tool with parallel/sequential mode
 
 **State Persistence:**
@@ -149,6 +168,7 @@ const response = await runChat({
 - Automatic context compaction when threshold exceeded
 - Message history management
 - Integration with agent lifecycle hooks
+- Hook execution via `AfterChatCompletion` event
 
 ### Context Handlers
 
@@ -437,8 +457,11 @@ app.addServices(new ChatService({
   defaultModels: ["auto"],
   agentDefaults: {
     model: "auto",
-    autoCompact: true,
     maxSteps: 30,
+    compaction: {
+      policy: "ask",
+      compactionThreshold: 0.5
+    },
     enabledTools: [],
     context: {
       initial: [
@@ -522,6 +545,29 @@ State is automatically managed and preserved across sessions through the ChatSer
   parallelTools: boolean,
   toolQueue: async.queue,
   initialConfig: ParsedChatConfig
+}
+```
+
+## Hooks
+
+The package provides lifecycle hooks for extending chat functionality:
+
+### AfterChatCompletion
+
+Executed after a chat completion is received:
+
+```typescript
+import {AfterChatCompletion} from "@tokenring-ai/chat";
+
+// Hook is automatically executed via AgentLifecycleService
+// Access response data in hook handlers
+class MyHookHandler {
+  async executeHook(hook: AfterChatCompletion, agent: Agent) {
+    if (hook instanceof AfterChatCompletion) {
+      // Process chat completion
+      console.log("Chat completed with", hook.response);
+    }
+  }
 }
 ```
 
@@ -675,7 +721,7 @@ console.log(analytics);
 import ChatService from "@tokenring-ai/chat";
 
 const chatService = agent.requireServiceByType(ChatService);
-const state = agent.getState(ChatService);
+const state = agent.getState(ChatServiceState);
 
 // Enable parallel tool execution
 state.parallelTools = true;
@@ -704,6 +750,30 @@ const config = chatService.getChatConfig(agent);
 config.context.initial.push({type: "custom-context"});
 ```
 
+### Registering Custom Tools
+
+```typescript
+import ChatService from "@tokenring-ai/chat";
+import {z} from "zod";
+
+const chatService = agent.requireServiceByType(ChatService);
+
+// Register tools from a package
+chatService.addTools({
+  "my-tool": {
+    name: "my-tool",
+    displayName: "My Tool",
+    description: "Does something useful",
+    inputSchema: z.object({
+      param: z.string()
+    }),
+    async execute(input, agent) {
+      return `Processed: ${input.param}`;
+    }
+  }
+});
+```
+
 ## Best Practices
 
 ### Model Selection
@@ -727,6 +797,12 @@ config.context.initial.push({type: "custom-context"});
 - Handle model unavailability with retry logic
 - Validate tool inputs before execution
 
+### Tool Development
+- Always include artifacts for better debugging
+- Handle errors gracefully in tool execution
+- Use descriptive tool names and descriptions
+- Include proper input schema validation
+
 ## Testing and Development
 
 ### Testing
@@ -747,6 +823,7 @@ pkg/chat/
 ├── plugin.ts                   # Plugin registration
 ├── commands.ts                 # Command exports
 ├── contextHandlers.ts          # Context handler exports
+├── hooks.ts                    # Lifecycle hook definitions
 ├── contextHandlers/
 │   ├── currentMessage.ts       # Current message handler
 │   ├── priorMessages.ts        # Prior messages handler
@@ -756,7 +833,8 @@ pkg/chat/
 │   ├── chat/
 │   │   ├── send.ts             # Send message implementation
 │   │   ├── context.ts          # Context display
-│   │   └── compact.ts          # Context compaction
+│   │   ├── compact.ts          # Context compaction
+│   │   └── reset.ts            # Reset chat
 │   ├── model/
 │   │   ├── get.ts              # Get model implementation
 │   │   ├── set.ts              # Set model implementation

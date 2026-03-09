@@ -12,7 +12,11 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
   return `Enabled tools: ${joinDefault(", ", chatService.getEnabledTools(agent), "(none)")}`;
 }
 
-export default { name: "tool disable", description: "/tool disable - Disable tools", help: `# /tools disable <tool1> [tool2...]
+export default {
+  name: "tools disable",
+  description: "/tools disable - Disable tools",
+  aliases: ["tool disable"],
+  help: `# /tools disable <tool1> [tool2...]
 
 Disable one or more tools by name.
 

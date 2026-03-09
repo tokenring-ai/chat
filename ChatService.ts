@@ -1,11 +1,15 @@
+import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
+import {InputAttachment} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentCreationContext} from "@tokenring-ai/agent/types";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
+import {getModelAndSettings} from "@tokenring-ai/ai-client/util/modelSettings";
 import TokenRingApp from "@tokenring-ai/app";
 import {TokenRingService} from "@tokenring-ai/app/types";
 import deepMerge from "@tokenring-ai/utility/object/deepMerge";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {z} from "zod";
+import {AfterChatClear, AfterChatCompaction} from "./hooks.ts";
 import {
   ChatAgentConfigSchema,
   ChatServiceConfigSchema,
@@ -18,8 +22,6 @@ import {
 } from "./schema.ts";
 import {ChatServiceState} from "./state/chatServiceState.js";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
-import { getModelAndSettings } from "@tokenring-ai/ai-client/util/modelSettings";
-import { InputAttachment } from "@tokenring-ai/agent/AgentEvents";
 
 export type BuildChatMessagesOptions = {
   input: string;
@@ -49,7 +51,9 @@ export default class ChatService implements TokenRingService {
   registerContextHandlers = this.contextHandlers.registerAll;
 
   defaultModel: string | null = null;
-  constructor(readonly app: TokenRingApp, readonly options: z.output<typeof ChatServiceConfigSchema>) {}
+
+  constructor(readonly app: TokenRingApp, readonly options: z.output<typeof ChatServiceConfigSchema>) {
+  }
 
   start() {
     const chatModelRegistry = this.app.requireService(ChatModelRegistry);
@@ -67,13 +71,17 @@ export default class ChatService implements TokenRingService {
   }
 
   attach(agent: Agent, creationContext: AgentCreationContext): void {
-    let {enabledTools, ...agentConfig} = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice('chat', ChatAgentConfigSchema));
+    let {enabledTools, hiddenTools, ...agentConfig} = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice('chat', ChatAgentConfigSchema));
 
     // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
     agent.initializeState(ChatServiceState, {
       ...agentConfig,
-      enabledTools: enabledTools.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat()
+      enabledTools: [],
+      hiddenTools: [],
     });
+
+    this.hideTools(hiddenTools, agent);
+    this.enableTools(enabledTools, agent);
 
     const selectedModel = agentConfig.model ?? this.defaultModel;
     if (selectedModel) {
@@ -86,7 +94,7 @@ export default class ChatService implements TokenRingService {
     }
   }
 
-  async buildChatMessages({input, attachments, chatConfig, agent} : BuildChatMessagesOptions) {
+  async buildChatMessages({input, attachments, chatConfig, agent}: BuildChatMessagesOptions) {
     const lastMessage = this.getLastMessage(agent);
 
     const messages: ContextItem[] = [];
@@ -130,12 +138,12 @@ export default class ChatService implements TokenRingService {
 
   requireModel(agent: Agent): string {
     const model = this.getChatConfig(agent).model ?? this.defaultModel;
-    if (! model) throw new Error(`No model selected`);
+    if (!model) throw new Error(`No model selected`);
     return model;
   }
 
   getModelAndSettings(agent: Agent) {
-    return getModelAndSettings(this,agent);
+    return getModelAndSettings(this, agent);
   }
 
   getChatConfig(agent: Agent): ParsedChatConfig {
@@ -187,6 +195,8 @@ export default class ChatService implements TokenRingService {
     agent.mutateState(ChatServiceState, (state) => {
       state.messages = [];
     });
+
+    agent.getServiceByType(AgentLifecycleService)?.executeHooks(new AfterChatClear(), agent);
   }
 
   /**
@@ -204,6 +214,10 @@ export default class ChatService implements TokenRingService {
 
   getEnabledTools(agent: Agent): string[] {
     return agent.getState(ChatServiceState).currentConfig.enabledTools ?? [];
+  }
+
+  getHiddenTools(agent: Agent): string[] {
+    return agent.getState(ChatServiceState).currentConfig.hiddenTools ?? [];
   }
 
   setEnabledTools(toolNames: string[], agent: Agent): string[] {
@@ -238,4 +252,69 @@ export default class ChatService implements TokenRingService {
       return state.currentConfig.enabledTools;
     });
   }
+
+  hideTools(toolNames: string[], agent: Agent): string[] {
+    const matchedToolNames = toolNames.map(toolName => this.tools.ensureItemNamesLike(toolName)).flat();
+    return agent.mutateState(ChatServiceState, (state) => {
+      const newTools = new Set(state.currentConfig.enabledTools);
+      matchedToolNames.forEach(tool => newTools.delete(tool));
+      state.currentConfig.enabledTools = Array.from(newTools.values());
+
+      const newHiddenTools = new Set(state.currentConfig.hiddenTools);
+      matchedToolNames.forEach(tool => newHiddenTools.add(tool));
+      state.currentConfig.hiddenTools = Array.from(newHiddenTools.values());
+      return state.currentConfig.hiddenTools;
+    });
+  }
+
+  async compactContext(compactionConfig: ParsedChatConfig["compaction"], agent: Agent): Promise<void> {
+    const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
+
+    const messages = this.getChatMessages(agent);
+    if (messages.length === 0) return;
+
+    const requestMessages = await this.buildChatMessages({
+      input: `
+Please provide a long and detailed and comprehensive summary of the prior conversation, focusing on the following:
+
+${compactionConfig.focus}
+`.trim(),
+      chatConfig: this.getChatConfig(agent),
+      agent
+    });
+
+    const client = await chatModelRegistry.getClient(
+      this.requireModel(agent),
+    );
+
+    const response = await agent.busyWhile(
+      "Waiting for response from AI...",
+      client.streamChat({
+        messages: requestMessages,
+        tools: {}
+      }, agent),
+    );
+
+    this.clearChatMessages(agent);
+
+    // Update the current message to follow up to the previous
+    this.pushChatMessage(
+      {
+        request: {
+          messages: requestMessages.filter(
+            (message) => message.role === "system",
+          ),
+        },
+        response,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      },
+      agent,
+    );
+
+
+    agent.getServiceByType(AgentLifecycleService)?.executeHooks(new AfterChatCompaction(), agent);
+    agent.infoMessage("Context compacted successfully");
+  }
+
 }

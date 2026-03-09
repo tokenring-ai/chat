@@ -13,4 +13,3 @@ export {
 } from "./schema.ts";
 export {getChatAnalytics} from "./util/getChatAnalytics.ts";
 export {tokenRingTool} from "./util/tokenRingTool.ts";
-export {compactContext} from "./util/compactContext.ts";

@@ -5,9 +5,10 @@ import AIChatClient, {AIResponse} from "@tokenring-ai/ai-client/client/AIChatCli
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {backoff} from "@tokenring-ai/utility/promise/backoff";
 import ChatService from "./ChatService.ts";
+import {AfterChatCompletion} from "./hooks.ts";
 import {ParsedChatConfig} from "./schema.ts";
 import {ChatServiceState} from "./state/chatServiceState.ts";
-import {compactContext} from "./util/compactContext.ts";
+import toolSearch from "./tools/toolSearch.ts";
 
 type StopReason = "finished" | "longContext" | "maxSteps";
 
@@ -49,7 +50,16 @@ export default async function runChat({
 
   if (!client) throw new Error(`No online client found for model ${model}`);
 
-  //agent.infoMessage(`Using model ${client.getModelId()}`);
+  const enabledTools = chatConfig.enabledTools;
+
+  for (const [, tool] of chatService.getAvailableToolEntries()) {
+    if (chatConfig.enabledTools.includes(tool.name)) continue;
+    const activate = tool?.toolDefinition?.autoActivate?.(agent) ?? false;
+    if (activate) {
+      agent.infoMessage(`Auto-Activated tool ${tool.name}`);
+      enabledTools.push(tool.name);
+    }
+  }
 
   const requestMessages = await chatService.buildChatMessages({input, attachments, chatConfig, agent });
 
@@ -96,7 +106,7 @@ export default async function runChat({
           const toolDefinition = chatService.requireTool(toolName);
           return [toolDefinition.name, toolDefinition.tool]
         })
-      ),
+      )
     }, agent);
 
     // Update the current message to follow up to the previous
@@ -110,7 +120,7 @@ export default async function runChat({
       agent,
     );
 
-    await agent.getServiceByType(AgentLifecycleService)?.executeHooks(agent, "afterChatCompletion", response);
+    await agent.getServiceByType(AgentLifecycleService)?.executeHooks(new AfterChatCompletion(response), agent);
 
     if (stopReason === "longContext" || shouldCompact(response.lastStepUsage, client, agent)) {
       const config = chatService.getChatConfig(agent);
@@ -124,7 +134,7 @@ export default async function runChat({
           "Context is getting long. Compacting context...",
         );
         agent.setBusyWith("Compacting context...");
-        await compactContext(null, agent);
+        await chatService.compactContext(config.compaction, agent);
         if (stopReason === "longContext") {
           const remainingSteps = chatConfig.maxSteps - stepCount;
           if (remainingSteps > 0) {

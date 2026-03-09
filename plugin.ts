@@ -9,6 +9,7 @@ import chatRPC from "./rpc/chat.ts";
 import contextHandlers from "./contextHandlers.ts";
 import packageJSON from "./package.json" with {type: "json"};
 import {ChatServiceConfigSchema} from "./schema.ts";
+import tools from "./tools.ts";
 
 const packageConfigSchema = z.object({
   chat: ChatServiceConfigSchema
@@ -28,6 +29,7 @@ export default {
     chatService.registerContextHandlers(contextHandlers);
 
     app.addServices(chatService);
+    chatService.addTools(tools)
 
     app.waitForService(RpcService, rpcService => {
       rpcService.registerEndpoint(chatRPC);
