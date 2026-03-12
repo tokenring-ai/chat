@@ -13,7 +13,6 @@ export default async function* getContextItems({input, chatConfig, agent}: Conte
     }
   }
 
-
   for (const type of requiredContextHandlers) {
     const contextHandler = chatService.requireContextHandlerByName(type);
     yield * contextHandler({input, chatConfig, sourceConfig: { type }, agent});

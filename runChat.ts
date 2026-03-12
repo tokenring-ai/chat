@@ -40,12 +40,13 @@ export default async function runChat({
 
   const model = chatService.requireModel(agent);
 
-  const client = await agent.busyWithActivity(
-    "Waiting for an an online model to respond...",
-    backoff({ times: 5, interval: 1000, multiplier: 2}, () =>
-      chatModelRegistry.getClient(model)
-    )
-  );
+  const times = 5;
+  const client = await backoff({ times, interval: 1000, multiplier: 2}, ({ attempt }) => {
+    if (attempt > 1) {
+      agent.setCurrentActivity(`Chat model ${model} is not responding, retry ${attempt}/${times}`);
+    }
+    return chatModelRegistry.getClient(model);
+  });
 
   if (!client) throw new Error(`No online client found for model ${model}`);
 
@@ -66,7 +67,7 @@ export default async function runChat({
   let stopReason = "finished" as StopReason;
   let maxSteps = chatConfig.maxSteps;
 
-  agent.setCurrentActivity("Sending request to AI...");
+  agent.setCurrentActivity("Waiting for response");
   try {
     const response = await client.streamChat({
       messages: requestMessages,
