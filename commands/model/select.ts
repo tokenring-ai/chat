@@ -7,7 +7,7 @@ import ChatService from "../../ChatService.ts";
 async function execute(_remainder: string, agent: Agent): Promise<string> {
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
-  const modelsByProvider = await agent.busyWhile("Checking online status of models...", chatModelRegistry.getModelsByProvider());
+  const modelsByProvider = await agent.busyWithActivity("Checking online status of models...", chatModelRegistry.getModelsByProvider());
   const tree: TreeLeaf[] = Object.entries(modelsByProvider)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([provider, providerModels]) => {

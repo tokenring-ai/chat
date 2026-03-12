@@ -1,4 +1,3 @@
-import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
 import {InputAttachment} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentCreationContext} from "@tokenring-ai/agent/types";
@@ -6,6 +5,7 @@ import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {getModelAndSettings} from "@tokenring-ai/ai-client/util/modelSettings";
 import TokenRingApp from "@tokenring-ai/app";
 import {TokenRingService} from "@tokenring-ai/app/types";
+import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
 import deepMerge from "@tokenring-ai/utility/object/deepMerge";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {z} from "zod";
@@ -287,7 +287,7 @@ ${compactionConfig.focus}
       this.requireModel(agent),
     );
 
-    const response = await agent.busyWhile(
+    const response = await agent.busyWithActivity(
       "Waiting for response from AI...",
       client.streamChat({
         messages: requestMessages,

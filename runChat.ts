@@ -1,14 +1,13 @@
-import {AgentLifecycleService} from "@tokenring-ai/agent";
 import Agent from "@tokenring-ai/agent/Agent";
 import type {InputAttachment} from "@tokenring-ai/agent/AgentEvents";
 import AIChatClient, {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
+import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
 import {backoff} from "@tokenring-ai/utility/promise/backoff";
 import ChatService from "./ChatService.ts";
 import {AfterChatCompletion} from "./hooks.ts";
 import {ParsedChatConfig} from "./schema.ts";
 import {ChatServiceState} from "./state/chatServiceState.ts";
-import toolSearch from "./tools/toolSearch.ts";
 
 type StopReason = "finished" | "longContext" | "maxSteps";
 
@@ -41,7 +40,7 @@ export default async function runChat({
 
   const model = chatService.requireModel(agent);
 
-  const client = await agent.busyWhile(
+  const client = await agent.busyWithActivity(
     "Waiting for an an online model to respond...",
     backoff({ times: 5, interval: 1000, multiplier: 2}, () =>
       chatModelRegistry.getClient(model)
@@ -67,7 +66,7 @@ export default async function runChat({
   let stopReason = "finished" as StopReason;
   let maxSteps = chatConfig.maxSteps;
 
-  agent.setBusyWith("Sending request to AI...");
+  agent.setCurrentActivity("Sending request to AI...");
   try {
     const response = await client.streamChat({
       messages: requestMessages,
@@ -133,7 +132,7 @@ export default async function runChat({
         agent.infoMessage(
           "Context is getting long. Compacting context...",
         );
-        agent.setBusyWith("Compacting context...");
+        agent.setCurrentActivity("Compacting context...");
         await chatService.compactContext(config.compaction, agent);
         if (stopReason === "longContext") {
           const remainingSteps = chatConfig.maxSteps - stepCount;
@@ -158,6 +157,6 @@ export default async function runChat({
 
     return response; // Return the full response object
   } finally {
-    agent.setBusyWith(null);
+    agent.setCurrentActivity("Chat completed");
   }
 }
