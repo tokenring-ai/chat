@@ -17,7 +17,7 @@ const followUpContextItems = [
   { type: "current-message" },
 ]
 
-type ToolArtifact = Omit<z.input<typeof OutputArtifactSchema>, "type" | "timestamp">
+export type ToolArtifact = Omit<z.input<typeof OutputArtifactSchema>, "type" | "timestamp">
 
 export type NamedTool = {
   name: string;

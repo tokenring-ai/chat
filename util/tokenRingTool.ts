@@ -93,8 +93,7 @@ ${result.text}
 \`\`\`
 `.trim()
       });
-    }
-      break;
+    } break;
     case 'media': {
       agent.artifactOutput({
         name: `Tool Call (${name})`,
@@ -102,7 +101,11 @@ ${result.text}
         mimeType: result.mediaType,
         body: result.data,
       });
-    }
-      break;
+    } break;
+    default:
+      // noinspection UnnecessaryLocalVariableJS
+      const foo: never = result;
+      throw new Error(`Unexpected result type: ${foo}`);
+
   }
 }
