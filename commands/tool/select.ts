@@ -13,9 +13,8 @@ async function execute(_remainder: string, agent: Agent): Promise<string> {
     (toolsByCategory[category] ??= []).push({displayName, toolName});
   }
   const tree: TreeLeaf[] = Object.keys(toolsByCategory).sort().map(category => ({
-    name: `📦 ${category}`,
-    value: `${category}/*`,
-    children: toolsByCategory[category].map(t => ({ name: `🔧 ${t.displayName}`, value: t.toolName })),
+    name: `${category}`,
+    children: toolsByCategory[category].map(t => ({ name: `${t.displayName}`, value: t.toolName })),
   }));
   const selection = await agent.askQuestion({
     message: "Choose the tools to enable for this agent:",
