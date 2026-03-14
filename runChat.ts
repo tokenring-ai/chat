@@ -11,11 +11,13 @@ import {ChatServiceState} from "./state/chatServiceState.ts";
 
 type StopReason = "finished" | "longContext" | "maxSteps";
 
-function shouldCompact({ inputTokens, outputTokens}: { inputTokens?: number, outputTokens?: number }, chatClient: AIChatClient, agent: Agent) {
-  const { compactionThreshold } = agent.getState(ChatServiceState).currentConfig.compaction;
-
+function isThresholdReached(
+  { inputTokens, outputTokens}: { inputTokens?: number, outputTokens?: number },
+  chatClient: AIChatClient,
+  threshold: number,
+) {
   const totalTokens = (inputTokens ?? 0) + (outputTokens ?? 0);
-  return totalTokens > chatClient.getModelSpec().maxContextLength * compactionThreshold;
+  return totalTokens > chatClient.getModelSpec().maxContextLength * threshold;
 }
 
 export type RunChatOptions = {
@@ -74,7 +76,8 @@ export default async function runChat({
       async stopWhen(options) {
         stepCount = options.steps.length;
         if (stepCount > 0) {
-          if (shouldCompact(options.steps[stepCount - 1].usage, client, agent)) {
+          const { compactionThreshold } = agent.getState(ChatServiceState).currentConfig.compaction;
+          if (isThresholdReached(options.steps[stepCount - 1].usage, client, compactionThreshold)) {
             stopReason = "longContext";
             return true;
           }
@@ -122,23 +125,57 @@ export default async function runChat({
 
     await agent.getServiceByType(AgentLifecycleService)?.executeHooks(new AfterChatCompletion(response), agent);
 
-    if (stopReason === "longContext" || shouldCompact(response.lastStepUsage, client, agent)) {
-      const config = chatService.getChatConfig(agent);
-      if ( config.compaction.policy === "automatic" || (config.compaction.policy === "ask" && (agent.headless && await agent.askForApproval({
+    const config = chatService.getChatConfig(agent);
+
+    let { applyThreshold, compactionThreshold } = config.compaction;
+    applyThreshold ??= compactionThreshold;
+
+    if (applyThreshold < compactionThreshold) {
+      agent.warningMessage(`Context compaction threshold was set lower than the context compaction apply threshold, setting compaction apply threshold to ${compactionThreshold}`);
+      applyThreshold = compactionThreshold;
+    }
+    const reachedCompactionThreshold =
+      stopReason === "longContext"
+      || isThresholdReached(response.lastStepUsage, client, compactionThreshold);
+
+    const reachedApplyThreshold = isThresholdReached(
+      response.lastStepUsage,
+      client,
+      applyThreshold,
+    );
+
+    let appliedCompaction = false;
+
+    if (reachedApplyThreshold && chatService.hasPendingCompaction(agent)) {
+      appliedCompaction = chatService.applyPendingCompaction(agent);
+      if (appliedCompaction) {
+        agent.infoMessage("Applied the stored context compaction");
+      }
+    }
+
+    if (reachedCompactionThreshold) {
+      if (config.compaction.policy === "automatic" || (config.compaction.policy === "ask" && (agent.headless && await agent.askForApproval({
         message:
           "Context is getting long. Would you like to compact it to save tokens?",
         default: true,
         timeout: 30,
       })))) {
-        agent.infoMessage(
-          "Context is getting long. Compacting context...",
-        );
-        agent.setCurrentActivity("Compacting context...");
-        await chatService.compactContext(config.compaction, agent);
-        if (stopReason === "longContext") {
+        if (!chatService.hasPendingCompaction(agent) && !chatService.isCompactionInProgress(agent)) {
+          agent.infoMessage("Context is getting long. Preparing a compaction summary...");
+          agent.setCurrentActivity("Preparing context compaction...");
+          if (config.compaction.background) {
+            void chatService.stageContextCompaction(config.compaction, agent).catch((error) => {
+              agent.errorMessage(`Failed to prepare context compaction: ${error instanceof Error ? error.message : String(error)}`);
+            });
+          } else {
+            await chatService.stageContextCompaction(config.compaction, agent);
+          }
+        }
+
+        if (stopReason === "longContext" && appliedCompaction) {
           const remainingSteps = chatConfig.maxSteps - stepCount;
           if (remainingSteps > 0) {
-            agent.infoMessage("Context compacted, and agent still has work to do. Continuing work...");
+            agent.infoMessage("Context compaction applied, and agent still has work to do. Continuing work...");
             return await runChat({ input: "Continue", chatConfig: {...chatConfig, maxSteps: remainingSteps}, agent});
           }
         }

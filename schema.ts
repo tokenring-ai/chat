@@ -76,8 +76,7 @@ export const ChatAgentConfigSchema = z.object({
   compaction: z.object({
     policy: z.enum(["automatic", "ask", "never"]).optional(),
     compactionThreshold: z.number().optional(),
-    windowThreshold: z.number().optional(),
-    backtrack: z.number().optional(),
+    applyThreshold: z.number().optional(),
     background: z.boolean().optional(),
     focus: z.string().optional(),
   }).prefault({}),
@@ -97,8 +96,7 @@ const ChatAgentDefaultConfig = z.object({
   compaction: z.object({
     policy: z.enum(["automatic", "ask", "never"]).default("ask"),
     compactionThreshold: z.number().default(0.5),
-    windowThreshold: z.number().default(0.7),
-    backtrack: z.number().default(1),
+    applyThreshold: z.number().optional(),
     background: z.boolean().default(false),
     focus: z.string().default(`
 - Important Details
@@ -153,3 +151,17 @@ export type StoredChatMessage = {
   /** The update time in milliseconds since the epoch format */
   updatedAt: number;
 }
+
+export const StoredChatCompactionSchema = z.object({
+  startIndex: z.number().int().nonnegative(),
+  endIndex: z.number().int().nonnegative(),
+  messages: z.array(z.any()),
+  createdAt: z.number(),
+});
+
+export type StoredChatCompaction = {
+  startIndex: number;
+  endIndex: number;
+  messages: ChatInputMessage[];
+  createdAt: number;
+};

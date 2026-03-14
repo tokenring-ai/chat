@@ -17,6 +17,7 @@ import {
   ContextItem,
   NamedTool,
   ParsedChatConfig,
+  StoredChatCompaction,
   StoredChatMessage,
   TokenRingToolDefinition
 } from "./schema.ts";
@@ -194,6 +195,8 @@ export default class ChatService implements TokenRingService {
   clearChatMessages(agent: Agent): void {
     agent.mutateState(ChatServiceState, (state) => {
       state.messages = [];
+      state.pendingCompaction = null;
+      state.compactionInProgress = false;
     });
 
     agent.getServiceByType(AgentLifecycleService)?.executeHooks(new AfterChatClear(), agent);
@@ -265,6 +268,106 @@ export default class ChatService implements TokenRingService {
       state.currentConfig.hiddenTools = Array.from(newHiddenTools.values());
       return state.currentConfig.hiddenTools;
     });
+  }
+
+  getPendingCompaction(agent: Agent): StoredChatCompaction | null {
+    return agent.getState(ChatServiceState).pendingCompaction;
+  }
+
+  hasPendingCompaction(agent: Agent): boolean {
+    return this.getPendingCompaction(agent) !== null;
+  }
+
+  isCompactionInProgress(agent: Agent): boolean {
+    return agent.getState(ChatServiceState).compactionInProgress;
+  }
+
+  applyPendingCompaction(agent: Agent): boolean {
+    return agent.mutateState(ChatServiceState, (state) => {
+      const pendingCompaction = state.pendingCompaction;
+      const lastMessage = state.messages.at(-1);
+
+      if (!pendingCompaction || !lastMessage) {
+        return false;
+      }
+
+      if (lastMessage.request.messages.length < pendingCompaction.endIndex) {
+        agent.warningMessage("Skipping stored compaction because the prior message stream no longer matches the recorded span");
+        state.pendingCompaction = null;
+        return false;
+      }
+
+      lastMessage.request.messages = [
+        ...lastMessage.request.messages.slice(0, pendingCompaction.startIndex),
+        ...pendingCompaction.messages,
+        ...lastMessage.request.messages.slice(pendingCompaction.endIndex),
+      ];
+      lastMessage.updatedAt = Date.now();
+      state.pendingCompaction = null;
+      return true;
+    });
+  }
+
+  async stageContextCompaction(compactionConfig: ParsedChatConfig["compaction"], agent: Agent): Promise<boolean> {
+    const currentState = agent.getState(ChatServiceState);
+    if (currentState.compactionInProgress || currentState.pendingCompaction) {
+      return false;
+    }
+
+    const lastMessage = this.getLastMessage(agent);
+    if (!lastMessage) return false;
+
+    const systemMessages = lastMessage.request.messages.filter((message) => message.role === "system");
+    const priorMessageStream = [
+      ...lastMessage.request.messages,
+      ...(lastMessage.response.messages ?? []),
+    ];
+
+    if (priorMessageStream.length === 0) return false;
+
+    agent.mutateState(ChatServiceState, (state) => {
+      state.compactionInProgress = true;
+    });
+
+    try {
+      const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
+      const client = await chatModelRegistry.getClient(this.requireModel(agent));
+
+      const response = await agent.busyWithActivity(
+        "Waiting for response from AI...",
+        client.streamChat({
+          messages: [
+            ...systemMessages,
+            ...priorMessageStream,
+            {
+              role: "user",
+              content: `
+Please provide a long and detailed and comprehensive summary of the prior conversation, focusing on the following:
+
+${compactionConfig.focus}
+`.trim(),
+            },
+          ],
+          tools: {}
+        }, agent),
+      );
+
+      agent.mutateState(ChatServiceState, (state) => {
+        state.pendingCompaction = {
+          startIndex: 0,
+          endIndex: priorMessageStream.length,
+          messages: response.messages ?? [],
+          createdAt: Date.now(),
+        };
+      });
+
+      agent.infoMessage("Context compaction prepared and stored for later application");
+      return true;
+    } finally {
+      agent.mutateState(ChatServiceState, (state) => {
+        state.compactionInProgress = false;
+      });
+    }
   }
 
   async compactContext(compactionConfig: ParsedChatConfig["compaction"], agent: Agent): Promise<void> {
