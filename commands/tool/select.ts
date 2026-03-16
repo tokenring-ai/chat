@@ -1,10 +1,11 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import type {TreeLeaf} from "@tokenring-ai/agent/question";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../../ChatService.ts";
 
-async function execute(_remainder: string, agent: Agent): Promise<string> {
+const inputSchema = {} as const satisfies AgentCommandInputSchema;
+
+async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const enabledTools = chatService.getEnabledTools(agent);
   const toolsByCategory: Record<string, Array<{displayName: string, toolName: string}>> = {};
@@ -31,10 +32,11 @@ export default {
   name: "tools select",
   description: "Interactively select tools",
   aliases: ["tool select"],
-  help: `# /tools select
-
-Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by package.
+  inputSchema,
+  execute,
+  help: `Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by package.
 
 ## Example
 
-/tools select`, execute } satisfies TokenRingAgentCommand;
+/tools select`,
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

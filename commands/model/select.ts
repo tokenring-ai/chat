@@ -1,10 +1,11 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import type {TreeLeaf} from "@tokenring-ai/agent/question";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import ChatService from "../../ChatService.ts";
 
-async function execute(_remainder: string, agent: Agent): Promise<string> {
+const inputSchema = {} as const satisfies AgentCommandInputSchema;
+
+async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
   const modelsByProvider = await agent.busyWithActivity("Checking online status of models...", chatModelRegistry.getModelsByProvider());
@@ -35,10 +36,13 @@ async function execute(_remainder: string, agent: Agent): Promise<string> {
 }
 
 export default {
-  name: "model select", description: "Interactively select a model", help: `# /model select
-
-Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
+  name: "model select", 
+  description: "Interactively select a model", 
+  inputSchema,
+  execute,
+  help: `Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
 
 ## Example
 
-/model select`, execute } satisfies TokenRingAgentCommand;
+/model select`,
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

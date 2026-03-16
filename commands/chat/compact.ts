@@ -1,19 +1,28 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
 const description = "Compact conversation context by summarizing prior messages";
 
-async function execute(remainder: string, agent: Agent): Promise<string> {
-  const focus = remainder.trim() || null;
+const inputSchema = {
+  args: {},
+  positionals: [{
+    name: "focus",
+    description: "Optional focus for compaction",
+    required: false,
+    greedy: true,
+  }],
+  allowAttachments: false,
+} as const satisfies AgentCommandInputSchema;
+
+async function execute({positionals: { focus }, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
 
   try {
     await chatService.compactContext({
       ...chatConfig.compaction,
-      focus: focus ?? chatConfig.compaction.focus,
+      focus: focus || chatConfig.compaction.focus,
     }, agent);
     return "Context compacted successfully.";
   } catch (error) {
@@ -21,9 +30,7 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
   }
 }
 
-const help: string = `# /chat compact [<focus>]
-
-Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and maintain context in long conversations.
+const help: string = `Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and maintain context in long conversations.
 
 ## How it works
 
@@ -48,16 +55,13 @@ Compress the conversation context by creating intelligent summaries of prior mes
 
 ## Example
 
-# Compresses all prior messages
-/chat compact                    
+/chat compact
+/chat compact specifics of the task at hand, including the goal and expected outcome`;
 
-# Gives more control over context compression
-/chat compact specifics of the task at hand, including the goal and expected outcome
-
-**Note:** Compaction is automatic in some cases, but manual compaction gives you control over when and how context is compressed.`;
 export default {
   name: "chat compact",
   description,
+  inputSchema,
   execute,
   help,
-} satisfies TokenRingAgentCommand;
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

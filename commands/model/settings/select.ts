@@ -1,11 +1,12 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import type {TreeLeaf} from "@tokenring-ai/agent/question";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
 import {ChatService} from "../../../index.ts";
 
-async function execute(_remainder: string, agent: Agent): Promise<string> {
+const inputSchema = {} as const satisfies AgentCommandInputSchema;
+
+async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const {base, settings} = chatService.getModelAndSettings(agent);
   const client = await agent.requireServiceByType(ChatModelRegistry).getClient(base);
@@ -28,11 +29,13 @@ async function execute(_remainder: string, agent: Agent): Promise<string> {
 }
 
 export default {
-  name: "model settings select", description: "Interactively select model settings", help: `# /model settings select
-
-Open an interactive selector to choose which feature flags to enable for the current model.
+  name: "model settings select", 
+  description: "Interactively select model settings", 
+  inputSchema,
+  execute,
+  help: `Open an interactive selector to choose which feature flags to enable for the current model.
 
 ## Example
 
-/model settings select`, execute
-} satisfies TokenRingAgentCommand;
+/model settings select`,
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

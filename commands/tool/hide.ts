@@ -1,24 +1,34 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../../ChatService.ts";
 
-async function execute(remainder: string, agent: Agent): Promise<string> {
-  const toolNames = remainder?.trim().split(/\s+/).filter(Boolean);
-  if (!toolNames?.length) throw new CommandFailedError("Tool names required. Usage: /tools hide <tool1> <tool2> ...");
+const inputSchema = {
+  args: {},
+  positionals: [{
+    name: "toolNames",
+    description: "Space-separated tool names to hide",
+    required: true,
+    greedy: true,
+  }],
+  allowAttachments: false,
+} as const satisfies AgentCommandInputSchema;
+
+async function execute({positionals, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+  const toolNames = positionals.toolNames.split(/\s+/).filter(Boolean);
+  if (!toolNames.length) throw new CommandFailedError("Tool names required. Usage: /tools hide <tool1> <tool2> ...");
   const chatService = agent.requireServiceByType(ChatService);
   chatService.hideTools(toolNames.map(n => chatService.ensureToolNamesLike(n)).flat(), agent);
   return `Hidden tools: ${joinDefault(", ", chatService.getHiddenTools(agent), "(none)")}`;
 }
 
-export default { 
+export default {
   name: "tools hide",
   description: "Hide tools",
   aliases: ["tool hide"],
-  help: `# /tools hide <tool1> [tool2...]
-
-Hide one or more tools by name, requiring the model to search for the tool to activate it before use.
+  inputSchema,
+  execute,
+  help: `Hide one or more tools by name, requiring the model to search for the tool to activate it before use.
 
 Saves context in some cases; useful for agents that need access to large numbers of tools.
 
@@ -26,5 +36,4 @@ Saves context in some cases; useful for agents that need access to large numbers
 
 /tools hide calculator
 /tools hide web-search calculator`,
-  execute
-} satisfies TokenRingAgentCommand;
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

@@ -1,10 +1,11 @@
-import Agent from "@tokenring-ai/agent/Agent";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import markdownList from "@tokenring-ai/utility/string/markdownList";
 import {ChatService} from "../../../index.ts";
 
-export async function show(_remainder: string, agent: Agent): Promise<string> {
+const inputSchema = {} as const satisfies AgentCommandInputSchema;
+
+async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const {currentModel, base, settings} = chatService.getModelAndSettings(agent);
   const lines: string[] = [`Current model: ${currentModel}`, `Base model: ${base}`];
@@ -23,10 +24,13 @@ export async function show(_remainder: string, agent: Agent): Promise<string> {
 }
 
 export default {
-  name: "model settings show", description: "Show model settings", help: `# /model settings show
-
-Show the currently enabled feature flags and all available settings for the current model.
+  name: "model settings show", 
+  description: "Show model settings", 
+  inputSchema,
+  execute,
+  help: `Show the currently enabled feature flags and all available settings for the current model.
 
 ## Example
 
-/model settings show`, execute: show } satisfies TokenRingAgentCommand;
+/model settings show`,
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

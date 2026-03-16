@@ -1,11 +1,20 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import {coerceFeatureValue, serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
 import ChatService from "../../../ChatService.ts";
 
-async function execute(remainder: string, agent: Agent): Promise<string> {
-  const token = remainder?.trim();
+const inputSchema = {
+  args: {},
+  positionals: [{
+    name: "token",
+    description: "Setting key or key=value pair",
+    required: true,
+  }],
+  allowAttachments: false,
+} as const satisfies AgentCommandInputSchema;
+
+async function execute({positionals, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+  const token = positionals.token;
   if (!token) throw new CommandFailedError("/model settings set requires a key or key=value");
   const chatService = agent.requireServiceByType(ChatService);
   const {base, settings} = chatService.getModelAndSettings(agent);
@@ -22,11 +31,14 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
 }
 
 export default {
-  name: "model settings set", description: "Set a model feature flag", help: `# /model settings set <key[=value]>
-
-Set a single model feature flag.
+  name: "model settings set",
+  description: "Set a model feature flag",
+  inputSchema,
+  execute,
+  help: `Set a single model feature flag.
 
 ## Example
 
 /model settings set websearch
-/model settings set temperature=0.7`, execute } satisfies TokenRingAgentCommand;
+/model settings set temperature=0.7`,
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

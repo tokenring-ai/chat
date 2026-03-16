@@ -1,23 +1,25 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 import {ChatServiceState} from "../../state/chatServiceState.ts";
+
+const inputSchema = {} as const satisfies AgentCommandInputSchema;
+
+async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+  const initialModel = agent.getState(ChatServiceState).initialConfig.model;
+  if (!initialModel) throw new CommandFailedError("No initial model configured");
+  agent.requireServiceByType(ChatService).setModel(initialModel, agent);
+  return `Model reset to ${initialModel}`;
+}
 
 export default {
   name: "model reset",
   description: "Reset to initial model",
-  help: `# /model reset
-
-Reset the chat model to the initial configured value.
+  inputSchema,
+  execute,
+  help: `Reset the chat model to the initial configured value.
 
 ## Example
 
 /model reset`,
-  execute: async (_remainder: string, agent: Agent): Promise<string> => {
-    const initialModel = agent.getState(ChatServiceState).initialConfig.model;
-    if (!initialModel) throw new CommandFailedError("No initial model configured");
-    agent.requireServiceByType(ChatService).setModel(initialModel, agent);
-    return `Model reset to ${initialModel}`;
-  },
-} satisfies TokenRingAgentCommand;
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

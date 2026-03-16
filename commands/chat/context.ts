@@ -1,11 +1,12 @@
-import {Agent} from "@tokenring-ai/agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
 const description = "Show the current context for the chat session";
 
-async function execute(_remainder: string, agent: Agent): Promise<string> {
+const inputSchema = {} as const satisfies AgentCommandInputSchema;
+
+async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   try {
     const chatService = agent.requireServiceByType(ChatService);
     const chatConfig = chatService.getChatConfig(agent);
@@ -37,7 +38,6 @@ async function execute(_remainder: string, agent: Agent): Promise<string> {
   }
 }
 
-
 const help: string = `
 ## /chat context
 
@@ -54,6 +54,7 @@ Display all context items that would be included in a chat request. Useful for d
 export default {
   name: "chat context",
   description,
+  inputSchema,
   execute,
   help,
-} satisfies TokenRingAgentCommand;
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

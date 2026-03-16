@@ -1,12 +1,22 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import {serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
 import {ChatService} from "../../../index.ts";
 
-async function execute(remainder: string, agent: Agent): Promise<string> {
-  const keys = remainder?.trim().split(/\s+/).filter(Boolean);
-  if (!keys?.length) throw new CommandFailedError("/model settings disable requires at least one key");
+const inputSchema = {
+  args: {},
+  positionals: [{
+    name: "keys",
+    description: "Space-separated setting keys to disable",
+    required: true,
+    greedy: true,
+  }],
+  allowAttachments: false,
+} as const satisfies AgentCommandInputSchema;
+
+async function execute({positionals, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+  const keys = positionals.keys.split(/\s+/).filter(Boolean);
+  if (!keys.length) throw new CommandFailedError("/model settings disable requires at least one key");
   const chatService = agent.requireServiceByType(ChatService);
   const {base, settings} = chatService.getModelAndSettings(agent);
   for (const key of keys) settings.delete(key);
@@ -16,11 +26,14 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
 }
 
 export default {
-  name: "model settings disable", description: "Disable model feature flags", help: `# /model settings disable <key> ...
-
-Disable one or more model feature flags.
+  name: "model settings disable",
+  description: "Disable model feature flags",
+  inputSchema,
+  execute,
+  help: `Disable one or more model feature flags.
 
 ## Example
 
 /model settings disable reasoning
-/model settings disable reasoning websearch`, execute } satisfies TokenRingAgentCommand;
+/model settings disable reasoning websearch`,
+} satisfies TokenRingAgentCommand<typeof inputSchema>;

@@ -1,19 +1,21 @@
-import Agent from "@tokenring-ai/agent/Agent";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
+
+const inputSchema = {} as const satisfies AgentCommandInputSchema;
+
+async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+  agent.requireServiceByType(ChatService).clearChatMessages(agent);
+  return `Chat context reset`;
+}
 
 export default {
   name: "chat reset",
   description: "Reset the chat context",
-  help: `# /chat reset
-
-Reset the chat context, clearing prior messages and starting a new conversation.
+  inputSchema,
+  execute,
+  help: `Reset the chat context, clearing prior messages and starting a new conversation.
 
 ## Example
 
 /chat reset`,
-  execute: async (_remainder: string, agent: Agent): Promise<string> => {
-    agent.requireServiceByType(ChatService).clearChatMessages(agent);
-    return `Chat context reset`;
-  },
-} satisfies TokenRingAgentCommand;
+} satisfies TokenRingAgentCommand<typeof inputSchema>;
