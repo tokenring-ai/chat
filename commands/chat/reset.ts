@@ -4,7 +4,7 @@ import ChatService from "../../ChatService.ts";
 
 export default {
   name: "chat reset",
-  description: "/chat reset - Reset the chat context",
+  description: "Reset the chat context",
   help: `# /chat reset
 
 Reset the chat context, clearing prior messages and starting a new conversation.

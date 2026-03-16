@@ -1,7 +1,7 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import {TokenRingToolDefinition, type TokenRingToolResult} from "../schema.ts";
-import ChatService from "../ChatService.ts";
 import {z} from "zod";
+import ChatService from "../ChatService.ts";
+import {TokenRingToolDefinition, type TokenRingToolResult} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 
 const name = "tool_search";
@@ -60,8 +60,7 @@ const inputSchema = z.object({
   ),
 });
 
-const description =
-  "Search for tools by regex pattern and enables matching tools. Searches tool names and descriptions.";
+const description = "Search for tools by regex pattern and enables matching tools. Searches tool names and descriptions.";
 
 export default {
   name,

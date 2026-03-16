@@ -6,8 +6,7 @@ import ChatService from "../../ChatService.ts";
 import runChat from "../../runChat.ts";
 import {getChatAnalytics} from "../../util/getChatAnalytics.ts";
 
-
-const description = "/chat send - Send messages to the LLM";
+const description = "Send messages to the LLM";
 
 
 async function execute({ input, attachments } : { input: string, attachments: InputAttachment[] }, agent: Agent): Promise<string> {

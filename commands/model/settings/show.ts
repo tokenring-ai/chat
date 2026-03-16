@@ -22,7 +22,8 @@ export async function show(_remainder: string, agent: Agent): Promise<string> {
   return lines.join("\n");
 }
 
-export default { name: "model settings show", description: "/model settings show - Show model settings", help: `# /model settings show
+export default {
+  name: "model settings show", description: "Show model settings", help: `# /model settings show
 
 Show the currently enabled feature flags and all available settings for the current model.
 

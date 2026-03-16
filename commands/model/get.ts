@@ -4,7 +4,7 @@ import ChatService from "../../ChatService.ts";
 
 export default {
   name: "model get",
-  description: "/model get - Show current model",
+  description: "Show current model",
   help: `# /model get
 
 Show the currently active chat model.

@@ -1,7 +1,7 @@
 import Agent from "@tokenring-ai/agent/Agent";
 import type {TreeLeaf} from "@tokenring-ai/agent/question";
-import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import ChatService from "../../ChatService.ts";
 
 async function execute(_remainder: string, agent: Agent): Promise<string> {
@@ -34,7 +34,8 @@ async function execute(_remainder: string, agent: Agent): Promise<string> {
   return "Model selection cancelled. No changes made.";
 }
 
-export default { name: "model select", description: "/model select - Interactively select a model", help: `# /model select
+export default {
+  name: "model select", description: "Interactively select a model", help: `# /model select
 
 Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
 

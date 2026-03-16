@@ -1,10 +1,9 @@
 import Agent from "@tokenring-ai/agent/Agent";
-import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
+import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
-const description =
-  "/chat compact - Compact conversation context by summarizing prior messages";
+const description = "Compact conversation context by summarizing prior messages";
 
 async function execute(remainder: string, agent: Agent): Promise<string> {
   const focus = remainder.trim() || null;

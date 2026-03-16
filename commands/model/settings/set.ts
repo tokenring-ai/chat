@@ -21,7 +21,8 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
   return `Set feature. New model: ${newModel}`;
 }
 
-export default { name: "model settings set", description: "/model settings set - Set a model feature flag", help: `# /model settings set <key[=value]>
+export default {
+  name: "model settings set", description: "Set a model feature flag", help: `# /model settings set <key[=value]>
 
 Set a single model feature flag.
 

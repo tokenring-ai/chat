@@ -23,7 +23,8 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
   return `Enabled settings. New model: ${newModel}`;
 }
 
-export default { name: "model settings enable", description: "/model settings enable - Enable model feature flags", help: `# /model settings enable <key[=value]> ...
+export default {
+  name: "model settings enable", description: "Enable model feature flags", help: `# /model settings enable <key[=value]> ...
 
 Enable one or more model feature flags.
 

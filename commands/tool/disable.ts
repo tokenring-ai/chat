@@ -14,7 +14,7 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
 
 export default {
   name: "tools disable",
-  description: "/tools disable - Disable tools",
+  description: "Disable tools",
   aliases: ["tool disable"],
   help: `# /tools disable <tool1> [tool2...]
 

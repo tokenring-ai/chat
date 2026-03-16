@@ -6,7 +6,7 @@ import {ChatServiceState} from "../../state/chatServiceState.ts";
 
 export default {
   name: "model reset",
-  description: "/model reset - Reset to initial model",
+  description: "Reset to initial model",
   help: `# /model reset
 
 Reset the chat model to the initial configured value.

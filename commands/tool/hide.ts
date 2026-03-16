@@ -13,8 +13,8 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
 }
 
 export default { 
-  name: "tools hide", 
-  description: "/tools hide - Hide tools", 
+  name: "tools hide",
+  description: "Hide tools",
   aliases: ["tool hide"],
   help: `# /tools hide <tool1> [tool2...]
 

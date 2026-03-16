@@ -15,7 +15,8 @@ async function execute(remainder: string, agent: Agent): Promise<string> {
   return `Disabled settings. New model: ${newModel}`;
 }
 
-export default { name: "model settings disable", description: "/model settings disable - Disable model feature flags", help: `# /model settings disable <key> ...
+export default {
+  name: "model settings disable", description: "Disable model feature flags", help: `# /model settings disable <key> ...
 
 Disable one or more model feature flags.
 

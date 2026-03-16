@@ -3,8 +3,7 @@ import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
 import {TokenRingAgentCommand} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
-const description =
-  "/chat context - Show the current context for the chat session";
+const description = "Show the current context for the chat session";
 
 async function execute(_remainder: string, agent: Agent): Promise<string> {
   try {

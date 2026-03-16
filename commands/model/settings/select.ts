@@ -28,7 +28,7 @@ async function execute(_remainder: string, agent: Agent): Promise<string> {
 }
 
 export default {
-  name: "model settings select", description: "/model settings select - Interactively select model settings", help: `# /model settings select
+  name: "model settings select", description: "Interactively select model settings", help: `# /model settings select
 
 Open an interactive selector to choose which feature flags to enable for the current model.
 

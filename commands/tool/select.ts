@@ -29,7 +29,7 @@ async function execute(_remainder: string, agent: Agent): Promise<string> {
 
 export default {
   name: "tools select",
-  description: "/tools select - Interactively select tools",
+  description: "Interactively select tools",
   aliases: ["tool select"],
   help: `# /tools select
 

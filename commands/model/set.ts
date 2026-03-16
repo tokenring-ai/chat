@@ -5,7 +5,7 @@ import ChatService from "../../ChatService.ts";
 
 export default {
   name: "model set",
-  description: "/model set - Set the model",
+  description: "Set the model",
   help: `# /model set <model_name>
 
 Set the chat model to a specific model by name.
