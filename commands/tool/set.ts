@@ -5,17 +5,11 @@ import ChatService from "../../ChatService.ts";
 
 const inputSchema = {
   args: {},
-  positionals: [{
-    name: "toolNames",
-    description: "Space-separated tool names to set as enabled",
-    required: true,
-    greedy: true,
-  }],
-  allowAttachments: false,
+  remainder: {name: "toolNames", description: "Space-separated tool names to set as enabled", required: true}
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({positionals, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
-  const toolNames = positionals.toolNames.split(/\s+/).filter(Boolean);
+async function execute({remainder, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+  const toolNames = remainder.split(/\s+/).filter(Boolean);
   if (!toolNames.length) throw new CommandFailedError("Tool names required. Usage: /tools set <tool1> <tool2> ...");
   const chatService = agent.requireServiceByType(ChatService);
   chatService.setEnabledTools(toolNames.map(n => chatService.ensureToolNamesLike(n)).flat(), agent);

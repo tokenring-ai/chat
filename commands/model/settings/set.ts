@@ -9,8 +9,7 @@ const inputSchema = {
     name: "token",
     description: "Setting key or key=value pair",
     required: true,
-  }],
-  allowAttachments: false,
+  }]
 } as const satisfies AgentCommandInputSchema;
 
 async function execute({positionals, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {

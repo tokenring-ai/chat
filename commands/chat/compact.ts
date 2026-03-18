@@ -6,23 +6,17 @@ const description = "Compact conversation context by summarizing prior messages"
 
 const inputSchema = {
   args: {},
-  positionals: [{
-    name: "focus",
-    description: "Optional focus for compaction",
-    required: false,
-    greedy: true,
-  }],
-  allowAttachments: false,
+  remainder: {name: "focus", description: "Optional focus for compaction"}
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({positionals: { focus }, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({remainder, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
 
   try {
     await chatService.compactContext({
       ...chatConfig.compaction,
-      focus: focus || chatConfig.compaction.focus,
+      focus: remainder ?? chatConfig.compaction.focus,
     }, agent);
     return "Context compacted successfully.";
   } catch (error) {

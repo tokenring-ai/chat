@@ -5,17 +5,11 @@ import {ChatService} from "../../../index.ts";
 
 const inputSchema = {
   args: {},
-  positionals: [{
-    name: "keys",
-    description: "Space-separated setting keys to disable",
-    required: true,
-    greedy: true,
-  }],
-  allowAttachments: false,
+  remainder: {name: "keys", description: "Space-separated setting keys to disable", required: true}
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({positionals, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
-  const keys = positionals.keys.split(/\s+/).filter(Boolean);
+async function execute({remainder, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+  const keys = remainder.split(/\s+/).filter(Boolean);
   if (!keys.length) throw new CommandFailedError("/model settings disable requires at least one key");
   const chatService = agent.requireServiceByType(ChatService);
   const {base, settings} = chatService.getModelAndSettings(agent);
