@@ -5,7 +5,8 @@ import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
 import {backoff} from "@tokenring-ai/utility/promise/backoff";
 import ChatService from "./ChatService.ts";
-import {AfterChatCompletion} from "./hooks.ts";
+
+import {AfterChatCompletion} from "./lifecycle.ts";
 import {ParsedChatConfig} from "./schema.ts";
 import {ChatServiceState} from "./state/chatServiceState.ts";
 

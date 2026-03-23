@@ -2,14 +2,23 @@ import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {type ContextHandlerOptions} from "../schema.ts";
 import type {FilePart, ImagePart, TextPart, UserModelMessage } from "@tokenring-ai/ai-client/schema";
 import z from "zod";
+import {ChatServiceState} from "../state/chatServiceState.ts";
 
 //TODO: we should evaluate whether this should default to true or false
 const sourceConfigSchema = z.object({
   allowRemoteAttachments: z.boolean().default(true),
 }).prefault({})
 
-export default async function* getContextItems({input, attachments, sourceConfig}: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
+export default async function* getContextItems({input, attachments, sourceConfig, agent}: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
   const { allowRemoteAttachments } = sourceConfigSchema.parse(sourceConfig);
+  const { injectedMessages } = agent.getState(ChatServiceState);
+  for (const message of injectedMessages) {
+    yield {
+      role: "user",
+      content: message
+    };
+  }
+
   const result = {
     role: "user",
     content: [

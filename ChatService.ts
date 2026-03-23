@@ -9,7 +9,7 @@ import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
 import deepMerge from "@tokenring-ai/utility/object/deepMerge";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import {z} from "zod";
-import {AfterChatClear, AfterChatCompaction} from "./hooks.ts";
+import {AfterChatClear, AfterChatCompaction} from "./lifecycle.ts";
 import {
   ChatAgentConfigSchema,
   ChatServiceConfigSchema,

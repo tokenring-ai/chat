@@ -1,5 +1,7 @@
 import {AgentCommandService} from "@tokenring-ai/agent";
+import hooks from "./hooks";
 import {TokenRingPlugin} from "@tokenring-ai/app";
+import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
 import {RpcService} from "@tokenring-ai/rpc";
 import {z} from "zod";
 
@@ -33,6 +35,11 @@ export default {
 
     app.waitForService(RpcService, rpcService => {
       rpcService.registerEndpoint(chatRPC);
+    });
+
+    // Register hooks with the lifecycle service
+    app.waitForService(AgentLifecycleService, lifecycleService => {
+      lifecycleService.addHooks(hooks);
     });
   },
   config: packageConfigSchema

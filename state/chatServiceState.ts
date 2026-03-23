@@ -5,6 +5,7 @@ import {ChatConfigMergedSchema, ParsedChatConfig, StoredChatCompactionSchema, St
 
 const serializationSchema = z.object({
   currentConfig: ChatConfigMergedSchema,
+  injectedMessages: z.array(z.string()).default([]),
   messages: z.array(z.any()),
   pendingCompaction: StoredChatCompactionSchema.nullable().default(null),
   compactionInProgress: z.boolean().default(false),
@@ -18,6 +19,7 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
     1,
   );
   /** History of chat messages */
+  injectedMessages: string[] = [];
   messages: StoredChatMessage[] = [];
   pendingCompaction: z.output<typeof StoredChatCompactionSchema> | null = null;
   compactionInProgress = false;
@@ -44,6 +46,7 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
   serialize(): z.output<typeof serializationSchema> {
     return {
       currentConfig: this.currentConfig,
+      injectedMessages: this.injectedMessages,
       messages: this.messages,
       pendingCompaction: this.pendingCompaction,
       compactionInProgress: this.compactionInProgress,
@@ -52,6 +55,7 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
 
   deserialize(data: z.output<typeof serializationSchema>): void {
     this.currentConfig = data.currentConfig || {...this.initialConfig};
+    this.injectedMessages = data.injectedMessages || [];
     this.messages = data.messages || [];
     this.pendingCompaction = data.pendingCompaction ?? null;
     this.compactionInProgress = data.compactionInProgress ?? false;
