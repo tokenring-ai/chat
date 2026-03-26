@@ -75,7 +75,7 @@ export default class ChatService implements TokenRingService {
     let {enabledTools, hiddenTools, ...agentConfig} = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice('chat', ChatAgentConfigSchema));
 
     // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
-    agent.initializeState(ChatServiceState, {
+    const initialState = agent.initializeState(ChatServiceState, {
       ...agentConfig,
       enabledTools: [],
       hiddenTools: [],
@@ -84,11 +84,9 @@ export default class ChatService implements TokenRingService {
     this.hideTools(hiddenTools, agent);
     this.enableTools(enabledTools, agent);
 
-    const selectedModel = agentConfig.model ?? this.defaultModel;
+    const selectedModel = initialState.currentConfig.model ?? this.defaultModel;
     if (selectedModel) {
       creationContext.items.push(`Chat Model: ${selectedModel}`);
-
-      //agent.infoMessage(`Using model ${selectedModel} for chat`);
     } else {
       creationContext.items.push(`Chat Model: No model selected`);
       agent.warningMessage(`No model was selected for chat, please manually select a model with /model`);

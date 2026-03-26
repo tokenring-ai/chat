@@ -208,13 +208,55 @@ Context handlers can be configured with additional options:
 
 ## Chat Commands
 
-The package provides the following chat commands:
+The package provides the following chat commands, organized by category:
 
-### /chat - Send messages and manage chat AI settings
-
-The `/chat` command is the primary interface for interacting with the AI chat service.
+### Chat Management Commands
 
 #### /chat send <message>
+
+#### /chat context
+
+#### /chat compact [<focus>]
+
+#### /chat reset
+
+### Model Management Commands
+
+#### /model get
+
+#### /model set <model>
+
+#### /model select
+
+#### /model reset
+
+#### /model settings show
+
+#### /model settings set <key[=value]>
+
+#### /model settings select
+
+#### /model settings enable <key[=value]...>
+
+#### /model settings disable <key...>
+
+### Tool Management Commands
+
+#### /tools list
+
+#### /tools enable <tool1> <tool2> ...
+
+#### /tools disable <tool1> <tool2> ...
+
+#### /tools set <tool1> <tool2> ...
+
+#### /tools select
+
+#### /tools hide <tool1> <tool2> ...
+
+## Chat Command Details
+
+### /chat send <message>
 
 Send a message to the AI chat service. This is the primary command for communicating with the AI, using your selected model and current context.
 
@@ -230,7 +272,7 @@ Send a message to the AI chat service. This is the primary command for communica
 - Shows detailed token usage analytics after completion
 - Supports attachments via `allowAttachments: true`
 
-#### /chat context
+### /chat context
 
 Display all context items that would be included in a chat request. Useful for debugging and understanding what information the AI has access to.
 
@@ -246,9 +288,9 @@ Display all context items that would be included in a chat request. Useful for d
 
 **Note:** Context display shows the exact data sent to the AI model.
 
-#### /chat compact [<focus>]
+### /chat compact [<focus>]
 
-Compress the conversation context by creating intelligent summaries of prior messages.
+Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and maintain context in long conversations.
 
 **Examples:**
 ```
@@ -262,7 +304,19 @@ Compress the conversation context by creating intelligent summaries of prior mes
 - Maintains conversation flow and important context
 - Reduces token count for better performance and cost savings
 
-#### /chat reset
+**When to use:**
+- After many messages have been exchanged
+- When you notice responses getting slower
+- When approaching token limits
+- Before starting a new topic in a long conversation
+
+**Benefits:**
+- Faster response times in long conversations
+- Lower API costs due to reduced token usage
+- Maintains important context without losing information
+- Prevents context overflow errors
+
+### /chat reset
 
 Reset the chat context, clearing prior messages and starting a new conversation.
 
@@ -271,54 +325,151 @@ Reset the chat context, clearing prior messages and starting a new conversation.
 /chat reset
 ```
 
-### /model - Set or show the target model for chat
+### /model get
 
-Manage the AI model used for chat responses.
-
-**Examples:**
-```
-/model                     # Show current model and open selector (unless headless)
-/model get                 # Show current model
-/model set gpt-5.2         # Set to specific model
-/model select              # Interactive model selection
-/model reset               # Reset to initial configured model
-/model settings            # Manage model feature flags
-```
-
-**Special Values:**
-- `auto` - Automatically selects best available model
-- `auto:reasoning` - Prefers models with advanced reasoning
-- `auto:frontier` - Prefers latest cutting-edge models
-
-#### /model settings subcommands
-
-- **/model settings show** - Show current model feature flags and available settings
-- **/model settings set <key[=value]>** - Set a single model feature flag
-- **/model settings enable <key[=value]> ...** - Enable one or more feature flags
-- **/model settings disable <key> ...** - Disable one or more feature flags
-- **/model settings select** - Interactively select feature flags to enable
-
-### /tools [list|enable|disable|set|select|hide] [tool1] [tool2] ...
-
-Manage available tools for your chat session.
+Show the currently active chat model.
 
 **Examples:**
 ```
-/tools                    # Show tools and open selector (unless headless)
-/tools list               # List enabled tools
-/tools enable web-search  # Enable a tool
-/tools disable calculator # Disable a tool
-/tools set web-search calculator  # Set exactly which tools are enabled
-/tools select             # Interactive tool selection
-/tools hide calculator    # Hide a tool (keeps it available but not visible to model)
+/model get
+```
+
+### /model set <modelName>
+
+Set the chat model to a specific model by name.
+
+**Examples:**
+```
+/model set gpt-5.2
+```
+
+### /model select
+
+Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
+
+**Examples:**
+```
+/model select
+```
+
+### /model reset
+
+Reset the chat model to the initial configured value.
+
+**Examples:**
+```
+/model reset
+```
+
+### /model settings show
+
+Show the currently enabled feature flags and all available settings for the current model.
+
+**Examples:**
+```
+/model settings show
+```
+
+### /model settings set <token>
+
+Set a single model feature flag.
+
+**Examples:**
+```
+/model settings set websearch
+/model settings set temperature=0.7
+```
+
+### /model settings select
+
+Open an interactive selector to choose which feature flags to enable for the current model.
+
+**Examples:**
+```
+/model settings select
+```
+
+### /model settings enable <keys>
+
+Enable one or more model feature flags.
+
+**Examples:**
+```
+/model settings enable reasoning
+/model settings enable websearch temperature=0.7
+```
+
+### /model settings disable <keys>
+
+Disable one or more model feature flags.
+
+**Examples:**
+```
+/model settings disable reasoning
+/model settings disable reasoning websearch
+```
+
+### /tools list
+
+List all currently enabled tools.
+
+**Examples:**
+```
+/tools list
+```
+
+### /tools enable <toolNames>
+
+Enable one or more tools by name.
+
+**Examples:**
+```
+/tools enable web-search
+/tools enable web-search calculator
+```
+
+### /tools disable <toolNames>
+
+Disable one or more tools by name.
+
+**Examples:**
+```
+/tools disable calculator
+/tools disable web-search calculator
+```
+
+### /tools set <toolNames>
+
+Set exactly which tools are enabled, replacing the current selection.
+
+**Examples:**
+```
+/tools set web-search calculator
+```
+
+### /tools select
+
+Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by package.
+
+**Examples:**
+```
+/tools select
+```
+
+### /tools hide <toolNames>
+
+Hide one or more tools by name, requiring the model to search for the tool to activate it before use.
+
+Saves context in some cases; useful for agents that need access to large numbers of tools.
+
+**Examples:**
+```
+/tools hide calculator
+/tools hide web-search calculator
 ```
 
 **Hidden Tools:**
-Tools can be hidden to save context tokens. Hidden tools are not visible to the model but remain available. The `tool_search` tool can be used to search for and enable hidden tools by pattern.
-
-### /compact [<focus>]
-
-Alias for `/chat compact` - Compress the conversation context by creating intelligent summaries of prior messages.
+Tools can be hidden to save context tokens. Hidden tools are not visible to the model but remain available. The `tool_search` tool is automatically enabled when hidden tools are configured and can be used to search for and enable hidden tools by regex pattern.
 
 ## Plugin Configuration
 
@@ -467,6 +618,28 @@ const toolDefinition = tokenRingTool({
 });
 ```
 
+### tool_search
+
+Built-in tool for searching hidden tools by regex pattern. Automatically enabled when `hiddenTools` is configured.
+
+**Usage:** The AI can use this tool to search for and enable hidden tools by providing a regex pattern.
+
+**Examples:**
+```json
+{
+  "name": "tool_search",
+  "arguments": {
+    "regex": "weather|forecast"
+  }
+}
+```
+
+**Features:**
+- Searches tool names and descriptions
+- Case-insensitive regex matching
+- Automatically enables matching tools
+- Only searches hidden tools
+
 **Tool Result Types:**
 
 - `text`: Simple string result or text object with type and content
@@ -526,7 +699,7 @@ Built-in tool for searching hidden tools by regex pattern:
 
 ### ChatService Registration
 
-The ChatService is automatically registered when using the plugin:
+The ChatService is automatically registered when using the plugin, or can be added manually:
 
 ```typescript
 import ChatService from "@tokenring-ai/chat";
@@ -566,12 +739,14 @@ await app.start();
 
 ## Providers
 
-The chat package uses the `ChatModelRegistry` provider from `@tokenring-ai/ai-client` for model selection and client management. This registry provides:
+The chat package uses the `ChatModelRegistry` from `@tokenring-ai/ai-client` for model selection and client management. This registry provides:
 
 - Model availability tracking (online, cold, offline)
 - Model cost information
 - Context length specifications
 - Automatic client selection and management
+
+The registry is automatically registered as a service when the `@tokenring-ai/ai-client` package is installed.
 
 ## RPC Endpoints
 
@@ -1065,9 +1240,9 @@ pkg/chat/
 
 ### Development Dependencies
 
-- `@vitest/coverage-v8` (^4.1.0) - Test coverage
-- `typescript` (^5.9.3) - TypeScript compiler
-- `vitest` (^4.1.0) - Testing framework
+- `@vitest/coverage-v8` (^4.1.1) - Test coverage
+- `typescript` (^6.0.2) - TypeScript compiler
+- `vitest` (^4.1.1) - Testing framework
 
 ## License
 
