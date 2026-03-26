@@ -6,7 +6,7 @@ import {RpcService} from "@tokenring-ai/rpc";
 import {z} from "zod";
 
 import agentCommands from "./commands.ts";
-import ChatService from "./ChatService.js";
+import ChatService from "./ChatService.ts";
 import chatRPC from "./rpc/chat.ts";
 import contextHandlers from "./contextHandlers.ts";
 import packageJSON from "./package.json" with {type: "json"};

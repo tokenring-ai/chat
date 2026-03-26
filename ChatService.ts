@@ -21,7 +21,7 @@ import {
   StoredChatMessage,
   TokenRingToolDefinition
 } from "./schema.ts";
-import {ChatServiceState} from "./state/chatServiceState.js";
+import {ChatServiceState} from "./state/chatServiceState.ts";
 import {tokenRingTool} from "./util/tokenRingTool.ts";
 
 export type BuildChatMessagesOptions = {
