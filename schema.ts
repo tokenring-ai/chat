@@ -62,7 +62,7 @@ export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> =
   start?: (agent: Agent) => Promise<void>;
   stop?: (agent: Agent) => Promise<void>;
   requiredContextHandlers?: string[];
-  autoActivate?: (agent: Agent) => boolean | Promise<boolean>;
+  adjustActivation?: (enabled: boolean, agent: Agent) => boolean | Promise<boolean>;
 };
 
 export const ContextSourceSchema = z.looseObject({

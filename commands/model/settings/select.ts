@@ -19,8 +19,8 @@ async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Prom
     question: {type: "treeSelect", label: "Feature Selection", key: "result", defaultValue: currentEnabled, minimumSelections: 0, tree},
   });
   if (selection) {
-    const newSettings = Object.create(null);
-    for (const k of selection) newSettings[k] = true;
+    const newSettings = new Map<string, any>();
+    for (const k of selection) newSettings.set(k, true);
     const newModel = serializeModel(base, newSettings);
     chatService.setModel(newModel, agent);
     return `Settings updated. New model: ${newModel}`;

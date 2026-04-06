@@ -1,15 +1,15 @@
 import {AgentCommandService} from "@tokenring-ai/agent";
-import hooks from "./hooks";
 import {TokenRingPlugin} from "@tokenring-ai/app";
 import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
 import {RpcService} from "@tokenring-ai/rpc";
 import {z} from "zod";
+import ChatService from "./ChatService.ts";
 
 import agentCommands from "./commands.ts";
-import ChatService from "./ChatService.ts";
-import chatRPC from "./rpc/chat.ts";
 import contextHandlers from "./contextHandlers.ts";
+import hooks from "./hooks";
 import packageJSON from "./package.json" with {type: "json"};
+import chatRPC from "./rpc/chat.ts";
 import {ChatServiceConfigSchema} from "./schema.ts";
 import tools from "./tools.ts";
 
@@ -19,6 +19,7 @@ const packageConfigSchema = z.object({
 
 export default {
   name: packageJSON.name,
+  displayName: "AI Chat Client",
   version: packageJSON.version,
   description: packageJSON.description,
   install(app, config) {

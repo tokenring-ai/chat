@@ -53,15 +53,28 @@ export default async function runChat({
 
   if (!client) throw new Error(`No online client found for model ${model}`);
 
-  const enabledTools = chatConfig.enabledTools;
+  const enabledTools = new Set(chatConfig.enabledTools);
+  let updatedTools = false;
 
   for (const [, tool] of chatService.getAvailableToolEntries()) {
-    if (chatConfig.enabledTools.includes(tool.name)) continue;
-    const activate = tool?.toolDefinition?.autoActivate?.(agent) ?? false;
-    if (activate) {
-      agent.infoMessage(`Auto-Activated tool ${tool.name}`);
-      enabledTools.push(tool.name);
+    let enabled = enabledTools.has(tool.name);
+    if (tool?.toolDefinition?.adjustActivation) {
+      let newEnabled = await tool.toolDefinition.adjustActivation(enabled, agent);
+      if (newEnabled && !enabled) {
+        enabledTools.add(tool.name);
+        agent.infoMessage(`Auto-Activated tool ${tool.name}`);
+        updatedTools = true;
+      } else if (!newEnabled && enabled) {
+        enabledTools.delete(tool.name);
+        agent.infoMessage(`Auto-Deactivated tool ${tool.name}`);
+      }
     }
+  }
+
+  if (updatedTools) {
+    agent.mutateState(ChatServiceState, (state) => {
+      state.currentConfig.enabledTools = Array.from(enabledTools);
+    })
   }
 
   const requestMessages = await chatService.buildChatMessages({input, attachments, chatConfig, agent });

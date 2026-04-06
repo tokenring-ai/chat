@@ -1,7 +1,7 @@
 {
   "name": "@tokenring-ai/chat",
   "version": "0.2.0",
-  "description": "AI chat client for the Token Ring ecosystem",
+  "description": "Tool calling AI chat client for the TokenRing ecosystem",
   "dependencies": {
     "@tokenring-ai/app": "0.2.0",
     "@tokenring-ai/ai-client": "0.2.0",

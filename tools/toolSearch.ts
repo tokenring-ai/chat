@@ -49,7 +49,7 @@ async function execute(
   return `Enabled tool(s): ${matched.join(", ")}, you may now use them.`;
 }
 
-function autoActivate(agent: Agent) {
+function adjustActivation(enabled: boolean, agent: Agent) {
   const { hiddenTools} = agent.getState(ChatServiceState).currentConfig;
   return hiddenTools.length > 0;
 }
@@ -68,5 +68,5 @@ export default {
   description,
   inputSchema,
   execute,
-  autoActivate,
+  adjustActivation
 } satisfies TokenRingToolDefinition<typeof inputSchema>;
