@@ -1,11 +1,11 @@
-import type Agent from "@tokenring-ai/agent/Agent";
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
-import {type ContextHandlerOptions, ParsedChatConfig} from "../schema.ts";
+import interpolateString from "@tokenring-ai/utility/string/interpolateString";
+import {type ContextHandlerOptions} from "../schema.ts";
+
+const replacementFunctions = {
+  DATE: () => new Date().toLocaleDateString(),
+} as Record<string, () => string>;
 
 export default async function* getContextItems({chatConfig}: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
-  if (typeof chatConfig.systemPrompt === 'function') {
-    yield {role: "system", content: chatConfig.systemPrompt()};
-  } else {
-    yield {role: "system", content: chatConfig.systemPrompt};
-  }
+  yield {role: "system", content: interpolateString(chatConfig.systemPrompt, replacementFunctions)};
 }

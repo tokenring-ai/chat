@@ -71,7 +71,7 @@ export const ContextSourceSchema = z.looseObject({
 
 export const ChatAgentConfigSchema = z.object({
   model: z.string().optional(),
-  systemPrompt: z.union([z.string(), z.function({output: z.string()})]),
+  systemPrompt: z.string(),
   maxSteps: z.number().optional(),
   compaction: z.object({
     policy: z.enum(["automatic", "ask", "never"]).optional(),
