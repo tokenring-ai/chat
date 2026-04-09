@@ -137,7 +137,7 @@ export type ContextHandlerOptions = {
   sourceConfig: z.infer<typeof ContextSourceSchema>;
   agent: Agent;
 };
-export type ContextHandler = (options: ContextHandlerOptions) => AsyncGenerator<ContextItem>;
+export type ContextHandler = (options: ContextHandlerOptions) => AsyncGenerator<ContextItem> | Generator<ContextItem>;
 /**
  * Represents a chat message in the storage system
  */

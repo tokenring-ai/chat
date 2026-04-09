@@ -6,6 +6,6 @@ const replacementFunctions = {
   DATE: () => new Date().toLocaleDateString(),
 } as Record<string, () => string>;
 
-export default async function* getContextItems({chatConfig}: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
+export default function* getContextItems({chatConfig}: ContextHandlerOptions): Generator<ChatInputMessage> {
   yield {role: "system", content: interpolateString(chatConfig.systemPrompt, replacementFunctions)};
 }

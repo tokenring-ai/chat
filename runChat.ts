@@ -57,9 +57,9 @@ export default async function runChat({
   let updatedTools = false;
 
   for (const [, tool] of chatService.getAvailableToolEntries()) {
-    let enabled = enabledTools.has(tool.name);
+    const enabled = enabledTools.has(tool.name);
     if (tool?.toolDefinition?.adjustActivation) {
-      let newEnabled = await tool.toolDefinition.adjustActivation(enabled, agent);
+      const newEnabled = await tool.toolDefinition.adjustActivation(enabled, agent);
       if (newEnabled && !enabled) {
         enabledTools.add(tool.name);
         agent.infoMessage(`Auto-Activated tool ${tool.name}`);

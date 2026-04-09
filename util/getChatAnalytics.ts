@@ -1,4 +1,3 @@
-import Agent from "@tokenring-ai/agent/Agent";
 import type {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 
 export function getChatAnalytics(

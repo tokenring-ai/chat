@@ -1,7 +1,7 @@
 import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
-import {type ContextHandlerOptions} from "../schema.ts";
-import type {FilePart, ImagePart, TextPart, UserModelMessage } from "@tokenring-ai/ai-client/schema";
+import type {FilePart, ImagePart, TextPart, UserModelMessage} from "@tokenring-ai/ai-client/schema";
 import z from "zod";
+import {type ContextHandlerOptions} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 
 //TODO: we should evaluate whether this should default to true or false
@@ -42,10 +42,12 @@ export default async function* getContextItems({input, attachments, sourceConfig
           if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
           text = await fetch(attachment.body).then(res => res.text());
           break;
-        default:
+        default: {
           // noinspection JSUnusedLocalSymbols
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const foo: never = attachment.encoding;
           throw new Error(`Unsupported attachment encoding: ${attachment.encoding}`);
+        }
       }
 
       text = `
@@ -79,10 +81,12 @@ ${text}`.trim();
             image: attachment.body,
           });
           break;
-        default:
+        default: {
           // noinspection JSUnusedLocalSymbols
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const foo: never = attachment.encoding;
           throw new Error(`Unsupported attachment encoding: ${attachment.encoding}`);
+        }
       }
     } else {
       switch (attachment.encoding) {
@@ -109,10 +113,12 @@ ${text}`.trim();
             data: attachment.body,
           })
           break;
-        default:
+        default: {
           // noinspection JSUnusedLocalSymbols
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const foo: never = attachment.encoding;
           throw new Error(`Unsupported attachment encoding: ${attachment.encoding}`);
+        }
       }
     }
   }

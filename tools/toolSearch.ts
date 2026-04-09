@@ -7,10 +7,10 @@ import {ChatServiceState} from "../state/chatServiceState.ts";
 const name = "tool_search";
 const displayName = "Chat/toolSearch";
 
-async function execute(
+function execute(
   {regex}: z.output<typeof inputSchema>,
   agent: Agent,
-): Promise<TokenRingToolResult> {
+): TokenRingToolResult {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
   const hiddenTools = chatConfig.hiddenTools ?? [];

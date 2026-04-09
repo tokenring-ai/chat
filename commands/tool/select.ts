@@ -10,7 +10,7 @@ async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Prom
   const enabledTools = chatService.getEnabledTools(agent);
   const toolsByCategory: Record<string, Array<{displayName: string, toolName: string}>> = {};
   for (const [toolName, tool] of chatService.getAvailableToolEntries()) {
-    let [, category, displayName] = tool.toolDefinition?.displayName.match(/^(.*)\/(.*)/) ?? [null, "Unknown", tool.toolDefinition?.displayName ?? toolName];
+    const [, category, displayName] = tool.toolDefinition?.displayName.match(/^(.*)\/(.*)/) ?? [null, "Unknown", tool.toolDefinition?.displayName ?? toolName];
     (toolsByCategory[category] ??= []).push({displayName, toolName});
   }
   const tree: TreeLeaf[] = Object.keys(toolsByCategory).sort().map(category => ({

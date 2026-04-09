@@ -1,6 +1,6 @@
+import AgentManager from "@tokenring-ai/agent/services/AgentManager";
 import TokenRingApp from "@tokenring-ai/app";
 import {createRPCEndpoint} from "@tokenring-ai/rpc/createRPCEndpoint";
-import AgentManager from "@tokenring-ai/agent/services/AgentManager";
 import ChatService from "../ChatService.ts";
 import ChatRpcSchema from "./schema.ts";
 

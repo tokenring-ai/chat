@@ -10,7 +10,7 @@ const displayName = "Chat/Inject Subagent Results";
 const description = "Injects the results of subagent into the parent agents chat stream";
 
 const callbacks = [
-  new HookCallback(AfterSubAgentResponse, async (data, agent) => {
+  new HookCallback(AfterSubAgentResponse, (data, agent) => {
     const lastStep = data.request.steps[data.request.steps.length - 1];
     const lastMessage = typeof lastStep === 'string' ? lastStep : lastStep.message;
 
@@ -26,7 +26,7 @@ ${data.result.status}: ${data.result.response}
       );
     });
   }),
-  new HookCallback(AfterChatCompletion, async (data, agent) => {
+  new HookCallback(AfterChatCompletion, (data, agent) => {
     agent.mutateState(ChatServiceState, state => {
       state.injectedMessages.splice(0);
     });
