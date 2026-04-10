@@ -1,32 +1,51 @@
 import type {TreeLeaf} from "@tokenring-ai/agent/question";
-import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand,} from "@tokenring-ai/agent/types";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
 import ChatService from "../../ChatService.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({
+                         agent,
+                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
-  const modelsByProvider = await agent.busyWithActivity("Checking online status of models...", chatModelRegistry.getModelsByProvider());
+  const modelsByProvider = await agent.busyWithActivity(
+    "Checking online status of models...",
+    chatModelRegistry.getModelsByProvider(),
+  );
   const tree: TreeLeaf[] = Object.entries(modelsByProvider)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([provider, providerModels]) => {
       const sorted = Object.entries(providerModels).sort(([, a], [, b]) =>
-        a.status === b.status ? a.modelSpec.modelId.localeCompare(b.modelSpec.modelId) : a.status.localeCompare(b.status)
+        a.status === b.status
+          ? a.modelSpec.modelId.localeCompare(b.modelSpec.modelId)
+          : a.status.localeCompare(b.status),
       );
-      const onlineCount = Object.values(providerModels).filter(m => m.status === "online").length;
+      const onlineCount = Object.values(providerModels).filter(
+        (m) => m.status === "online",
+      ).length;
       return {
         name: `${provider} (${onlineCount}/${Object.keys(providerModels).length} online)`,
         children: sorted.map(([modelName, model]) => ({
           value: modelName,
-          name: model.status === "online" ? model.modelSpec.modelId : `${model.modelSpec.modelId} (${model.status})`,
+          name:
+            model.status === "online"
+              ? model.modelSpec.modelId
+              : `${model.modelSpec.modelId} (${model.status})`,
         })),
       };
     });
   const selection = await agent.askQuestion({
     message: `Choose a new model:`,
-    question: { type: 'treeSelect', label: "Model Selection", key: "result", minimumSelections: 1, maximumSelections: 1, tree },
+    question: {
+      type: "treeSelect",
+      label: "Model Selection",
+      key: "result",
+      minimumSelections: 1,
+      maximumSelections: 1,
+      tree,
+    },
   });
   if (selection) {
     chatService.setModel(selection[0], agent);
@@ -36,8 +55,8 @@ async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Prom
 }
 
 export default {
-  name: "model select", 
-  description: "Interactively select a model", 
+  name: "model select",
+  description: "Interactively select a model",
   inputSchema,
   execute,
   help: `Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.

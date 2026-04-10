@@ -1,18 +1,31 @@
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand,} from "@tokenring-ai/agent/types";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../../ChatService.ts";
 
 const inputSchema = {
   args: {},
-  remainder: {name: "toolNames", description: "Space-separated tool names to disable", required: true}
+  remainder: {
+    name: "toolNames",
+    description: "Space-separated tool names to disable",
+    required: true,
+  },
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({remainder, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+function execute({
+                   remainder,
+                   agent,
+                 }: AgentCommandInputType<typeof inputSchema>): string {
   const toolNames = remainder.split(/\s+/).filter(Boolean);
-  if (!toolNames.length) throw new CommandFailedError("Tool names required. Usage: /tools disable <tool1> <tool2> ...");
+  if (!toolNames.length)
+    throw new CommandFailedError(
+      "Tool names required. Usage: /tools disable <tool1> <tool2> ...",
+    );
   const chatService = agent.requireServiceByType(ChatService);
-  chatService.disableTools(toolNames.map(n => chatService.ensureToolNamesLike(n)).flat(), agent);
+  chatService.disableTools(
+    toolNames.flatMap((n) => chatService.ensureToolNamesLike(n)),
+    agent,
+  );
   return `Enabled tools: ${joinDefault(", ", chatService.getEnabledTools(agent), "(none)")}`;
 }
 

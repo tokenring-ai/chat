@@ -1,31 +1,29 @@
 import type {AIResponse} from "@tokenring-ai/ai-client/client/AIChatClient";
 
-export function getChatAnalytics(
-  response: AIResponse,
-) {
-  const {
-    inputTokens,
-    cachedInputTokens,
-    outputTokens,
-    reasoningTokens,
-  } = response.totalUsage;
+export function getChatAnalytics(response: AIResponse) {
+  const {inputTokens, cachedInputTokens, outputTokens, reasoningTokens} =
+    response.totalUsage;
 
   const usage = [
     `- Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
-    `- Output Tokens: ${outputTokens?.toLocaleString() ?? "unknown"}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`
+    `- Output Tokens: ${outputTokens?.toLocaleString() ?? "unknown"}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`,
   ];
 
-  if (response.lastStepUsage.inputTokens && response.lastStepUsage.outputTokens) {
-    usage.push(`- Context Length: ${(response.lastStepUsage.inputTokens + response.lastStepUsage.outputTokens).toLocaleString()}`);
+  if (
+    response.lastStepUsage.inputTokens &&
+    response.lastStepUsage.outputTokens
+  ) {
+    usage.push(
+      `- Context Length: ${(response.lastStepUsage.inputTokens + response.lastStepUsage.outputTokens).toLocaleString()}`,
+    );
   }
 
   const {input, cachedInput, output, reasoning, total} = response.cost;
   if (total) {
     usage.push(
-      `- Input Cost: \$${input ? input.toFixed(4) : "unknown"}${cachedInput ? ` (+\$${cachedInput.toFixed(4)} cached)` : ""}`,
-      `- Output Cost: \$${output ? output.toFixed(4) : "unknown"}${reasoning ? ` (+\$${reasoning.toFixed(4)} reasoning)` : ""}`,
+      `- Input Cost: $${input ? input.toFixed(4) : "unknown"}${cachedInput ? ` (+$${cachedInput.toFixed(4)} cached)` : ""}`,
+      `- Output Cost: $${output ? output.toFixed(4) : "unknown"}${reasoning ? ` (+$${reasoning.toFixed(4)} reasoning)` : ""}`,
     );
-
   }
 
   const {elapsedMs, tokensPerSec} = response.timing;

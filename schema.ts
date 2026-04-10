@@ -1,23 +1,26 @@
-import Agent from "@tokenring-ai/agent/Agent";
-import {type InputAttachment, OutputArtifactSchema} from "@tokenring-ai/agent/AgentEvents";
+import type Agent from "@tokenring-ai/agent/Agent";
+import type {InputAttachment, OutputArtifactSchema,} from "@tokenring-ai/agent/AgentEvents";
 
 import type {Tool as AITool} from "@tokenring-ai/ai-client";
-import type {AIResponse, ChatInputMessage, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
+import type {AIResponse, ChatInputMessage, ChatRequest,} from "@tokenring-ai/ai-client/client/AIChatClient";
 import {z} from "zod";
 
 const initialContextItems = [
-  { type: "system-message" },
-  { type: "tool-context" },
-  { type: "prior-messages" },
-  { type: "current-message" },
+  {type: "system-message"},
+  {type: "tool-context"},
+  {type: "prior-messages"},
+  {type: "current-message"},
 ];
 
 const followUpContextItems = [
-  { type: "prior-messages" },
-  { type: "current-message" },
-]
+  {type: "prior-messages"},
+  {type: "current-message"},
+];
 
-export type ToolArtifact = Omit<z.input<typeof OutputArtifactSchema>, "type" | "timestamp">
+export type ToolArtifact = Omit<
+  z.input<typeof OutputArtifactSchema>,
+  "type" | "timestamp"
+>;
 
 export type NamedTool = {
   name: string;
@@ -25,93 +28,121 @@ export type NamedTool = {
   toolDefinition?: TokenRingToolDefinition<any>;
 };
 
-export type TokenRingToolTextResult = string | {
-  type: 'text',
-  text: string,
-  artifact?: ToolArtifact,
-}
+export type TokenRingToolTextResult =
+  | string
+  | {
+  type: "text";
+  text: string;
+  artifact?: ToolArtifact;
+};
 export type TokenRingToolMediaResult = {
-  type: 'media',
-  mediaType: string,
-  data: string,
-  artifact?: ToolArtifact,
-}
+  type: "media";
+  mediaType: string;
+  data: string;
+  artifact?: ToolArtifact;
+};
 
-type AsJson<T> =
-  T extends string | number | boolean | null ? T :
-  T extends Function ? never :
-  T extends object ? { [K in keyof T]: AsJson<T[K]> } :
-    never;
+type AsJson<T> = T extends string | number | boolean | null
+  ? T
+  : T extends Function
+    ? never
+    : T extends object
+      ? { [K in keyof T]: AsJson<T[K]> }
+      : never;
 
 export type TokenRingToolJSONResult<T> = {
-  type: 'json',
+  type: "json";
   data: AsJson<T>;
-  artifact?: ToolArtifact,
-}
-
-export type TokenRingToolResult = TokenRingToolTextResult | TokenRingToolMediaResult | TokenRingToolJSONResult<any>;
-
-export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> = {
-  /* The name of the tool, as seen by the model */
-  name: string;
-  /* The display name of the tool, as seen by the user */
-  displayName: string;
-  description: string;
-  execute: (input: z.output<InputSchema>, agent: Agent) => Promise<TokenRingToolResult> | TokenRingToolResult;
-  inputSchema: InputSchema;
-  start?: (agent: Agent) => Promise<void>;
-  stop?: (agent: Agent) => Promise<void>;
-  requiredContextHandlers?: string[];
-  adjustActivation?: (enabled: boolean, agent: Agent) => boolean | Promise<boolean>;
+  artifact?: ToolArtifact;
 };
+
+export type TokenRingToolResult =
+  | TokenRingToolTextResult
+  | TokenRingToolMediaResult
+  | TokenRingToolJSONResult<any>;
+
+export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> =
+  {
+    /* The name of the tool, as seen by the model */
+    name: string;
+    /* The display name of the tool, as seen by the user */
+    displayName: string;
+    description: string;
+    execute: (
+      input: z.output<InputSchema>,
+      agent: Agent,
+    ) => Promise<TokenRingToolResult> | TokenRingToolResult;
+    inputSchema: InputSchema;
+    start?: (agent: Agent) => Promise<void>;
+    stop?: (agent: Agent) => Promise<void>;
+    requiredContextHandlers?: string[];
+    adjustActivation?: (
+      enabled: boolean,
+      agent: Agent,
+    ) => boolean | Promise<boolean>;
+  };
 
 export const ContextSourceSchema = z.looseObject({
   type: z.string(),
 });
 
-export const ChatAgentConfigSchema = z.object({
-  model: z.string().optional(),
-  systemPrompt: z.string(),
-  maxSteps: z.number().optional(),
-  compaction: z.object({
-    policy: z.enum(["automatic", "ask", "never"]).optional(),
-    compactionThreshold: z.number().optional(),
-    applyThreshold: z.number().optional(),
-    background: z.boolean().optional(),
-    focus: z.string().optional(),
-  }).prefault({}),
-  enabledTools: z.array(z.string()).optional(),
-  hiddenTools: z.array(z.string()).optional(),
-  context: z.object({
-    initial: z.array(ContextSourceSchema).default(initialContextItems),
-    followUp: z.array(ContextSourceSchema).default(followUpContextItems),
-  }).optional(),
-}).strict();
+export const ChatAgentConfigSchema = z
+  .object({
+    model: z.string().optional(),
+    systemPrompt: z.string(),
+    maxSteps: z.number().optional(),
+    compaction: z
+      .object({
+        policy: z.enum(["automatic", "ask", "never"]).optional(),
+        compactionThreshold: z.number().optional(),
+        applyThreshold: z.number().optional(),
+        background: z.boolean().optional(),
+        focus: z.string().optional(),
+      })
+      .prefault({}),
+    enabledTools: z.array(z.string()).optional(),
+    hiddenTools: z.array(z.string()).optional(),
+    context: z
+      .object({
+        initial: z.array(ContextSourceSchema).default(initialContextItems),
+        followUp: z.array(ContextSourceSchema).default(followUpContextItems),
+      })
+      .optional(),
+  })
+  .strict();
 
-const ChatAgentDefaultConfig = z.object({
-  model: z.string().optional(),
-  enabledTools: z.array(z.string()).default([]),
-  hiddenTools: z.array(z.string()).default([]),
-  maxSteps: z.number().default(0),
-  compaction: z.object({
-    policy: z.enum(["automatic", "ask", "never"]).default("ask"),
-    compactionThreshold: z.number().default(0.5),
-    applyThreshold: z.number().optional(),
-    background: z.boolean().default(false),
-    focus: z.string().default(`
+const ChatAgentDefaultConfig = z
+  .object({
+    model: z.string().optional(),
+    enabledTools: z.array(z.string()).default([]),
+    hiddenTools: z.array(z.string()).default([]),
+    maxSteps: z.number().default(0),
+    compaction: z
+      .object({
+        policy: z.enum(["automatic", "ask", "never"]).default("ask"),
+        compactionThreshold: z.number().default(0.5),
+        applyThreshold: z.number().optional(),
+        background: z.boolean().default(false),
+        focus: z.string().default(
+          `
 - Important Details
 - Resources, files, or URLs that were referenced
 - A clear description of the current task
 - A summary of the previous steps taken
 - Key details about the current task
 - Any other relevant information that might be useful for the current task
-    `.trim())
-  }).prefault({}),
-  context: z.object({
-    initial: z.array(ContextSourceSchema).default(initialContextItems),
-    followUp: z.array(ContextSourceSchema).default(followUpContextItems),
-  }).prefault({}),
-}).strict();
+    `.trim(),
+        ),
+      })
+      .prefault({}),
+    context: z
+      .object({
+        initial: z.array(ContextSourceSchema).default(initialContextItems),
+        followUp: z.array(ContextSourceSchema).default(followUpContextItems),
+      })
+      .prefault({}),
+  })
+  .strict();
 
 export const ChatServiceConfigSchema = z.object({
   defaultModels: z.array(z.string()).default([]),
@@ -124,7 +155,7 @@ export const ChatConfigMergedSchema = z.object({
 });
 
 export type ChatAgentConfig = {
-  chat: z.input<typeof ChatAgentConfigSchema>
+  chat: z.input<typeof ChatAgentConfigSchema>;
 };
 
 export type ParsedChatConfig = z.output<typeof ChatConfigMergedSchema>;
@@ -137,7 +168,9 @@ export type ContextHandlerOptions = {
   sourceConfig: z.infer<typeof ContextSourceSchema>;
   agent: Agent;
 };
-export type ContextHandler = (options: ContextHandlerOptions) => AsyncGenerator<ContextItem> | Generator<ContextItem>;
+export type ContextHandler = (
+  options: ContextHandlerOptions,
+) => AsyncGenerator<ContextItem> | Generator<ContextItem>;
 /**
  * Represents a chat message in the storage system
  */
@@ -150,7 +183,7 @@ export type StoredChatMessage = {
   createdAt: number;
   /** The update time in milliseconds since the epoch format */
   updatedAt: number;
-}
+};
 
 export const StoredChatCompactionSchema = z.object({
   startIndex: z.number().int().nonnegative(),

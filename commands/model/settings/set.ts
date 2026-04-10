@@ -1,25 +1,34 @@
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
-import {coerceFeatureValue, serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
+import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand,} from "@tokenring-ai/agent/types";
+import {coerceFeatureValue, serializeModel,} from "@tokenring-ai/ai-client/util/modelSettings";
 import ChatService from "../../../ChatService.ts";
 
 const inputSchema = {
   args: {},
-  positionals: [{
-    name: "token",
-    description: "Setting key or key=value pair",
-    required: true,
-  }]
+  positionals: [
+    {
+      name: "token",
+      description: "Setting key or key=value pair",
+      required: true,
+    },
+  ],
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({positionals, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+function execute({
+                   positionals,
+                   agent,
+                 }: AgentCommandInputType<typeof inputSchema>): string {
   const token = positionals.token;
-  if (!token) throw new CommandFailedError("/model settings set requires a key or key=value");
+  if (!token)
+    throw new CommandFailedError(
+      "/model settings set requires a key or key=value",
+    );
   const chatService = agent.requireServiceByType(ChatService);
   const {base, settings} = chatService.getModelAndSettings(agent);
   const eq = token.indexOf("=");
-  if (eq === -1) { settings.set(token, true); }
-  else {
+  if (eq === -1) {
+    settings.set(token, true);
+  } else {
     const key = token.substring(0, eq);
     if (!key) throw new CommandFailedError(`Invalid feature token: ${token}`);
     settings.set(key, coerceFeatureValue(token.substring(eq + 1)));

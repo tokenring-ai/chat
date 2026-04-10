@@ -1,21 +1,27 @@
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand,} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
 const description = "Show the current context for the chat session";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-async function execute({agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({
+                         agent,
+                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   try {
     const chatService = agent.requireServiceByType(ChatService);
     const chatConfig = chatService.getChatConfig(agent);
 
-    const messages = await chatService.buildChatMessages({input: "input", chatConfig, agent});
+    const messages = await chatService.buildChatMessages({
+      input: "input",
+      chatConfig,
+      agent,
+    });
 
     const lines: string[] = [
       "Context items that would be added to chat request:",
-      `Total messages: ${messages.length}`
+      `Total messages: ${messages.length}`,
     ];
 
     messages.slice(0, -1).forEach((msg, index) => {

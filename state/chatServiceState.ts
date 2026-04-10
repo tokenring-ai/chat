@@ -1,7 +1,8 @@
 import {AgentStateSlice} from "@tokenring-ai/agent/types";
+import markdownList from "@tokenring-ai/utility/string/markdownList";
 import async from "async";
 import {z} from "zod";
-import {ChatConfigMergedSchema, ParsedChatConfig, StoredChatCompactionSchema, StoredChatMessage, type TokenRingToolResult} from "../schema.ts";
+import {ChatConfigMergedSchema, type ParsedChatConfig, StoredChatCompactionSchema, type StoredChatMessage, type TokenRingToolResult,} from "../schema.ts";
 
 const serializationSchema = z.object({
   currentConfig: ChatConfigMergedSchema,
@@ -11,7 +12,9 @@ const serializationSchema = z.object({
   compactionInProgress: z.boolean().default(false),
 });
 
-export class ChatServiceState extends AgentStateSlice<typeof serializationSchema> {
+export class ChatServiceState extends AgentStateSlice<
+  typeof serializationSchema
+> {
   currentConfig: ParsedChatConfig;
   parallelTools = false;
   toolQueue = async.queue(
@@ -61,9 +64,9 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
     this.compactionInProgress = data.compactionInProgress ?? false;
   }
 
-  show(): string[] {
-    return [
-      `Messages: ${this.messages.length}`,
+  show(): string {
+    return `Messages: ${this.messages.length}
+${markdownList([
       `Enabled Tools: ${this.currentConfig.enabledTools?.join(", ") || "None"}`,
       `Compaction Policy: ${this.currentConfig.compaction.policy}`,
       `Compaction Threshold: ${this.currentConfig.compaction.compactionThreshold}`,
@@ -71,6 +74,6 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
       `Pending Compaction: ${this.pendingCompaction ? "Yes" : "No"}`,
       `Max Steps: ${this.currentConfig.maxSteps}`,
       `System Prompt: ${this.currentConfig.systemPrompt}`,
-    ];
+    ])}`;
   }
 }

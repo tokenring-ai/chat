@@ -1,5 +1,5 @@
 import AgentManager from "@tokenring-ai/agent/services/AgentManager";
-import TokenRingApp from "@tokenring-ai/app";
+import type TokenRingApp from "@tokenring-ai/app";
 import {createRPCEndpoint} from "@tokenring-ai/rpc/createRPCEndpoint";
 import ChatService from "../ChatService.ts";
 import ChatRpcSchema from "./schema.ts";
@@ -7,13 +7,14 @@ import ChatRpcSchema from "./schema.ts";
 export default createRPCEndpoint(ChatRpcSchema, {
   getAvailableTools(_args, app: TokenRingApp) {
     const chatService = app.requireService(ChatService);
-    const tools = chatService.getAvailableToolEntries()
+    const tools = chatService.getAvailableToolEntries();
     return {
       tools: Object.fromEntries(
         tools.map(([toolName, tool]) => [
-          toolName, { displayName: tool.toolDefinition?.displayName || toolName },
-        ])
-      )
+          toolName,
+          {displayName: tool.toolDefinition?.displayName || toolName},
+        ]),
+      ),
     };
   },
 
@@ -22,7 +23,7 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) throw new Error("Agent not found");
     const chatService = app.requireService(ChatService);
     return {
-      model: chatService.getModel(agent)
+      model: chatService.getModel(agent),
     };
   },
 
@@ -31,7 +32,7 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) throw new Error("Agent not found");
     const chatService = app.requireService(ChatService);
     chatService.setModel(args.model, agent);
-    return { success: true };
+    return {success: true};
   },
 
   getEnabledTools(args, app: TokenRingApp) {
@@ -39,7 +40,7 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) throw new Error("Agent not found");
     const chatService = app.requireService(ChatService);
     return {
-      tools: chatService.getEnabledTools(agent)
+      tools: chatService.getEnabledTools(agent),
     };
   },
 
@@ -48,7 +49,7 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) throw new Error("Agent not found");
     const chatService = app.requireService(ChatService);
     const tools = chatService.setEnabledTools(args.tools, agent);
-    return { tools };
+    return {tools};
   },
 
   enableTools(args, app: TokenRingApp) {
@@ -56,7 +57,7 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) throw new Error("Agent not found");
     const chatService = app.requireService(ChatService);
     const tools = chatService.enableTools(args.tools, agent);
-    return { tools };
+    return {tools};
   },
 
   disableTools(args, app: TokenRingApp) {
@@ -64,7 +65,7 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) throw new Error("Agent not found");
     const chatService = app.requireService(ChatService);
     const tools = chatService.disableTools(args.tools, agent);
-    return { tools };
+    return {tools};
   },
 
   getChatMessages(args, app: TokenRingApp) {
@@ -72,7 +73,7 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) throw new Error("Agent not found");
     const chatService = app.requireService(ChatService);
     return {
-      messages: chatService.getChatMessages(agent)
+      messages: chatService.getChatMessages(agent),
     };
   },
 
@@ -81,6 +82,6 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) throw new Error("Agent not found");
     const chatService = app.requireService(ChatService);
     chatService.clearChatMessages(agent);
-    return { success: true };
-  }
+    return {success: true};
+  },
 });

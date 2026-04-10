@@ -1,4 +1,4 @@
-import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand,} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 import runChat from "../../runChat.ts";
 import {getChatAnalytics} from "../../util/getChatAnalytics.ts";
@@ -7,14 +7,27 @@ const description = "Send messages to the LLM";
 
 const inputSchema = {
   args: {},
-  remainder: {name: "message", description: "The message to send", required: true},
+  remainder: {
+    name: "message",
+    description: "The message to send",
+    required: true,
+  },
   allowAttachments: true,
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({remainder, attachments, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({
+                         remainder,
+                         attachments,
+                         agent,
+                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
-  const response = await runChat({input: remainder, attachments, chatConfig, agent});
+  const response = await runChat({
+    input: remainder,
+    attachments,
+    chatConfig,
+    agent,
+  });
   return `Chat Complete\n${getChatAnalytics(response)}`;
 }
 

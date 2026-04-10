@@ -1,7 +1,7 @@
-import Agent from "@tokenring-ai/agent/Agent";
+import type Agent from "@tokenring-ai/agent/Agent";
 import {z} from "zod";
 import ChatService from "../ChatService.ts";
-import {TokenRingToolDefinition, type TokenRingToolResult} from "../schema.ts";
+import type {TokenRingToolDefinition, TokenRingToolResult,} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 
 const name = "tool_search";
@@ -49,18 +49,21 @@ function execute(
   return `Enabled tool(s): ${matched.join(", ")}, you may now use them.`;
 }
 
-function adjustActivation(enabled: boolean, agent: Agent) {
-  const { hiddenTools} = agent.getState(ChatServiceState).currentConfig;
+function adjustActivation(_enabled: boolean, agent: Agent) {
+  const {hiddenTools} = agent.getState(ChatServiceState).currentConfig;
   return hiddenTools.length > 0;
 }
 
 const inputSchema = z.object({
-  regex: z.string().describe(
-    "Regex pattern (case-insensitive) to match against tool names and descriptions. Examples: \"weather\", \"file.*read\", \"database|sql\"",
-  ),
+  regex: z
+    .string()
+    .describe(
+      'Regex pattern (case-insensitive) to match against tool names and descriptions. Examples: "weather", "file.*read", "database|sql"',
+    ),
 });
 
-const description = "Search for tools by regex pattern and enables matching tools. Searches tool names and descriptions.";
+const description =
+  "Search for tools by regex pattern and enables matching tools. Searches tool names and descriptions.";
 
 export default {
   name,
@@ -68,5 +71,5 @@ export default {
   description,
   inputSchema,
   execute,
-  adjustActivation
+  adjustActivation,
 } satisfies TokenRingToolDefinition<typeof inputSchema>;

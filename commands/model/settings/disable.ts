@@ -1,16 +1,26 @@
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand,} from "@tokenring-ai/agent/types";
 import {serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
 import {ChatService} from "../../../index.ts";
 
 const inputSchema = {
   args: {},
-  remainder: {name: "keys", description: "Space-separated setting keys to disable", required: true}
+  remainder: {
+    name: "keys",
+    description: "Space-separated setting keys to disable",
+    required: true,
+  },
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({remainder, agent}: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+function execute({
+                   remainder,
+                   agent,
+                 }: AgentCommandInputType<typeof inputSchema>): string {
   const keys = remainder.split(/\s+/).filter(Boolean);
-  if (!keys.length) throw new CommandFailedError("/model settings disable requires at least one key");
+  if (!keys.length)
+    throw new CommandFailedError(
+      "/model settings disable requires at least one key",
+    );
   const chatService = agent.requireServiceByType(ChatService);
   const {base, settings} = chatService.getModelAndSettings(agent);
   for (const key of keys) settings.delete(key);

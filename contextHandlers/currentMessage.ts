@@ -1,21 +1,28 @@
-import {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
-import type {FilePart, ImagePart, TextPart, UserModelMessage} from "@tokenring-ai/ai-client/schema";
+import type {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
+import type {FilePart, ImagePart, TextPart, UserModelMessage,} from "@tokenring-ai/ai-client/schema";
 import z from "zod";
-import {type ContextHandlerOptions} from "../schema.ts";
+import type {ContextHandlerOptions} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 
 //TODO: we should evaluate whether this should default to true or false
-const sourceConfigSchema = z.object({
-  allowRemoteAttachments: z.boolean().default(true),
-}).prefault({})
+const sourceConfigSchema = z
+  .object({
+    allowRemoteAttachments: z.boolean().default(true),
+  })
+  .prefault({});
 
-export default async function* getContextItems({input, attachments, sourceConfig, agent}: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
-  const { allowRemoteAttachments } = sourceConfigSchema.parse(sourceConfig);
-  const { injectedMessages } = agent.getState(ChatServiceState);
+export default async function* getContextItems({
+                                                 input,
+                                                 attachments,
+                                                 sourceConfig,
+                                                 agent,
+                                               }: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
+  const {allowRemoteAttachments} = sourceConfigSchema.parse(sourceConfig);
+  const {injectedMessages} = agent.getState(ChatServiceState);
   for (const message of injectedMessages) {
     yield {
       role: "user",
-      content: message
+      content: message,
     };
   }
 
@@ -24,29 +31,31 @@ export default async function* getContextItems({input, attachments, sourceConfig
     content: [
       {
         type: "text",
-        text: input
-      }
-    ] as Array<TextPart | ImagePart | FilePart>
+        text: input,
+      },
+    ] as Array<TextPart | ImagePart | FilePart>,
   } satisfies UserModelMessage;
 
   for (const attachment of attachments ?? []) {
     if (attachment.mimeType.startsWith("text/")) {
       let text = attachment.body;
       switch (attachment.encoding) {
-        case 'text':
+        case "text":
           break;
-        case 'base64':
+        case "base64":
           text = Buffer.from(attachment.body, "base64").toString("utf-8");
           break;
-        case 'href':
-          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
-          text = await fetch(attachment.body).then(res => res.text());
+        case "href":
+          if (!allowRemoteAttachments)
+            throw new Error("Remote attachments are not allowed");
+          text = await fetch(attachment.body).then((res) => res.text());
           break;
         default: {
           // noinspection JSUnusedLocalSymbols
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const foo: never = attachment.encoding;
-          throw new Error(`Unsupported attachment encoding: ${attachment.encoding}`);
+          const _foo: never = attachment.encoding;
+          throw new Error(
+            `Unsupported attachment encoding: ${attachment.encoding}`,
+          );
         }
       }
 
@@ -59,22 +68,25 @@ ${text}`.trim();
 
       result.content.push({
         type: "text",
-        text
+        text,
       });
     } else if (attachment.mimeType.startsWith("image/")) {
       switch (attachment.encoding) {
-        case 'text':
-          throw new Error("Image attachments cannot be text, only base64 or href");
-        case 'href':
-          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
+        case "text":
+          throw new Error(
+            "Image attachments cannot be text, only base64 or href",
+          );
+        case "href":
+          if (!allowRemoteAttachments)
+            throw new Error("Remote attachments are not allowed");
 
           result.content.push({
             type: "image",
             mediaType: attachment.mimeType,
-            image: new URL(attachment.body)
+            image: new URL(attachment.body),
           });
           break;
-        case 'base64':
+        case "base64":
           result.content.push({
             type: "image",
             mediaType: attachment.mimeType,
@@ -82,42 +94,44 @@ ${text}`.trim();
           });
           break;
         default: {
-          // noinspection JSUnusedLocalSymbols
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const foo: never = attachment.encoding;
-          throw new Error(`Unsupported attachment encoding: ${attachment.encoding}`);
+          const _foo: never = attachment.encoding;
+          throw new Error(
+            `Unsupported attachment encoding: ${attachment.encoding}`,
+          );
         }
       }
     } else {
       switch (attachment.encoding) {
-        case 'text':
+        case "text":
           result.content.push({
             type: "file",
             mediaType: attachment.mimeType,
-            data: Buffer.from(attachment.body, "utf-8")
-          })
+            data: Buffer.from(attachment.body, "utf-8"),
+          });
           break;
-        case 'href':
-          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
+        case "href":
+          if (!allowRemoteAttachments)
+            throw new Error("Remote attachments are not allowed");
 
           result.content.push({
             type: "file",
             mediaType: attachment.mimeType,
-            data: new URL(attachment.body)
-          })
+            data: new URL(attachment.body),
+          });
           break;
-        case 'base64':
+        case "base64":
           result.content.push({
             type: "file",
             mediaType: attachment.mimeType,
             data: attachment.body,
-          })
+          });
           break;
         default: {
           // noinspection JSUnusedLocalSymbols
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const foo: never = attachment.encoding;
-          throw new Error(`Unsupported attachment encoding: ${attachment.encoding}`);
+          const _foo: never = attachment.encoding;
+          throw new Error(
+            `Unsupported attachment encoding: ${attachment.encoding}`,
+          );
         }
       }
     }

@@ -1,5 +1,5 @@
 import {AgentCommandService} from "@tokenring-ai/agent";
-import {TokenRingPlugin} from "@tokenring-ai/app";
+import type {TokenRingPlugin} from "@tokenring-ai/app";
 import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
 import {RpcService} from "@tokenring-ai/rpc";
 import {z} from "zod";
@@ -14,7 +14,7 @@ import {ChatServiceConfigSchema} from "./schema.ts";
 import tools from "./tools.ts";
 
 const packageConfigSchema = z.object({
-  chat: ChatServiceConfigSchema
+  chat: ChatServiceConfigSchema,
 });
 
 export default {
@@ -23,8 +23,8 @@ export default {
   version: packageJSON.version,
   description: packageJSON.description,
   install(app, config) {
-    app.waitForService(AgentCommandService, agentCommandService =>
-      agentCommandService.addAgentCommands(agentCommands)
+    app.waitForService(AgentCommandService, (agentCommandService) =>
+      agentCommandService.addAgentCommands(agentCommands),
     );
 
     const chatService = new ChatService(app, config.chat);
@@ -32,16 +32,16 @@ export default {
     chatService.registerContextHandlers(contextHandlers);
 
     app.addServices(chatService);
-    chatService.addTools(tools)
+    chatService.addTools(tools);
 
-    app.waitForService(RpcService, rpcService => {
+    app.waitForService(RpcService, (rpcService) => {
       rpcService.registerEndpoint(chatRPC);
     });
 
     // Register hooks with the lifecycle service
-    app.waitForService(AgentLifecycleService, lifecycleService => {
+    app.waitForService(AgentLifecycleService, (lifecycleService) => {
       lifecycleService.addHooks(hooks);
     });
   },
-  config: packageConfigSchema
+  config: packageConfigSchema,
 } satisfies TokenRingPlugin<typeof packageConfigSchema>;

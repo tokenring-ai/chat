@@ -1,4 +1,4 @@
-import {RPCSchema} from "@tokenring-ai/rpc/types";
+import type {RPCSchema} from "@tokenring-ai/rpc/types";
 import {z} from "zod";
 
 export default {
@@ -9,89 +9,91 @@ export default {
       type: "query",
       input: z.object({}),
       result: z.object({
-        tools: z.record(z.string(), z.object({ displayName: z.string() }))
-      })
+        tools: z.record(z.string(), z.object({displayName: z.string()})),
+      }),
     },
     getModel: {
       type: "query",
       input: z.object({
-        agentId: z.string()
+        agentId: z.string(),
       }),
       result: z.object({
-        model: z.string().nullable()
-      })
+        model: z.string().nullable(),
+      }),
     },
     setModel: {
       type: "mutation",
       input: z.object({
         agentId: z.string(),
-        model: z.string()
+        model: z.string(),
       }),
       result: z.object({
-        success: z.boolean()
-      })
+        success: z.boolean(),
+      }),
     },
     getEnabledTools: {
       type: "query",
       input: z.object({
-        agentId: z.string()
+        agentId: z.string(),
       }),
       result: z.object({
-        tools: z.array(z.string())
-      })
+        tools: z.array(z.string()),
+      }),
     },
     setEnabledTools: {
       type: "mutation",
       input: z.object({
         agentId: z.string(),
-        tools: z.array(z.string())
+        tools: z.array(z.string()),
       }),
       result: z.object({
-        tools: z.array(z.string())
-      })
+        tools: z.array(z.string()),
+      }),
     },
     enableTools: {
       type: "mutation",
       input: z.object({
         agentId: z.string(),
-        tools: z.array(z.string())
+        tools: z.array(z.string()),
       }),
       result: z.object({
-        tools: z.array(z.string())
-      })
+        tools: z.array(z.string()),
+      }),
     },
     disableTools: {
       type: "mutation",
       input: z.object({
         agentId: z.string(),
-        tools: z.array(z.string())
+        tools: z.array(z.string()),
       }),
       result: z.object({
-        tools: z.array(z.string())
-      })
+        tools: z.array(z.string()),
+      }),
     },
     getChatMessages: {
       type: "query",
       input: z.object({
-        agentId: z.string()
+        agentId: z.string(),
       }),
       result: z.object({
-        messages: z.array(z.object({
-          request: z.any(),
-          response: z.any(),
-          createdAt: z.number(),
-          updatedAt: z.number()
-        }))
-      })
+        messages: z.array(
+          z.object({
+            request: z.any(),
+            response: z.any(),
+            createdAt: z.number(),
+            updatedAt: z.number(),
+          }),
+        ),
+      }),
     },
     clearChatMessages: {
       type: "mutation",
       input: z.object({
-        agentId: z.string()
+        agentId: z.string(),
       }),
       result: z.object({
-        success: z.boolean()
-      })
-    }
-  }
+        success: z.boolean(),
+      }),
+    },
+  },
 } satisfies RPCSchema;
