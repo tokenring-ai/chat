@@ -1,5 +1,5 @@
 import type {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
-import type {FilePart, ImagePart, TextPart, UserModelMessage,} from "@tokenring-ai/ai-client/schema";
+import type {FilePart, ImagePart, TextPart, UserModelMessage} from "@tokenring-ai/ai-client/schema";
 import z from "zod";
 import type {ContextHandlerOptions} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";

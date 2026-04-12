@@ -2,7 +2,7 @@ import {AgentStateSlice} from "@tokenring-ai/agent/types";
 import markdownList from "@tokenring-ai/utility/string/markdownList";
 import async from "async";
 import {z} from "zod";
-import {ChatConfigMergedSchema, type ParsedChatConfig, StoredChatCompactionSchema, type StoredChatMessage, type TokenRingToolResult,} from "../schema.ts";
+import {ChatConfigMergedSchema, type ParsedChatConfig, StoredChatCompactionSchema, type StoredChatMessage, } from "../schema.ts";
 
 const serializationSchema = z.object({
   currentConfig: ChatConfigMergedSchema,
@@ -18,7 +18,7 @@ export class ChatServiceState extends AgentStateSlice<
   currentConfig: ParsedChatConfig;
   parallelTools = false;
   toolQueue = async.queue(
-    async (task: () => Promise<string | object>) => task(),
+    async (task: () => Promise<object>) => task(),
     1,
   );
   /** History of chat messages */
@@ -32,9 +32,9 @@ export class ChatServiceState extends AgentStateSlice<
     this.currentConfig = {...initialConfig};
   }
 
-  async runToolMaybeInParallel(
-    executeToolFunction: () => Promise<TokenRingToolResult>,
-  ): Promise<TokenRingToolResult> {
+  async runToolMaybeInParallel<T extends object>(
+    executeToolFunction: () => Promise<T>,
+  ): Promise<T> {
     if (this.parallelTools) {
       return await executeToolFunction();
     } else {

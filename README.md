@@ -142,6 +142,7 @@ const chatService = new ChatService(app, options);
 The state management class that tracks chat state for each agent:
 
 **State Properties:**
+
 - `currentConfig`: Current chat configuration (model, tools, context settings, etc.)
 - `messages`: Array of chat messages with timestamps
 - `parallelTools`: Boolean flag for parallel/sequential tool execution mode
@@ -151,6 +152,7 @@ The state management class that tracks chat state for each agent:
 - `compactionInProgress`: Flag indicating if compaction is currently running
 
 **Methods:**
+
 - `serialize()`: Serialize state for persistence
 - `deserialize(data)`: Deserialize state from persistence
 - `show()`: Return array of strings for display in agent UI
@@ -159,6 +161,7 @@ The state management class that tracks chat state for each agent:
 - `runToolMaybeInParallel(executeToolFunction)`: Execute tool with parallel/sequential mode
 
 **State Persistence:**
+
 - State is persisted across agent sessions
 - Uses Zod schema for type-safe serialization/deserialization
 - Registered with agent system via `attach()` method
@@ -178,6 +181,7 @@ const response = await runChat({
 ```
 
 **Features:**
+
 - Automatic model selection and client management
 - Context building from handlers
 - Tool execution with parallel/sequential support
@@ -244,15 +248,15 @@ The package provides the following chat commands, organized by category:
 
 #### /tools list
 
-#### /tools enable <tool1> <tool2> ...
+#### /tools enable <tool1> <tool2>
 
-#### /tools disable <tool1> <tool2> ...
+#### /tools disable <tool1> <tool2>
 
-#### /tools set <tool1> <tool2> ...
+#### /tools set <tool1> <tool2>
 
 #### /tools select
 
-#### /tools hide <tool1> <tool2> ...
+#### /tools hide <tool1> <tool2>
 
 ## Chat Command Details
 
@@ -261,11 +265,13 @@ The package provides the following chat commands, organized by category:
 Send a message to the AI chat service. This is the primary command for communicating with the AI, using your selected model and current context.
 
 **Examples:**
+
 ```
 /chat send Hello, how are you?
 ```
 
 **Features:**
+
 - Uses your selected AI model (see `/model`)
 - Includes conversation context and system prompts
 - Provides available tools if enabled (see `/tools`)
@@ -277,11 +283,13 @@ Send a message to the AI chat service. This is the primary command for communica
 Display all context items that would be included in a chat request. Useful for debugging and understanding what information the AI has access to.
 
 **Examples:**
+
 ```
 /chat context
 ```
 
 **Shows:**
+
 - Total number of context messages
 - System prompt configuration
 - Previous conversation messages (with preview)
@@ -293,24 +301,28 @@ Display all context items that would be included in a chat request. Useful for d
 Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and maintain context in long conversations.
 
 **Examples:**
+
 ```
 /chat compact
 /chat compact specifics of the task at hand, including the goal and expected outcome
 ```
 
 **How it works:**
+
 - Analyzes all previous messages in the conversation
 - Creates concise summaries while preserving key information
 - Maintains conversation flow and important context
 - Reduces token count for better performance and cost savings
 
 **When to use:**
+
 - After many messages have been exchanged
 - When you notice responses getting slower
 - When approaching token limits
 - Before starting a new topic in a long conversation
 
 **Benefits:**
+
 - Faster response times in long conversations
 - Lower API costs due to reduced token usage
 - Maintains important context without losing information
@@ -321,6 +333,7 @@ Compress the conversation context by creating intelligent summaries of prior mes
 Reset the chat context, clearing prior messages and starting a new conversation.
 
 **Examples:**
+
 ```
 /chat reset
 ```
@@ -330,6 +343,7 @@ Reset the chat context, clearing prior messages and starting a new conversation.
 Show the currently active chat model.
 
 **Examples:**
+
 ```
 /model get
 ```
@@ -339,6 +353,7 @@ Show the currently active chat model.
 Set the chat model to a specific model by name.
 
 **Examples:**
+
 ```
 /model set gpt-5.2
 ```
@@ -348,6 +363,7 @@ Set the chat model to a specific model by name.
 Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
 
 **Examples:**
+
 ```
 /model select
 ```
@@ -357,6 +373,7 @@ Open an interactive tree-based selector to choose a chat model. Models are group
 Reset the chat model to the initial configured value.
 
 **Examples:**
+
 ```
 /model reset
 ```
@@ -366,6 +383,7 @@ Reset the chat model to the initial configured value.
 Show the currently enabled feature flags and all available settings for the current model.
 
 **Examples:**
+
 ```
 /model settings show
 ```
@@ -375,6 +393,7 @@ Show the currently enabled feature flags and all available settings for the curr
 Set a single model feature flag.
 
 **Examples:**
+
 ```
 /model settings set websearch
 /model settings set temperature=0.7
@@ -385,6 +404,7 @@ Set a single model feature flag.
 Open an interactive selector to choose which feature flags to enable for the current model.
 
 **Examples:**
+
 ```
 /model settings select
 ```
@@ -394,6 +414,7 @@ Open an interactive selector to choose which feature flags to enable for the cur
 Enable one or more model feature flags.
 
 **Examples:**
+
 ```
 /model settings enable reasoning
 /model settings enable websearch temperature=0.7
@@ -404,6 +425,7 @@ Enable one or more model feature flags.
 Disable one or more model feature flags.
 
 **Examples:**
+
 ```
 /model settings disable reasoning
 /model settings disable reasoning websearch
@@ -414,6 +436,7 @@ Disable one or more model feature flags.
 List all currently enabled tools.
 
 **Examples:**
+
 ```
 /tools list
 ```
@@ -423,6 +446,7 @@ List all currently enabled tools.
 Enable one or more tools by name.
 
 **Examples:**
+
 ```
 /tools enable web-search
 /tools enable web-search calculator
@@ -433,6 +457,7 @@ Enable one or more tools by name.
 Disable one or more tools by name.
 
 **Examples:**
+
 ```
 /tools disable calculator
 /tools disable web-search calculator
@@ -443,6 +468,7 @@ Disable one or more tools by name.
 Set exactly which tools are enabled, replacing the current selection.
 
 **Examples:**
+
 ```
 /tools set web-search calculator
 ```
@@ -452,6 +478,7 @@ Set exactly which tools are enabled, replacing the current selection.
 Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by package.
 
 **Examples:**
+
 ```
 /tools select
 ```
@@ -463,6 +490,7 @@ Hide one or more tools by name, requiring the model to search for the tool to ac
 Saves context in some cases; useful for agents that need access to large numbers of tools.
 
 **Examples:**
+
 ```
 /tools hide calculator
 /tools hide web-search calculator
@@ -625,6 +653,7 @@ Built-in tool for searching hidden tools by regex pattern. Automatically enabled
 **Usage:** The AI can use this tool to search for and enable hidden tools by providing a regex pattern.
 
 **Examples:**
+
 ```json
 {
   "name": "tool_search",
@@ -635,6 +664,7 @@ Built-in tool for searching hidden tools by regex pattern. Automatically enabled
 ```
 
 **Features:**
+
 - Searches tool names and descriptions
 - Case-insensitive regex matching
 - Automatically enables matching tools
@@ -643,6 +673,7 @@ Built-in tool for searching hidden tools by regex pattern. Automatically enabled
 **Tool Result Types:**
 
 - `text`: Simple string result or text object with type and content
+
   ```typescript
   // String result
   return "Success!";
@@ -655,6 +686,7 @@ Built-in tool for searching hidden tools by regex pattern. Automatically enabled
   ```
 
 - `media`: Media result with type, mediaType, and data (base64 encoded)
+
   ```typescript
   return {
     type: "media",
@@ -664,6 +696,7 @@ Built-in tool for searching hidden tools by regex pattern. Automatically enabled
   ```
 
 - `json`: JSON result with type and data (automatically stringified)
+
   ```typescript
   return {
     type: "json",
@@ -672,6 +705,7 @@ Built-in tool for searching hidden tools by regex pattern. Automatically enabled
   ```
 
 **Artifact Generation:**
+
 - Tool calls automatically generate artifacts showing request JSON and response
 - Media tools generate base64-encoded artifacts
 - Errors are caught and reported with clear error messages
@@ -690,6 +724,7 @@ Built-in tool for searching hidden tools by regex pattern:
 ```
 
 **Features:**
+
 - Searches tool names and descriptions
 - Case-insensitive regex matching
 - Automatically enables matching tools
@@ -1124,12 +1159,14 @@ chatService.updateChatConfig({
 ## Best Practices
 
 ### Model Selection
+
 - Use `auto` for automatic model selection based on availability
 - Use `auto:reasoning` for complex reasoning tasks
 - Use `auto:frontier` for cutting-edge capabilities
 - Set specific models for reproducible results
 
 ### Tool Management
+
 - Use wildcard patterns for enabling multiple tools (`web-*`)
 - Enable only necessary tools to reduce context overhead
 - Use `/tools select` for interactive tool selection
@@ -1137,6 +1174,7 @@ chatService.updateChatConfig({
 - Use `tool_search` to search for hidden tools by pattern
 
 ### Context Optimization
+
 - Enable automatic compaction for long conversations
 - Use manual compaction before starting new topics
 - Monitor token usage with analytics output
@@ -1144,11 +1182,13 @@ chatService.updateChatConfig({
 - Configure appropriate thresholds for your use case
 
 ### Error Handling
+
 - Always check for `CommandFailedError` in command execution
 - Handle model unavailability with retry logic
 - Validate tool inputs before execution
 
 ### Tool Development
+
 - Always include artifacts for better debugging
 - Handle errors gracefully in tool execution
 - Use descriptive tool names and descriptions
@@ -1156,6 +1196,7 @@ chatService.updateChatConfig({
 - Use `requiredContextHandlers` to specify context needs
 
 ### Hidden Tools
+
 - Use hidden tools when you have many tools available
 - Hidden tools save context tokens while remaining accessible
 - The `tool_search` tool enables dynamic tool activation

@@ -1,7 +1,7 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import {z} from "zod";
 import ChatService from "../ChatService.ts";
-import type {TokenRingToolDefinition, TokenRingToolResult,} from "../schema.ts";
+import type {TokenRingToolDefinition, TokenRingToolResult} from "../schema.ts";
 import {ChatServiceState} from "../state/chatServiceState.ts";
 
 const name = "tool_search";

@@ -1,6 +1,6 @@
 import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand,} from "@tokenring-ai/agent/types";
-import {coerceFeatureValue, serializeModel,} from "@tokenring-ai/ai-client/util/modelSettings";
+import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import {coerceFeatureValue, serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
 import ChatService from "../../../ChatService.ts";
 
 const inputSchema = {

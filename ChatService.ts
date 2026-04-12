@@ -2,7 +2,7 @@ import type Agent from "@tokenring-ai/agent/Agent";
 import type {InputAttachment} from "@tokenring-ai/agent/AgentEvents";
 import type {AgentCreationContext} from "@tokenring-ai/agent/types";
 import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
-import {getModelAndSettings} from "@tokenring-ai/ai-client/util/modelSettings";
+import {parseModelAndSettings} from "@tokenring-ai/ai-client/util/modelSettings";
 import type TokenRingApp from "@tokenring-ai/app";
 import type {TokenRingService} from "@tokenring-ai/app/types";
 import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
@@ -162,7 +162,8 @@ export default class ChatService implements TokenRingService {
   }
 
   getModelAndSettings(agent: Agent) {
-    return getModelAndSettings(this, agent);
+    const currentModel = this.requireModel(agent);
+    return {currentModel, ...parseModelAndSettings(currentModel)};
   }
 
   getChatConfig(agent: Agent): ParsedChatConfig {
