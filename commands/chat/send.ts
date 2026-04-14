@@ -1,4 +1,4 @@
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand, TokenRingAgentCommandResult} from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 import runChat from "../../runChat.ts";
 import {getChatAnalytics} from "../../util/getChatAnalytics.ts";
@@ -19,7 +19,7 @@ async function execute({
                          remainder,
                          attachments,
                          agent,
-                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+                       }: AgentCommandInputType<typeof inputSchema>): Promise<TokenRingAgentCommandResult> {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
   const response = await runChat({
@@ -28,7 +28,10 @@ async function execute({
     chatConfig,
     agent,
   });
-  return `Chat Complete\n${getChatAnalytics(response)}`;
+  return {
+    message: 'Chat Complete',
+    details: getChatAnalytics(response),
+  };
 }
 
 const help: string = `Send a message to the AI chat service. This is the primary command for communicating with the AI, using your selected model and current context.

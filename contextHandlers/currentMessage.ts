@@ -52,9 +52,9 @@ export default async function* getContextItems({
           break;
         default: {
           // noinspection JSUnusedLocalSymbols
-          const _foo: never = attachment.encoding;
+          const unknownEncoding: never = attachment.encoding;
           throw new Error(
-            `Unsupported attachment encoding: ${attachment.encoding}`,
+            `Unsupported attachment encoding: ${unknownEncoding as string}`,
           );
         }
       }
@@ -94,9 +94,9 @@ ${text}`.trim();
           });
           break;
         default: {
-          const _foo: never = attachment.encoding;
+          const unknownEncoding: never = attachment.encoding;
           throw new Error(
-            `Unsupported attachment encoding: ${attachment.encoding}`,
+            `Unsupported attachment encoding: ${unknownEncoding as string}`,
           );
         }
       }
@@ -128,9 +128,9 @@ ${text}`.trim();
           break;
         default: {
           // noinspection JSUnusedLocalSymbols
-          const _foo: never = attachment.encoding;
+          const unknownEncoding: never = attachment.encoding;
           throw new Error(
-            `Unsupported attachment encoding: ${attachment.encoding}`,
+            `Unsupported attachment encoding: ${unknownEncoding as string}`,
           );
         }
       }

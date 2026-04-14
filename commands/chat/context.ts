@@ -39,8 +39,8 @@ async function execute({
     });
 
     return lines.join("\n");
-  } catch (error) {
-    throw new CommandFailedError(`Error building context: ${error}`);
+  } catch (error: unknown) {
+    throw new CommandFailedError(`Error building context:`, error as Error);
   }
 }
 

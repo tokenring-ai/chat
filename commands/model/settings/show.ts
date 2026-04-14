@@ -5,9 +5,9 @@ import {ChatService} from "../../../index.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-async function execute({
+function execute({
                          agent,
-                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+                       }: AgentCommandInputType<typeof inputSchema>) {
   const chatService = agent.requireServiceByType(ChatService);
   const {currentModel, base, settings} =
     chatService.getModelAndSettings(agent);
@@ -28,7 +28,7 @@ async function execute({
     );
   }
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
-  const client = await chatModelRegistry.getClient(base);
+  const client = chatModelRegistry.getClient(base);
   const availableKeys = Object.keys(client.getModelSpec().settings || {});
   lines.push(
     availableKeys.length === 0

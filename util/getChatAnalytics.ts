@@ -5,8 +5,8 @@ export function getChatAnalytics(response: AIResponse) {
     response.totalUsage;
 
   const usage = [
-    `- Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
-    `- Output Tokens: ${outputTokens?.toLocaleString() ?? "unknown"}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`,
+    `Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
+    `Output Tokens: ${outputTokens?.toLocaleString() ?? "unknown"}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`,
   ];
 
   if (
@@ -14,15 +14,15 @@ export function getChatAnalytics(response: AIResponse) {
     response.lastStepUsage.outputTokens
   ) {
     usage.push(
-      `- Context Length: ${(response.lastStepUsage.inputTokens + response.lastStepUsage.outputTokens).toLocaleString()}`,
+      `Context Length: ${(response.lastStepUsage.inputTokens + response.lastStepUsage.outputTokens).toLocaleString()}`,
     );
   }
 
   const {input, cachedInput, output, reasoning, total} = response.cost;
   if (total) {
     usage.push(
-      `- Input Cost: $${input ? input.toFixed(4) : "unknown"}${cachedInput ? ` (+$${cachedInput.toFixed(4)} cached)` : ""}`,
-      `- Output Cost: $${output ? output.toFixed(4) : "unknown"}${reasoning ? ` (+$${reasoning.toFixed(4)} reasoning)` : ""}`,
+      `Input Cost: $${input ? input.toFixed(4) : "unknown"}${cachedInput ? ` (+$${cachedInput.toFixed(4)} cached)` : ""}`,
+      `Output Cost: $${output ? output.toFixed(4) : "unknown"}${reasoning ? ` (+$${reasoning.toFixed(4)} reasoning)` : ""}`,
     );
   }
 
@@ -31,10 +31,10 @@ export function getChatAnalytics(response: AIResponse) {
   const seconds = (elapsedMs / 1000).toFixed(2);
   const tps = tokensPerSec ? tokensPerSec.toFixed(0) : "N/A";
 
-  usage.push(`- Run Time: ${seconds}s`);
+  usage.push(`Run Time: ${seconds}s`);
   if (tps) {
-    usage.push(`- Throughput: ${tps} tk/s`);
+    usage.push(`Throughput: ${tps} tk/s`);
   }
 
-  return usage.join("\n");
+  return usage;
 }

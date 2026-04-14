@@ -26,7 +26,7 @@ async function execute({
       agent,
     );
     return "Context compacted successfully.";
-  } catch (error) {
+  } catch (error: unknown) {
     throw new CommandFailedError(
       `Failed to compact context: ${error instanceof Error ? error.message : String(error)}`,
     );

@@ -3,10 +3,10 @@ import ChatService from "../../ChatService.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-function execute({
+async function execute({
                    agent,
-                 }: AgentCommandInputType<typeof inputSchema>): string {
-  agent.requireServiceByType(ChatService).clearChatMessages(agent);
+                 }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+  await agent.requireServiceByType(ChatService).clearChatMessages(agent);
   return `Chat context reset`;
 }
 

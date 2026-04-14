@@ -11,7 +11,7 @@ async function execute({
                        }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const {base, settings} = chatService.getModelAndSettings(agent);
-  const client = await agent
+  const client = agent
     .requireServiceByType(ChatModelRegistry)
     .getClient(base);
   const availableKeys = Object.keys(client.getModelSpec().settings || {});

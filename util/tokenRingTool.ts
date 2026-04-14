@@ -116,7 +116,7 @@ export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>) {
                     default: {
                       // noinspection JSUnusedLocalSymbols
                       const _foo: never = result.mimeType;
-                      throw new Error(`Unsupported MIME type: ${result.mimeType}`);
+                      throw new Error(`Unsupported MIME type: ${result.mimeType as string}`);
                     }
                   }
                 })
@@ -149,9 +149,9 @@ function decodeAsText(body: string, encoding: BaseAttachment["encoding"], chatSt
 
       return fetch(body).then((res) => res.text());
     default: {
-      // noinspection JSUnusedLocalSymbols
-      const _foo: never = encoding;
-      throw new Error(`Unsupported encoding: ${encoding}`);
+      // noinspection UnnecessaryLocalVariableJS
+      const unknownEncoding: never = encoding;
+      throw new Error(`Unsupported encoding: ${unknownEncoding as string}`);
     }
   }
 }

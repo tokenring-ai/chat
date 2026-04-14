@@ -74,7 +74,7 @@ export default class ChatService implements TokenRingService {
         `Selected ${this.defaultModel} as default model for chat`,
       );
     } else {
-      this.app.serviceError(this, `No default model was selected for chat'`);
+      this.app.serviceError(this, `No default model was selected for chat`);
     }
   }
 
@@ -211,14 +211,14 @@ export default class ChatService implements TokenRingService {
    * @param {Agent} agent - The agent instance whose chat messages will be cleared.
    * @return {void} This method does not return a value.
    */
-  clearChatMessages(agent: Agent): void {
+  async clearChatMessages(agent: Agent): Promise<void> {
     agent.mutateState(ChatServiceState, (state) => {
       state.messages = [];
       state.pendingCompaction = null;
       state.compactionInProgress = false;
     });
 
-    agent
+    await agent
       .getServiceByType(AgentLifecycleService)
       ?.executeHooks(new AfterChatClear(), agent);
   }
@@ -371,7 +371,7 @@ export default class ChatService implements TokenRingService {
 
     try {
       const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
-      const client = await chatModelRegistry.getClient(
+      const client = chatModelRegistry.getClient(
         this.requireModel(agent),
       );
 
@@ -436,7 +436,7 @@ ${compactionConfig.focus}
       agent,
     });
 
-    const client = await chatModelRegistry.getClient(this.requireModel(agent));
+    const client = chatModelRegistry.getClient(this.requireModel(agent));
 
     const response = await agent.busyWithActivity(
       "Waiting for response from AI...",
@@ -449,7 +449,7 @@ ${compactionConfig.focus}
       ),
     );
 
-    this.clearChatMessages(agent);
+    await this.clearChatMessages(agent);
 
     // Update the current message to follow up to the previous
     this.pushChatMessage(
@@ -466,9 +466,10 @@ ${compactionConfig.focus}
       agent,
     );
 
-    agent
+    await agent
       .getServiceByType(AgentLifecycleService)
       ?.executeHooks(new AfterChatCompaction(), agent);
+
     agent.infoMessage("Context compacted successfully");
   }
 }
