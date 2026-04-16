@@ -1,4 +1,4 @@
-import {AgentCommandService} from "@tokenring-ai/agent";
+import {AgentCommandService, AgentManager} from "@tokenring-ai/agent";
 import type {TokenRingPlugin} from "@tokenring-ai/app";
 import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
 import {RpcService} from "@tokenring-ai/rpc";
@@ -10,11 +10,13 @@ import contextHandlers from "./contextHandlers.ts";
 import hooks from "./hooks";
 import packageJSON from "./package.json" with {type: "json"};
 import chatRPC from "./rpc/chat.ts";
-import {ChatServiceConfigSchema} from "./schema.ts";
+import {ChatServiceConfigSchema, ChatToolConfigSchema} from "./schema.ts";
 import tools from "./tools.ts";
+import {createAgentTool} from "./util/createAgentTool.ts";
 
 const packageConfigSchema = z.object({
   chat: ChatServiceConfigSchema,
+  tools: z.record(z.string(), ChatToolConfigSchema).default({})
 });
 
 export default {
@@ -32,7 +34,17 @@ export default {
     chatService.registerContextHandlers(contextHandlers);
 
     app.addServices(chatService);
-    chatService.addTools(tools);
+    chatService.addTools(...tools);
+
+    app.waitForService(AgentManager, agentManager => {
+      for (const [toolName, toolConfig] of Object.entries(config.tools)) {
+        const agentType = toolConfig.agentType;
+        if (!agentManager.getAgentConfig(agentType)) {
+          throw new Error(`Error while processing command ${toolName}: Agent ${agentType} not found`);
+        }
+        chatService.addTools(createAgentTool(toolName, toolConfig));
+      }
+    });
 
     app.waitForService(RpcService, (rpcService) => {
       rpcService.registerEndpoint(chatRPC);

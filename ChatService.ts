@@ -38,18 +38,18 @@ export default class ChatService implements TokenRingService {
   private tools = new KeyedRegistry<NamedTool>();
   private contextHandlers = new KeyedRegistry<ContextHandler>();
 
-  requireTool = this.tools.requireItemByName;
-  registerTool = this.tools.register;
-  getAvailableToolNames = this.tools.getAllItemNames;
-  getAvailableToolEntries = this.tools.entries;
+  requireTool = this.tools.require;
+  registerTool = this.tools.set;
+  getAvailableToolNames = this.tools.keysArray;
+  getAvailableToolEntries = this.tools.entriesArray;
 
-  getToolNamesLike = this.tools.getItemNamesLike;
-  ensureToolNamesLike = this.tools.ensureItemNamesLike;
+  getToolNamesLike = this.tools.keysLike;
+  ensureToolNamesLike = this.tools.requireKeysLike;
 
-  getContextHandlerByName = this.contextHandlers.getItemByName;
-  requireContextHandlerByName = this.contextHandlers.requireItemByName;
-  registerContextHandler = this.contextHandlers.register;
-  registerContextHandlers = this.contextHandlers.registerAll;
+  getContextHandlerByName = this.contextHandlers.get;
+  requireContextHandlerByName = this.contextHandlers.require;
+  registerContextHandler = this.contextHandlers.set;
+  registerContextHandlers = this.contextHandlers.setAll;
 
   defaultModel: string | null = null;
 
@@ -133,14 +133,14 @@ export default class ChatService implements TokenRingService {
     return messages;
   }
 
-  addTools(tools: Record<string, TokenRingToolDefinition<any>>) {
-    for (const tool of Object.values(tools)) {
+  addTools(...tools: TokenRingToolDefinition<any>[]) {
+    for (const tool of tools) {
       // Check for duplicate tool registration
-      if (this.tools.getItemByName(tool.name)) {
+      if (this.tools.get(tool.name)) {
         throw new Error(`Tool "${tool.name}" is already registered`);
       }
 
-      this.tools.register(tool.name, tokenRingTool(tool));
+      this.tools.set(tool.name, tokenRingTool(tool));
     }
   }
 
@@ -246,7 +246,7 @@ export default class ChatService implements TokenRingService {
 
   setEnabledTools(toolNames: string[], agent: Agent): string[] {
     const matchedToolNames = toolNames
-      .flatMap((toolName) => this.tools.ensureItemNamesLike(toolName));
+      .flatMap((toolName) => this.tools.requireKeysLike(toolName));
 
     return agent.mutateState(ChatServiceState, (state) => {
       state.currentConfig.enabledTools = matchedToolNames;
@@ -256,7 +256,7 @@ export default class ChatService implements TokenRingService {
 
   enableTools(toolNames: string[], agent: Agent): string[] {
     const matchedToolNames = toolNames
-      .flatMap((toolName) => this.tools.ensureItemNamesLike(toolName));
+      .flatMap((toolName) => this.tools.requireKeysLike(toolName));
 
     return agent.mutateState(ChatServiceState, (state) => {
       const newTools = new Set(state.currentConfig.enabledTools);
@@ -271,7 +271,7 @@ export default class ChatService implements TokenRingService {
 
   disableTools(toolNames: string[], agent: Agent): string[] {
     const matchedToolNames = toolNames
-      .flatMap((toolName) => this.tools.ensureItemNamesLike(toolName));
+      .flatMap((toolName) => this.tools.requireKeysLike(toolName));
 
     return agent.mutateState(ChatServiceState, (state) => {
       const newTools = new Set(state.currentConfig.enabledTools);
@@ -286,7 +286,7 @@ export default class ChatService implements TokenRingService {
 
   hideTools(toolNames: string[], agent: Agent): string[] {
     const matchedToolNames = toolNames
-      .flatMap((toolName) => this.tools.ensureItemNamesLike(toolName));
+      .flatMap((toolName) => this.tools.requireKeysLike(toolName));
     return agent.mutateState(ChatServiceState, (state) => {
       const newTools = new Set(state.currentConfig.enabledTools);
       matchedToolNames.forEach((tool) => {

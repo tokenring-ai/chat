@@ -1,5 +1,6 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import type {InputAttachment, OutputArtifactSchema, ToolCallResult} from "@tokenring-ai/agent/AgentEvents";
+import {SubAgentConfigSchema} from "@tokenring-ai/agent/schema";
 
 import type {Tool as AITool} from "@tokenring-ai/ai-client";
 import type {AIResponse, ChatInputMessage, ChatRequest} from "@tokenring-ai/ai-client/client/AIChatClient";
@@ -39,34 +40,6 @@ export type TokenRingFullToolResult = Omit<ToolCallResult, "type" | "timestamp" 
 };
 
 export type TokenRingToolResult = string | TokenRingFullToolResult;
-
-
-/*
-export type TokenRingToolMediaResult = {
-  type: "media";
-  mediaType: string;
-  data: string;
-  artifact?: ToolArtifact;
-};
-
-type AsJson<T> = T extends string | number | boolean | null
-  ? T
-  : T extends Function
-    ? never
-    : T extends object
-      ? { [K in keyof T]: AsJson<T[K]> }
-      : never;
-
-export type TokenRingToolResult<T> = {
-  type: "json";
-  data: AsJson<T>;
-  artifact?: ToolArtifact;
-};
-
-export type TokenRingToolResult =
-  | TokenRingToolResult
-  | TokenRingToolMediaResult
-  | TokenRingToolResult<any>;*/
 
 export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> =
   {
@@ -162,6 +135,29 @@ export const ChatConfigMergedSchema = z.object({
   ...ChatAgentConfigSchema.shape,
   ...ChatAgentDefaultConfig.shape,
 });
+
+export const ChatToolInputArgumentSchema = z.object({
+  description: z.string(),
+  defaultValue: z.string().optional(),
+});
+
+export const ChatToolConfigSchema = z.object({
+  /** Type of agent used to execute the tool */
+  agentType: z.string(),
+  /** Tool Display Name */
+  displayName: z.string(),
+  /** Tool Description */
+  description: z.string(),
+  /** Tool Input Schema */
+  inputArguments: z.record(z.string(), ChatToolInputArgumentSchema),
+  /** The steps to execute */
+  steps: z.array(z.string()).min(1),
+  /** The subagent configuration */
+  subAgent: SubAgentConfigSchema.prefault({}),
+});
+export type ChatToolConfig = z.infer<typeof ChatToolConfigSchema>;
+
+
 
 export type ChatAgentConfig = {
   chat: z.input<typeof ChatAgentConfigSchema>;

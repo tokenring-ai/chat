@@ -28,8 +28,12 @@ async function execute({
     chatConfig,
     agent,
   });
+
+  const { totalTokens, inputTokens, outputTokens } = response.lastStepUsage
+
+
   return {
-    message: 'Chat Complete',
+    message: `Response Complete (Tokens: ${totalTokens?.toLocaleString() ?? "Unknown"} ↑${inputTokens?.toLocaleString() ?? "Unknown"} ↓${outputTokens?.toLocaleString() ?? "Unknown"})`,
     details: getChatAnalytics(response),
   };
 }
