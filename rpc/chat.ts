@@ -20,68 +20,87 @@ export default createRPCEndpoint(ChatRpcSchema, {
 
   getModel(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) throw new Error("Agent not found");
+    if (!agent) {
+      return {status: 'agentNotFound'};
+    }
     const chatService = app.requireService(ChatService);
     return {
+      status: 'success',
       model: chatService.getModel(agent),
     };
   },
 
   setModel(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) throw new Error("Agent not found");
+    if (!agent) {
+      return {status: 'agentNotFound'};
+    }
     const chatService = app.requireService(ChatService);
     chatService.setModel(args.model, agent);
-    return {success: true};
+    return {status: 'success', success: true};
   },
 
   getEnabledTools(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) throw new Error("Agent not found");
+    if (!agent) {
+      return {status: 'agentNotFound'};
+    }
     const chatService = app.requireService(ChatService);
     return {
+      status: 'success',
       tools: chatService.getEnabledTools(agent),
     };
   },
 
   setEnabledTools(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) throw new Error("Agent not found");
+    if (!agent) {
+      return {status: 'agentNotFound'};
+    }
     const chatService = app.requireService(ChatService);
     const tools = chatService.setEnabledTools(args.tools, agent);
-    return {tools};
+    return {status: 'success', tools};
   },
 
   enableTools(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) throw new Error("Agent not found");
+    if (!agent) {
+      return {status: 'agentNotFound'};
+    }
     const chatService = app.requireService(ChatService);
     const tools = chatService.enableTools(args.tools, agent);
-    return {tools};
+    return {status: 'success', tools};
   },
 
   disableTools(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) throw new Error("Agent not found");
+    if (!agent) {
+      return {status: 'agentNotFound'};
+    }
     const chatService = app.requireService(ChatService);
     const tools = chatService.disableTools(args.tools, agent);
-    return {tools};
+    return {status: 'success', tools};
   },
 
   getChatMessages(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) throw new Error("Agent not found");
+    if (!agent) {
+      return {status: 'agentNotFound'};
+    }
     const chatService = app.requireService(ChatService);
     return {
+      status: 'success',
       messages: chatService.getChatMessages(agent),
     };
   },
 
   async clearChatMessages(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) throw new Error("Agent not found");
+    if (!agent) {
+      return {status: 'agentNotFound'};
+    }
     const chatService = app.requireService(ChatService);
     await chatService.clearChatMessages(agent);
-    return {success: true};
+    return {status: 'success', success: true};
   },
 });

@@ -1,5 +1,6 @@
 import type {RPCSchema} from "@tokenring-ai/rpc/types";
 import {z} from "zod";
+import {AgentNotFoundSchema} from "@tokenring-ai/agent/schema";
 
 export default {
   name: "Chat RPC",
@@ -17,9 +18,13 @@ export default {
       input: z.object({
         agentId: z.string(),
       }),
-      result: z.object({
-        model: z.string().nullable(),
-      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal('success'),
+          model: z.string().nullable(),
+        }),
+        AgentNotFoundSchema
+      ]),
     },
     setModel: {
       type: "mutation",
@@ -27,18 +32,26 @@ export default {
         agentId: z.string(),
         model: z.string(),
       }),
-      result: z.object({
-        success: z.boolean(),
-      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal('success'),
+          success: z.boolean(),
+        }),
+        AgentNotFoundSchema
+      ]),
     },
     getEnabledTools: {
       type: "query",
       input: z.object({
         agentId: z.string(),
       }),
-      result: z.object({
-        tools: z.array(z.string()),
-      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal('success'),
+          tools: z.array(z.string()),
+        }),
+        AgentNotFoundSchema
+      ]),
     },
     setEnabledTools: {
       type: "mutation",
@@ -46,9 +59,13 @@ export default {
         agentId: z.string(),
         tools: z.array(z.string()),
       }),
-      result: z.object({
-        tools: z.array(z.string()),
-      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal('success'),
+          tools: z.array(z.string()),
+        }),
+        AgentNotFoundSchema
+      ]),
     },
     enableTools: {
       type: "mutation",
@@ -56,9 +73,13 @@ export default {
         agentId: z.string(),
         tools: z.array(z.string()),
       }),
-      result: z.object({
-        tools: z.array(z.string()),
-      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal('success'),
+          tools: z.array(z.string()),
+        }),
+        AgentNotFoundSchema
+      ]),
     },
     disableTools: {
       type: "mutation",
@@ -66,34 +87,46 @@ export default {
         agentId: z.string(),
         tools: z.array(z.string()),
       }),
-      result: z.object({
-        tools: z.array(z.string()),
-      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal('success'),
+          tools: z.array(z.string()),
+        }),
+        AgentNotFoundSchema
+      ]),
     },
     getChatMessages: {
       type: "query",
       input: z.object({
         agentId: z.string(),
       }),
-      result: z.object({
-        messages: z.array(
-          z.object({
-            request: z.any(),
-            response: z.any(),
-            createdAt: z.number(),
-            updatedAt: z.number(),
-          }),
-        ),
-      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal('success'),
+          messages: z.array(
+            z.object({
+              request: z.any(),
+              response: z.any(),
+              createdAt: z.number(),
+              updatedAt: z.number(),
+            }),
+          ),
+        }),
+        AgentNotFoundSchema
+      ]),
     },
     clearChatMessages: {
       type: "mutation",
       input: z.object({
         agentId: z.string(),
       }),
-      result: z.object({
-        success: z.boolean(),
-      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal('success'),
+          success: z.boolean(),
+        }),
+        AgentNotFoundSchema
+      ]),
     },
   },
 } satisfies RPCSchema;
