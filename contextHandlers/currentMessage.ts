@@ -1,8 +1,8 @@
-import type {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
-import type {FilePart, ImagePart, TextPart, UserModelMessage} from "@tokenring-ai/ai-client/schema";
+import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
+import type { FilePart, ImagePart, TextPart, UserModelMessage } from "@tokenring-ai/ai-client/schema";
 import z from "zod";
-import type {ContextHandlerOptions} from "../schema.ts";
-import {ChatServiceState} from "../state/chatServiceState.ts";
+import type { ContextHandlerOptions } from "../schema.ts";
+import { ChatServiceState } from "../state/chatServiceState.ts";
 
 //TODO: we should evaluate whether this should default to true or false
 const sourceConfigSchema = z
@@ -11,14 +11,9 @@ const sourceConfigSchema = z
   })
   .prefault({});
 
-export default async function* getContextItems({
-                                                 input,
-                                                 attachments,
-                                                 sourceConfig,
-                                                 agent,
-                                               }: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
-  const {allowRemoteAttachments} = sourceConfigSchema.parse(sourceConfig);
-  const {injectedMessages} = agent.getState(ChatServiceState);
+export default async function* getContextItems({ input, attachments, sourceConfig, agent }: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
+  const { allowRemoteAttachments } = sourceConfigSchema.parse(sourceConfig);
+  const { injectedMessages } = agent.getState(ChatServiceState);
   for (const message of injectedMessages) {
     yield {
       role: "user",
@@ -46,16 +41,13 @@ export default async function* getContextItems({
           text = Buffer.from(attachment.body, "base64").toString("utf-8");
           break;
         case "href":
-          if (!allowRemoteAttachments)
-            throw new Error("Remote attachments are not allowed");
-          text = await fetch(attachment.body).then((res) => res.text());
+          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
+          text = await fetch(attachment.body).then(res => res.text());
           break;
         default: {
           // noinspection JSUnusedLocalSymbols
           const unknownEncoding: never = attachment.encoding;
-          throw new Error(
-            `Unsupported attachment encoding: ${unknownEncoding as string}`,
-          );
+          throw new Error(`Unsupported attachment encoding: ${unknownEncoding as string}`);
         }
       }
 
@@ -73,12 +65,9 @@ ${text}`.trim();
     } else if (attachment.mimeType.startsWith("image/")) {
       switch (attachment.encoding) {
         case "text":
-          throw new Error(
-            "Image attachments cannot be text, only base64 or href",
-          );
+          throw new Error("Image attachments cannot be text, only base64 or href");
         case "href":
-          if (!allowRemoteAttachments)
-            throw new Error("Remote attachments are not allowed");
+          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
 
           result.content.push({
             type: "image",
@@ -95,9 +84,7 @@ ${text}`.trim();
           break;
         default: {
           const unknownEncoding: never = attachment.encoding;
-          throw new Error(
-            `Unsupported attachment encoding: ${unknownEncoding as string}`,
-          );
+          throw new Error(`Unsupported attachment encoding: ${unknownEncoding as string}`);
         }
       }
     } else {
@@ -110,8 +97,7 @@ ${text}`.trim();
           });
           break;
         case "href":
-          if (!allowRemoteAttachments)
-            throw new Error("Remote attachments are not allowed");
+          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
 
           result.content.push({
             type: "file",
@@ -129,9 +115,7 @@ ${text}`.trim();
         default: {
           // noinspection JSUnusedLocalSymbols
           const unknownEncoding: never = attachment.encoding;
-          throw new Error(
-            `Unsupported attachment encoding: ${unknownEncoding as string}`,
-          );
+          throw new Error(`Unsupported attachment encoding: ${unknownEncoding as string}`);
         }
       }
     }

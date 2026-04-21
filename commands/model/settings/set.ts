@@ -1,6 +1,6 @@
-import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
-import {coerceFeatureValue, serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
+import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
+import { coerceFeatureValue, serializeModel } from "@tokenring-ai/ai-client/util/modelSettings";
 import ChatService from "../../../ChatService.ts";
 
 const inputSchema = {
@@ -14,17 +14,11 @@ const inputSchema = {
   ],
 } as const satisfies AgentCommandInputSchema;
 
-function execute({
-                   positionals,
-                   agent,
-                 }: AgentCommandInputType<typeof inputSchema>): string {
+function execute({ positionals, agent }: AgentCommandInputType<typeof inputSchema>): string {
   const token = positionals.token;
-  if (!token)
-    throw new CommandFailedError(
-      "/model settings set requires a key or key=value",
-    );
+  if (!token) throw new CommandFailedError("/model settings set requires a key or key=value");
   const chatService = agent.requireServiceByType(ChatService);
-  const {base, settings} = chatService.getModelAndSettings(agent);
+  const { base, settings } = chatService.getModelAndSettings(agent);
   const eq = token.indexOf("=");
   if (eq === -1) {
     settings.set(token, true);

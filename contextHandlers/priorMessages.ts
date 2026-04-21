@@ -1,24 +1,18 @@
-import type {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
+import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
 import z from "zod";
 import ChatService from "../ChatService.ts";
-import type {ContextHandlerOptions} from "../schema.ts";
+import type { ContextHandlerOptions } from "../schema.ts";
 
 const priorMessagesParamsSchema = z.object({
   maxMessages: z.number().min(4).default(1000),
 });
 
-export default function* getContextItems({
-                                           sourceConfig,
-                                           agent,
-                                         }: ContextHandlerOptions): Generator<ChatInputMessage> {
+export default function* getContextItems({ sourceConfig, agent }: ContextHandlerOptions): Generator<ChatInputMessage> {
   const safeParams = priorMessagesParamsSchema.parse(sourceConfig);
   const chatService = agent.requireServiceByType(ChatService);
   const lastMessage = chatService.getLastMessage(agent);
 
-  let messages = [
-    ...(lastMessage?.request.messages ?? []),
-    ...(lastMessage?.response.messages ?? []),
-  ];
+  let messages = [...(lastMessage?.request.messages ?? []), ...(lastMessage?.response.messages ?? [])];
 
   if (messages.length > safeParams.maxMessages) {
     const messagesToRemove = messages.length - safeParams.maxMessages;

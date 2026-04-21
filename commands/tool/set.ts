@@ -1,5 +1,5 @@
-import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../../ChatService.ts";
 
@@ -12,18 +12,12 @@ const inputSchema = {
   },
 } as const satisfies AgentCommandInputSchema;
 
-function execute({
-                   remainder,
-                   agent,
-                 }: AgentCommandInputType<typeof inputSchema>): string {
+function execute({ remainder, agent }: AgentCommandInputType<typeof inputSchema>): string {
   const toolNames = remainder.split(/\s+/).filter(Boolean);
-  if (!toolNames.length)
-    throw new CommandFailedError(
-      "Tool names required. Usage: /tools set <tool1> <tool2> ...",
-    );
+  if (!toolNames.length) throw new CommandFailedError("Tool names required. Usage: /tools set <tool1> <tool2> ...");
   const chatService = agent.requireServiceByType(ChatService);
   chatService.setEnabledTools(
-    toolNames.flatMap((n) => chatService.ensureToolNamesLike(n)),
+    toolNames.flatMap(n => chatService.ensureToolNamesLike(n)),
     agent,
   );
   return `Enabled tools: ${joinDefault(", ", chatService.getEnabledTools(agent), "(none)")}`;

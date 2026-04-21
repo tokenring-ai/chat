@@ -1,8 +1,8 @@
 import type Agent from "@tokenring-ai/agent/Agent";
-import type {ChatInputMessage} from "@tokenring-ai/ai-client/client/AIChatClient";
+import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
 import z from "zod";
-import {ChatService} from "../index.ts";
-import type {ParsedChatConfig} from "../schema.ts";
+import { ChatService } from "../index.ts";
+import type { ParsedChatConfig } from "../schema.ts";
 
 const toolCallParamsSchema = z.object({
   role: z.enum(["system", "user"]),
@@ -11,28 +11,17 @@ const toolCallParamsSchema = z.object({
   toolInput: z.record(z.string(), z.any()),
 });
 
-export default async function* getContextItems(
-  _input: string,
-  _chatConfig: ParsedChatConfig,
-  params: any,
-  agent: Agent,
-): AsyncGenerator<ChatInputMessage> {
+export default async function* getContextItems(_input: string, _chatConfig: ParsedChatConfig, params: any, agent: Agent): AsyncGenerator<ChatInputMessage> {
   const validatedParams = toolCallParamsSchema.parse(params);
 
   const chatService = agent.requireServiceByType(ChatService);
-  const {toolDefinition} = chatService.requireTool(validatedParams.toolName);
+  const { toolDefinition } = chatService.requireTool(validatedParams.toolName);
 
-  if (!toolDefinition)
-    throw new Error(
-      `Tool ${validatedParams.toolName} is not a native TokenRing tool, and cannot be injected into the chat context.`,
-    );
+  if (!toolDefinition) throw new Error(`Tool ${validatedParams.toolName} is not a native TokenRing tool, and cannot be injected into the chat context.`);
 
-  const {inputSchema, execute} = toolDefinition;
+  const { inputSchema, execute } = toolDefinition;
 
-  const result = await execute(
-    inputSchema.parse(validatedParams.toolInput),
-    agent,
-  );
+  const result = await execute(inputSchema.parse(validatedParams.toolInput), agent);
 
   yield {
     role: validatedParams.role,

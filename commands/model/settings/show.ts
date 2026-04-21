@@ -1,20 +1,14 @@
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
-import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
+import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import markdownList from "@tokenring-ai/utility/string/markdownList";
-import {ChatService} from "../../../index.ts";
+import { ChatService } from "../../../index.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-function execute({
-                         agent,
-                       }: AgentCommandInputType<typeof inputSchema>) {
+function execute({ agent }: AgentCommandInputType<typeof inputSchema>) {
   const chatService = agent.requireServiceByType(ChatService);
-  const {currentModel, base, settings} =
-    chatService.getModelAndSettings(agent);
-  const lines: string[] = [
-    `Current model: ${currentModel}`,
-    `Base model: ${base}`,
-  ];
+  const { currentModel, base, settings } = chatService.getModelAndSettings(agent);
+  const lines: string[] = [`Current model: ${currentModel}`, `Base model: ${base}`];
   if (settings.size === 0) {
     lines.push("Enabled settings: (none)");
   } else {
@@ -23,18 +17,14 @@ function execute({
       markdownList(
         Array.from(settings.entries())
           .sort((a, b) => a[0].localeCompare(b[0]))
-          .map((e) => `${e[0]}: ${e[1]}`),
+          .map(e => `${e[0]}: ${e[1]}`),
       ),
     );
   }
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const client = chatModelRegistry.getClient(base);
   const availableKeys = Object.keys(client.getModelSpec().settings || {});
-  lines.push(
-    availableKeys.length === 0
-      ? "Available settings: (none)"
-      : "Available settings:",
-  );
+  lines.push(availableKeys.length === 0 ? "Available settings: (none)" : "Available settings:");
   if (availableKeys.length > 0) lines.push(markdownList(availableKeys.sort()));
   return lines.join("\n");
 }

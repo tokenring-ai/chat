@@ -1,5 +1,5 @@
-import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
 const inputSchema = {
@@ -13,15 +13,9 @@ const inputSchema = {
   ],
 } as const satisfies AgentCommandInputSchema;
 
-function execute({
-                   positionals,
-                   agent,
-                 }: AgentCommandInputType<typeof inputSchema>): string {
+function execute({ positionals, agent }: AgentCommandInputType<typeof inputSchema>): string {
   const modelName = positionals.modelName;
-  if (!modelName)
-    throw new CommandFailedError(
-      "Model name required. Usage: /model set <model_name>",
-    );
+  if (!modelName) throw new CommandFailedError("Model name required. Usage: /model set <model_name>");
   agent.requireServiceByType(ChatService).setModel(modelName, agent);
   return `Model set to ${modelName}`;
 }

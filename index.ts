@@ -1,5 +1,5 @@
-export {default as ChatService} from "./ChatService.ts";
-export {default as runChat} from "./runChat.ts";
+export { default as ChatService } from "./ChatService.ts";
+export { default as runChat } from "./runChat.ts";
 export {
   ChatAgentConfigSchema,
   ChatServiceConfigSchema,
@@ -10,6 +10,6 @@ export {
   type StoredChatMessage,
   type TokenRingToolDefinition,
 } from "./schema.ts";
-export {ChatServiceState} from "./state/chatServiceState.ts";
-export {getChatAnalytics} from "./util/getChatAnalytics.ts";
-export {tokenRingTool} from "./util/tokenRingTool.ts";
+export { ChatServiceState } from "./state/chatServiceState.ts";
+export { getChatAnalytics } from "./util/getChatAnalytics.ts";
+export { tokenRingTool } from "./util/tokenRingTool.ts";

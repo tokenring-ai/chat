@@ -1,22 +1,20 @@
-import {AfterSubAgentResponse} from "@tokenring-ai/agent/hooks";
-import type {HookSubscription} from "@tokenring-ai/lifecycle/types";
-import {HookCallback} from "@tokenring-ai/lifecycle/util/hooks";
+import { AfterSubAgentResponse } from "@tokenring-ai/agent/hooks";
+import type { HookSubscription } from "@tokenring-ai/lifecycle/types";
+import { HookCallback } from "@tokenring-ai/lifecycle/util/hooks";
 
-import {AfterChatCompletion} from "../lifecycle.ts";
-import {ChatServiceState} from "../state/chatServiceState";
+import { AfterChatCompletion } from "../lifecycle.ts";
+import { ChatServiceState } from "../state/chatServiceState";
 
 const name = "injectSubAgentResults";
 const displayName = "Chat/Inject Subagent Results";
-const description =
-  "Injects the results of subagent into the parent agents chat stream";
+const description = "Injects the results of subagent into the parent agents chat stream";
 
 const callbacks = [
   new HookCallback(AfterSubAgentResponse, (data, agent) => {
     const lastStep = data.request.steps[data.request.steps.length - 1];
-    const lastMessage =
-      typeof lastStep === "string" ? lastStep : lastStep.message;
+    const lastMessage = typeof lastStep === "string" ? lastStep : lastStep.message;
 
-    agent.mutateState(ChatServiceState, (state) => {
+    agent.mutateState(ChatServiceState, state => {
       state.injectedMessages.push(
         `
         
@@ -30,7 +28,7 @@ ${data.result.status}: ${data.result.response}
     });
   }),
   new HookCallback(AfterChatCompletion, (_data, agent) => {
-    agent.mutateState(ChatServiceState, (state) => {
+    agent.mutateState(ChatServiceState, state => {
       state.injectedMessages.splice(0);
     });
   }),

@@ -1,38 +1,26 @@
-import type {TreeLeaf} from "@tokenring-ai/agent/question";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
-import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
+import type { TreeLeaf } from "@tokenring-ai/agent/question";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
+import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import ChatService from "../../ChatService.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-async function execute({
-                         agent,
-                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const chatService = agent.requireServiceByType(ChatService);
-  const modelsByProvider = await agent.busyWithActivity(
-    "Checking online status of models...",
-    chatModelRegistry.getModelsByProvider(),
-  );
+  const modelsByProvider = await agent.busyWithActivity("Checking online status of models...", chatModelRegistry.getModelsByProvider());
   const tree: TreeLeaf[] = Object.entries(modelsByProvider)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([provider, providerModels]) => {
       const sorted = Object.entries(providerModels).sort(([, a], [, b]) =>
-        a.status === b.status
-          ? a.modelSpec.modelId.localeCompare(b.modelSpec.modelId)
-          : a.status.localeCompare(b.status),
+        a.status === b.status ? a.modelSpec.modelId.localeCompare(b.modelSpec.modelId) : a.status.localeCompare(b.status),
       );
-      const onlineCount = Object.values(providerModels).filter(
-        (m) => m.status === "online",
-      ).length;
+      const onlineCount = Object.values(providerModels).filter(m => m.status === "online").length;
       return {
         name: `${provider} (${onlineCount}/${Object.keys(providerModels).length} online)`,
         children: sorted.map(([modelName, model]) => ({
           value: modelName,
-          name:
-            model.status === "online"
-              ? model.modelSpec.modelId
-              : `${model.modelSpec.modelId} (${model.status})`,
+          name: model.status === "online" ? model.modelSpec.modelId : `${model.modelSpec.modelId} (${model.status})`,
         })),
       };
     });

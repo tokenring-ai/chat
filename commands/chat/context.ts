@@ -1,14 +1,12 @@
-import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
 const description = "Show the current context for the chat session";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-async function execute({
-                         agent,
-                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   try {
     const chatService = agent.requireServiceByType(ChatService);
     const chatConfig = chatService.getChatConfig(agent);
@@ -19,10 +17,7 @@ async function execute({
       agent,
     });
 
-    const lines: string[] = [
-      "Context items that would be added to chat request:",
-      `Total messages: ${messages.length}`,
-    ];
+    const lines: string[] = ["Context items that would be added to chat request:", `Total messages: ${messages.length}`];
 
     messages.slice(0, -1).forEach((msg, index) => {
       const content =
@@ -33,8 +28,7 @@ async function execute({
               : msg.content
             : msg.content
           : JSON.stringify(msg.content);
-      const preview =
-        content.length > 100 ? content.substring(0, 130) + "..." : content;
+      const preview = content.length > 100 ? content.substring(0, 130) + "..." : content;
       lines.push(`${index + 1}. [${msg.role}] ${preview}`);
     });
 

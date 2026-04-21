@@ -1,7 +1,7 @@
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand, TokenRingAgentCommandResult} from "@tokenring-ai/agent/types";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand, TokenRingAgentCommandResult } from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 import runChat from "../../runChat.ts";
-import {getChatAnalytics} from "../../util/getChatAnalytics.ts";
+import { getChatAnalytics } from "../../util/getChatAnalytics.ts";
 
 const description = "Send messages to the LLM";
 
@@ -15,11 +15,7 @@ const inputSchema = {
   allowAttachments: true,
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({
-                         remainder,
-                         attachments,
-                         agent,
-                       }: AgentCommandInputType<typeof inputSchema>): Promise<TokenRingAgentCommandResult> {
+async function execute({ remainder, attachments, agent }: AgentCommandInputType<typeof inputSchema>): Promise<TokenRingAgentCommandResult> {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
   const response = await runChat({
@@ -29,8 +25,7 @@ async function execute({
     agent,
   });
 
-  const { totalTokens, inputTokens, outputTokens } = response.lastStepUsage
-
+  const { totalTokens, inputTokens, outputTokens } = response.lastStepUsage;
 
   return {
     message: `Response Complete (Tokens: ${totalTokens?.toLocaleString() ?? "Unknown"} ↑${inputTokens?.toLocaleString() ?? "Unknown"} ↓${outputTokens?.toLocaleString() ?? "Unknown"})`,

@@ -1,30 +1,23 @@
-import type {TreeLeaf} from "@tokenring-ai/agent/question";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import type { TreeLeaf } from "@tokenring-ai/agent/question";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import joinDefault from "@tokenring-ai/utility/string/joinDefault";
 import ChatService from "../../ChatService.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-async function execute({
-                         agent,
-                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const enabledTools = chatService.getEnabledTools(agent);
-  const toolsByCategory: Record<
-    string,
-    Array<{ displayName: string; toolName: string }>
-  > = {};
+  const toolsByCategory: Record<string, Array<{ displayName: string; toolName: string }>> = {};
   for (const [toolName, tool] of chatService.getAvailableToolEntries()) {
-    const [, category, displayName] = tool.toolDefinition?.displayName.match(
-      /^(.*)\/(.*)/,
-    ) ?? [null, "Unknown", tool.toolDefinition?.displayName ?? toolName];
-    (toolsByCategory[category] ??= []).push({displayName, toolName});
+    const [, category, displayName] = tool.toolDefinition?.displayName.match(/^(.*)\/(.*)/) ?? [null, "Unknown", tool.toolDefinition?.displayName ?? toolName];
+    (toolsByCategory[category] ??= []).push({ displayName, toolName });
   }
   const tree: TreeLeaf[] = Object.keys(toolsByCategory)
     .sort()
-    .map((category) => ({
+    .map(category => ({
       name: `${category}`,
-      children: toolsByCategory[category].map((t) => ({
+      children: toolsByCategory[category].map(t => ({
         name: `${t.displayName}`,
         value: t.toolName,
       })),

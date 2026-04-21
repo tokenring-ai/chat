@@ -1,22 +1,22 @@
-import {AgentCommandService, AgentManager} from "@tokenring-ai/agent";
-import type {TokenRingPlugin} from "@tokenring-ai/app";
-import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
-import {RpcService} from "@tokenring-ai/rpc";
-import {z} from "zod";
+import { AgentCommandService, AgentManager } from "@tokenring-ai/agent";
+import type { TokenRingPlugin } from "@tokenring-ai/app";
+import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
+import { RpcService } from "@tokenring-ai/rpc";
+import { z } from "zod";
 import ChatService from "./ChatService.ts";
 
 import agentCommands from "./commands.ts";
 import contextHandlers from "./contextHandlers.ts";
 import hooks from "./hooks";
-import packageJSON from "./package.json" with {type: "json"};
+import packageJSON from "./package.json" with { type: "json" };
 import chatRPC from "./rpc/chat.ts";
-import {ChatServiceConfigSchema, ChatToolConfigSchema} from "./schema.ts";
+import { ChatServiceConfigSchema, ChatToolConfigSchema } from "./schema.ts";
 import tools from "./tools.ts";
-import {createAgentTool} from "./util/createAgentTool.ts";
+import { createAgentTool } from "./util/createAgentTool.ts";
 
 const packageConfigSchema = z.object({
   chat: ChatServiceConfigSchema,
-  tools: z.record(z.string(), ChatToolConfigSchema).default({})
+  tools: z.record(z.string(), ChatToolConfigSchema).default({}),
 });
 
 export default {
@@ -25,9 +25,7 @@ export default {
   version: packageJSON.version,
   description: packageJSON.description,
   install(app, config) {
-    app.waitForService(AgentCommandService, (agentCommandService) =>
-      agentCommandService.addAgentCommands(agentCommands),
-    );
+    app.waitForService(AgentCommandService, agentCommandService => agentCommandService.addAgentCommands(agentCommands));
 
     const chatService = new ChatService(app, config.chat);
 
@@ -46,12 +44,12 @@ export default {
       }
     });
 
-    app.waitForService(RpcService, (rpcService) => {
+    app.waitForService(RpcService, rpcService => {
       rpcService.registerEndpoint(chatRPC);
     });
 
     // Register hooks with the lifecycle service
-    app.waitForService(AgentLifecycleService, (lifecycleService) => {
+    app.waitForService(AgentLifecycleService, lifecycleService => {
       lifecycleService.addHooks(hooks);
     });
   },

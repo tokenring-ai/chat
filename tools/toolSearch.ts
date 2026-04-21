@@ -1,16 +1,13 @@
 import type Agent from "@tokenring-ai/agent/Agent";
-import {z} from "zod";
+import { z } from "zod";
 import ChatService from "../ChatService.ts";
-import type {TokenRingToolDefinition, TokenRingToolResult} from "../schema.ts";
-import {ChatServiceState} from "../state/chatServiceState.ts";
+import type { TokenRingToolDefinition, TokenRingToolResult } from "../schema.ts";
+import { ChatServiceState } from "../state/chatServiceState.ts";
 
 const name = "tool_search";
 const displayName = "Chat/toolSearch";
 
-function execute(
-  {regex}: z.output<typeof inputSchema>,
-  agent: Agent,
-): TokenRingToolResult {
+function execute({ regex }: z.output<typeof inputSchema>, agent: Agent): TokenRingToolResult {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
   const hiddenTools = chatConfig.hiddenTools ?? [];
@@ -29,11 +26,7 @@ function execute(
   const matched: string[] = [];
   for (const toolName of hiddenTools) {
     const namedTool = chatService.requireTool(toolName);
-    const searchText = [
-      toolName,
-      namedTool.toolDefinition?.displayName ?? "",
-      namedTool.toolDefinition?.description ?? "",
-    ].join(" ");
+    const searchText = [toolName, namedTool.toolDefinition?.displayName ?? "", namedTool.toolDefinition?.description ?? ""].join(" ");
 
     if (pattern.test(searchText)) {
       matched.push(toolName);
@@ -50,20 +43,17 @@ function execute(
 }
 
 function adjustActivation(_enabled: boolean, agent: Agent) {
-  const {hiddenTools} = agent.getState(ChatServiceState).currentConfig;
+  const { hiddenTools } = agent.getState(ChatServiceState).currentConfig;
   return hiddenTools.length > 0;
 }
 
 const inputSchema = z.object({
   regex: z
     .string()
-    .describe(
-      'Regex pattern (case-insensitive) to match against tool names and descriptions. Examples: "weather", "file.*read", "database|sql"',
-    ),
+    .describe('Regex pattern (case-insensitive) to match against tool names and descriptions. Examples: "weather", "file.*read", "database|sql"'),
 });
 
-const description =
-  "Search for tools by regex pattern and enables matching tools. Searches tool names and descriptions.";
+const description = "Search for tools by regex pattern and enables matching tools. Searches tool names and descriptions.";
 
 export default {
   name,

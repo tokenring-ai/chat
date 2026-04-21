@@ -1,28 +1,19 @@
-import type {TreeLeaf} from "@tokenring-ai/agent/question";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
-import {ChatModelRegistry} from "@tokenring-ai/ai-client/ModelRegistry";
-import {serializeModel} from "@tokenring-ai/ai-client/util/modelSettings";
-import {ChatService} from "../../../index.ts";
+import type { TreeLeaf } from "@tokenring-ai/agent/question";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
+import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
+import { serializeModel } from "@tokenring-ai/ai-client/util/modelSettings";
+import { ChatService } from "../../../index.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
-async function execute({
-                         agent,
-                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
-  const {base, settings} = chatService.getModelAndSettings(agent);
-  const client = agent
-    .requireServiceByType(ChatModelRegistry)
-    .getClient(base);
+  const { base, settings } = chatService.getModelAndSettings(agent);
+  const client = agent.requireServiceByType(ChatModelRegistry).getClient(base);
   const availableKeys = Object.keys(client.getModelSpec().settings || {});
-  if (availableKeys.length === 0)
-    return "No selectable settings available for this model.";
-  const tree: TreeLeaf[] = availableKeys
-    .sort()
-    .map((k) => ({name: k, value: k}));
-  const currentEnabled = Object.keys(settings).filter(
-    (k) => settings.get(k) === true,
-  );
+  if (availableKeys.length === 0) return "No selectable settings available for this model.";
+  const tree: TreeLeaf[] = availableKeys.sort().map(k => ({ name: k, value: k }));
+  const currentEnabled = Object.keys(settings).filter(k => settings.get(k) === true);
   const selection = await agent.askQuestion({
     message: "Choose settings to enable:",
     question: {

@@ -1,28 +1,21 @@
-import {type RunSubAgentOptions, SubAgentService} from "@tokenring-ai/agent";
-import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import {AfterSubAgentResponse} from "@tokenring-ai/agent/hooks";
-import type {TokenRingToolDefinition} from "@tokenring-ai/chat";
-import {AgentLifecycleService} from "@tokenring-ai/lifecycle";
+import { type RunSubAgentOptions, SubAgentService } from "@tokenring-ai/agent";
+import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
+import { AfterSubAgentResponse } from "@tokenring-ai/agent/hooks";
+import type { TokenRingToolDefinition } from "@tokenring-ai/chat";
+import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
 import interpolateString from "@tokenring-ai/utility/string/interpolateString";
-import {z} from "zod";
-import type {ChatToolConfig} from "../schema.ts";
+import { z } from "zod";
+import type { ChatToolConfig } from "../schema.ts";
 
 /**
  * Register an agent as a callable tool
  */
 
-export function createAgentTool(
-  toolName: string,
-  toolConfig: ChatToolConfig
-) {
-  const inputSchemaEntries = Object.entries(toolConfig.inputArguments).map(
-    ([name, arg]) => [
-      name,
-      arg.defaultValue
-        ? z.string().describe(arg.description).default(arg.defaultValue)
-        : z.string().describe(arg.description),
-    ],
-  );
+export function createAgentTool(toolName: string, toolConfig: ChatToolConfig) {
+  const inputSchemaEntries = Object.entries(toolConfig.inputArguments).map(([name, arg]) => [
+    name,
+    arg.defaultValue ? z.string().describe(arg.description).default(arg.defaultValue) : z.string().describe(arg.description),
+  ]);
 
   const inputSchema = z.object(Object.fromEntries(inputSchemaEntries));
 
@@ -38,9 +31,7 @@ export function createAgentTool(
         replacements[key] = () => (args[key] as string) ?? "undefined";
       }
 
-      const steps = toolConfig.steps.map((step) =>
-        interpolateString(step, replacements),
-      );
+      const steps = toolConfig.steps.map(step => interpolateString(step, replacements));
 
       const subAgentService = agent.requireServiceByType(SubAgentService);
       const request: RunSubAgentOptions = {
@@ -56,10 +47,7 @@ export function createAgentTool(
       const result = await subAgentService.runSubAgent(request);
 
       const lifecycleService = agent.getServiceByType(AgentLifecycleService);
-      await lifecycleService?.executeHooks(
-        new AfterSubAgentResponse(request, result),
-        agent,
-      );
+      await lifecycleService?.executeHooks(new AfterSubAgentResponse(request, result), agent);
 
       if (result.status === "success") {
         return result.response || "Agent completed successfully.";

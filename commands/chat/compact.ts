@@ -1,19 +1,15 @@
-import {CommandFailedError} from "@tokenring-ai/agent/AgentError";
-import type {AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand} from "@tokenring-ai/agent/types";
+import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
+import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import ChatService from "../../ChatService.ts";
 
-const description =
-  "Compact conversation context by summarizing prior messages";
+const description = "Compact conversation context by summarizing prior messages";
 
 const inputSchema = {
   args: {},
-  remainder: {name: "focus", description: "Optional focus for compaction"},
+  remainder: { name: "focus", description: "Optional focus for compaction" },
 } as const satisfies AgentCommandInputSchema;
 
-async function execute({
-                         remainder,
-                         agent,
-                       }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
+async function execute({ remainder, agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
 
@@ -27,9 +23,7 @@ async function execute({
     );
     return "Context compacted successfully.";
   } catch (error: unknown) {
-    throw new CommandFailedError(
-      `Failed to compact context: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    throw new CommandFailedError(`Failed to compact context: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
