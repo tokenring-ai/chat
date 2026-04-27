@@ -25,7 +25,7 @@ async function execute({ remainder, attachments, agent }: AgentCommandInputType<
     agent,
   });
 
-  const { totalTokens, inputTokens, outputTokens } = response.lastStepUsage;
+  const { totalTokens, inputTokens, outputTokens } = response.totalUsage;
 
   return {
     message: `Response Complete (Tokens: ${totalTokens?.toLocaleString() ?? "Unknown"} ↑${inputTokens?.toLocaleString() ?? "Unknown"} ↓${outputTokens?.toLocaleString() ?? "Unknown"})`,

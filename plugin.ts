@@ -7,7 +7,7 @@ import ChatService from "./ChatService.ts";
 
 import agentCommands from "./commands.ts";
 import contextHandlers from "./contextHandlers.ts";
-import hooks from "./hooks";
+import injectSubagentResults from "./hooks/injectSubagentResults.ts";
 import packageJSON from "./package.json" with { type: "json" };
 import chatRPC from "./rpc/chat.ts";
 import { ChatServiceConfigSchema, ChatToolConfigSchema } from "./schema.ts";
@@ -50,7 +50,7 @@ export default {
 
     // Register hooks with the lifecycle service
     app.waitForService(AgentLifecycleService, lifecycleService => {
-      lifecycleService.addHooks(hooks);
+      lifecycleService.addHooks(injectSubagentResults);
     });
   },
   config: packageConfigSchema,

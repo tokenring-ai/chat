@@ -39,4 +39,4 @@ export default {
   displayName,
   description,
   callbacks,
-} satisfies HookSubscription;
+} satisfies HookSubscription<any>;
