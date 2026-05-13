@@ -26,7 +26,7 @@ function execute({ remainder, agent }: AgentCommandInputType<typeof inputSchema>
 export default {
   name: "tools enable",
   description: "Enable tools",
-  aliases: ["tool enable"],
+  alias: ["tool enable"],
   inputSchema,
   execute,
   help: `Enable one or more tools by name.

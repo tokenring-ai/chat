@@ -1,7 +1,7 @@
 import type { TreeLeaf } from "@tokenring-ai/agent/question";
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
-import ChatService from "../../ChatService.ts";
+import ChatService from "../../../ChatService.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
@@ -43,13 +43,14 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
 }
 
 export default {
-  name: "model select",
+  name: "chat model select",
+  alias: "model",
   description: "Interactively select a model",
   inputSchema,
   execute,
   help: `Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
 
 ## Example
-
-/model select`,
+/chat model select
+/model`,
 } satisfies TokenRingAgentCommand<typeof inputSchema>;

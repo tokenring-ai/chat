@@ -2,7 +2,7 @@ import type { TreeLeaf } from "@tokenring-ai/agent/question";
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import { serializeModel } from "@tokenring-ai/ai-client/util/modelSettings";
-import { ChatService } from "../../../index.ts";
+import { ChatService } from "../../../../index.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
@@ -36,13 +36,14 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
 }
 
 export default {
-  name: "model settings select",
+  name: "chat model settings select",
+  alias: "model settings",
   description: "Interactively select model settings",
   inputSchema,
   execute,
   help: `Open an interactive selector to choose which feature flags to enable for the current model.
 
 ## Example
-
-/model settings select`,
+/chat model settings select
+/model settings`,
 } satisfies TokenRingAgentCommand<typeof inputSchema>;

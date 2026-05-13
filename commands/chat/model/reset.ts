@@ -1,7 +1,7 @@
 import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
-import ChatService from "../../ChatService.ts";
-import { ChatServiceState } from "../../state/chatServiceState.ts";
+import ChatService from "../../../ChatService.ts";
+import { ChatServiceState } from "../../../state/chatServiceState.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
@@ -13,7 +13,7 @@ function execute({ agent }: AgentCommandInputType<typeof inputSchema>): string {
 }
 
 export default {
-  name: "model reset",
+  name: "chat model reset",
   description: "Reset to initial model",
   inputSchema,
   execute,
@@ -21,5 +21,5 @@ export default {
 
 ## Example
 
-/model reset`,
+/chat model reset`,
 } satisfies TokenRingAgentCommand<typeof inputSchema>;

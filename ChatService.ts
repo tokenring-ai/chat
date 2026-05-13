@@ -34,10 +34,8 @@ export type BuildChatMessagesOptions = {
 export default class ChatService implements TokenRingService {
   readonly name = "ChatService";
   description = "A service for managing AI configuration";
-
+  defaultModel: string | null = null;
   private tools = new KeyedRegistry<NamedTool>();
-  private contextHandlers = new KeyedRegistry<ContextHandler>();
-
   requireTool = this.tools.require;
   registerTool = this.tools.set;
   getAvailableToolNames = this.tools.keysArray;
@@ -45,13 +43,11 @@ export default class ChatService implements TokenRingService {
 
   getToolNamesLike = this.tools.keysLike;
   ensureToolNamesLike = this.tools.requireKeysLike;
-
+  private contextHandlers = new KeyedRegistry<ContextHandler>();
   getContextHandlerByName = this.contextHandlers.get;
   requireContextHandlerByName = this.contextHandlers.require;
   registerContextHandler = this.contextHandlers.set;
   registerContextHandlers = this.contextHandlers.setAll;
-
-  defaultModel: string | null = null;
 
   constructor(
     readonly app: TokenRingApp,

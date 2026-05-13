@@ -26,7 +26,7 @@ function execute({ remainder, agent }: AgentCommandInputType<typeof inputSchema>
 export default {
   name: "tools hide",
   description: "Hide tools",
-  aliases: ["tool hide"],
+  alias: ["tool hide"],
   inputSchema,
   execute,
   help: `Hide one or more tools by name, requiring the model to search for the tool to activate it before use.

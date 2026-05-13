@@ -1,7 +1,9 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import type { InputAttachment } from "@tokenring-ai/agent/AgentEvents";
+
 import type AIChatClient from "@tokenring-ai/ai-client/client/AIChatClient";
 import type { AIResponse } from "@tokenring-ai/ai-client/client/AIChatClient";
+
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
 import { backoff } from "@tokenring-ai/utility/promise/backoff";

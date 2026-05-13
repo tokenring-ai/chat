@@ -43,7 +43,7 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
 export default {
   name: "tools select",
   description: "Interactively select tools",
-  aliases: ["tool select"],
+  alias: ["tool select"],
   inputSchema,
   execute,
   help: `Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by package.

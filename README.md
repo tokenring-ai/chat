@@ -2,14 +2,18 @@
 
 ## Overview
 
-Tool calling AI chat client for the TokenRing ecosystem. This package provides a comprehensive chat interface for AI-powered conversations with advanced features like context management, tool integration, and interactive command-line controls. It integrates seamlessly with the Token Ring application framework and supports multiple AI providers.
+Tool calling AI chat client for the TokenRing ecosystem. This package provides a comprehensive chat interface for
+AI-powered conversations with advanced features like context management, tool integration, and interactive command-line
+controls. It integrates seamlessly with the Token Ring application framework and supports multiple AI providers.
 
 ## Key Features
 
-- **Multi-Provider Support**: Works with various AI model providers (OpenAI, Anthropic, Google, Groq, etc.) via `@tokenring-ai/ai-client`
+- **Multi-Provider Support**: Works with various AI model providers (OpenAI, Anthropic, Google, Groq, etc.) via
+  `@tokenring-ai/ai-client`
 - **Context Management**: Intelligent context handling with automatic compaction and customizable context sources
 - **Tool Integration**: Extensible tool system with plugin architecture and wildcard matching
-- **Hidden Tools**: Ability to hide tools from the model while keeping them available, with search functionality via `tool_search`
+- **Hidden Tools**: Ability to hide tools from the model while keeping them available, with search functionality via
+  `tool_search`
 - **Interactive Commands**: Rich command set for chat management including `/chat`, `/model`, `/tools`, and `/compact`
 - **State Persistence**: Persistent chat history with message history management and message stack for undo operations
 - **Interactive Selection**: Tree-based UI for model and tool selection
@@ -35,7 +39,8 @@ bun install @tokenring-ai/chat
 
 ### ChatService
 
-The main service class for managing AI chat functionality. Implements `TokenRingService` and provides comprehensive chat management capabilities.
+The main service class for managing AI chat functionality. Implements `TokenRingService` and provides comprehensive chat
+management capabilities.
 
 ```typescript
 import ChatService from "@tokenring-ai/chat";
@@ -97,20 +102,20 @@ const chatService = new ChatService(app, options);
 
 ##### Tool Management
 
-| Method                                                          | Description                                         |
-|-----------------------------------------------------------------|-----------------------------------------------------|
-| `addTools(...tools: TokenRingToolDefinition<any>[])`            | Register one or more tools                          |
-| `getAvailableToolNames(): string[]`                             | Get all available tool names                        |
-| `getAvailableToolEntries()`                                     | Get all available tool definitions as entries       |
-| `getToolNamesLike(pattern: string): string[]`                   | Get tool names matching a pattern                   |
-| `ensureToolNamesLike(pattern: string): string[]`                | Expand wildcard patterns to tool names              |
-| `getEnabledTools(agent: Agent): string[]`                       | Get enabled tool names                              |
-| `getHiddenTools(agent: Agent): string[]`                        | Get hidden tool names                               |
-| `setEnabledTools(toolNames: string[], agent: Agent): string[]`  | Set exactly enabled tools                           |
-| `enableTools(toolNames: string[], agent: Agent): string[]`      | Enable additional tools                             |
-| `disableTools(toolNames: string[], agent: Agent): string[]`     | Disable tools                                       |
-| `hideTools(toolNames: string[], agent: Agent): string[]`        | Hide tools (remove from enabled but keep available) |
-| `requireTool(toolName: string): NamedTool`                      | Get a tool by name                                  |
+| Method                                                         | Description                                         |
+|----------------------------------------------------------------|-----------------------------------------------------|
+| `addTools(...tools: TokenRingToolDefinition<any>[])`           | Register one or more tools                          |
+| `getAvailableToolNames(): string[]`                            | Get all available tool names                        |
+| `getAvailableToolEntries()`                                    | Get all available tool definitions as entries       |
+| `getToolNamesLike(pattern: string): string[]`                  | Get tool names matching a pattern                   |
+| `ensureToolNamesLike(pattern: string): string[]`               | Expand wildcard patterns to tool names              |
+| `getEnabledTools(agent: Agent): string[]`                      | Get enabled tool names                              |
+| `getHiddenTools(agent: Agent): string[]`                       | Get hidden tool names                               |
+| `setEnabledTools(toolNames: string[], agent: Agent): string[]` | Set exactly enabled tools                           |
+| `enableTools(toolNames: string[], agent: Agent): string[]`     | Enable additional tools                             |
+| `disableTools(toolNames: string[], agent: Agent): string[]`    | Disable tools                                       |
+| `hideTools(toolNames: string[], agent: Agent): string[]`       | Hide tools (remove from enabled but keep available) |
+| `requireTool(toolName: string): NamedTool`                     | Get a tool by name                                  |
 
 ##### Context Handler Management
 
@@ -199,43 +204,44 @@ The package provides the following chat commands, organized by category:
 
 ### Chat Management Commands
 
-| Command                      | Description                              |
-|------------------------------|------------------------------------------|
-| `/chat send message`         | Send a message to the AI                 |
-| `/chat context`              | Display current chat context             |
-| `/chat compact [focus]`      | Compact conversation context             |
-| `/chat reset`                | Reset the chat context                   |
+| Command                 | Description                  |
+|-------------------------|------------------------------|
+| `/chat send message`    | Send a message to the AI     |
+| `/chat context`         | Display current chat context |
+| `/chat compact [focus]` | Compact conversation context |
+| `/chat reset`           | Reset the chat context       |
 
 ### Model Management Commands
 
-| Command                          | Description                              |
-|----------------------------------|------------------------------------------|
-| `/model get`                     | Show current model                       |
-| `/model set modelName`           | Set the chat model                       |
-| `/model select`                  | Interactive model selection              |
-| `/model reset`                   | Reset to initial model                   |
-| `/model settings show`           | Show model settings                      |
-| `/model settings set key=value`  | Set a model setting                      |
-| `/model settings select`         | Interactive settings selection           |
-| `/model settings enable keys`    | Enable model settings                    |
-| `/model settings disable keys`   | Disable model settings                   |
+| Command                         | Description                    |
+|---------------------------------|--------------------------------|
+| `/model get`                    | Show current model             |
+| `/model set modelName`          | Set the chat model             |
+| `/model select`                 | Interactive model selection    |
+| `/model reset`                  | Reset to initial model         |
+| `/model settings show`          | Show model settings            |
+| `/model settings set key=value` | Set a model setting            |
+| `/model settings select`        | Interactive settings selection |
+| `/model settings enable keys`   | Enable model settings          |
+| `/model settings disable keys`  | Disable model settings         |
 
 ### Tool Management Commands
 
-| Command                      | Description                              |
-|------------------------------|------------------------------------------|
-| `/tools list`                | List enabled tools                       |
-| `/tools enable toolNames`    | Enable tools                             |
-| `/tools disable toolNames`   | Disable tools                            |
-| `/tools set toolNames`       | Set exactly which tools are enabled      |
-| `/tools select`              | Interactive tool selection               |
-| `/tools hide toolNames`      | Hide tools from the model                |
+| Command                    | Description                         |
+|----------------------------|-------------------------------------|
+| `/tools list`              | List enabled tools                  |
+| `/tools enable toolNames`  | Enable tools                        |
+| `/tools disable toolNames` | Disable tools                       |
+| `/tools set toolNames`     | Set exactly which tools are enabled |
+| `/tools select`            | Interactive tool selection          |
+| `/tools hide toolNames`    | Hide tools from the model           |
 
 ## Chat Command Details
 
 ### /chat send message
 
-Send a message to the AI chat service. This is the primary command for communicating with the AI, using your selected model and current context.
+Send a message to the AI chat service. This is the primary command for communicating with the AI, using your selected
+model and current context.
 
 **Examples:**
 
@@ -253,7 +259,8 @@ Send a message to the AI chat service. This is the primary command for communica
 
 ### /chat context
 
-Display all context items that would be included in a chat request. Useful for debugging and understanding what information the AI has access to.
+Display all context items that would be included in a chat request. Useful for debugging and understanding what
+information the AI has access to.
 
 **Examples:**
 
@@ -271,7 +278,8 @@ Display all context items that would be included in a chat request. Useful for d
 
 ### /chat compact [focus]
 
-Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and maintain context in long conversations.
+Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and
+maintain context in long conversations.
 
 **Examples:**
 
@@ -471,7 +479,9 @@ Saves context tokens; useful for agents that need access to large numbers of too
 
 **Hidden Tools:**
 
-Tools can be hidden to save context tokens. Hidden tools are not visible to the model but remain available. The `tool_search` tool is automatically enabled when hidden tools are configured and can be used to search for and enable hidden tools by regex pattern.
+Tools can be hidden to save context tokens. Hidden tools are not visible to the model but remain available. The
+`tool_search` tool is automatically enabled when hidden tools are configured and can be used to search for and enable
+hidden tools by regex pattern.
 
 ## Context Handlers
 
@@ -744,7 +754,7 @@ The ChatService is automatically registered when using the plugin, or can be add
 
 ```typescript
 import ChatService from "@tokenring-ai/chat";
-import { TokenRingApp } from "@tokenring-ai/app";
+import {TokenRingApp} from "@tokenring-ai/app";
 
 const app = new TokenRingApp();
 
@@ -780,7 +790,8 @@ await app.start();
 
 ## Providers
 
-The chat package uses the `ChatModelRegistry` from `@tokenring-ai/ai-client` for model selection and client management. This registry provides:
+The chat package uses the `ChatModelRegistry` from `@tokenring-ai/ai-client` for model selection and client management.
+This registry provides:
 
 - Model availability tracking (online, cold, offline)
 - Model cost information
@@ -793,17 +804,17 @@ The registry is automatically registered as a service when the `@tokenring-ai/ai
 
 The chat package provides RPC endpoints for remote chat management:
 
-| Endpoint            | Type     | Request                                | Response                                             |
-|---------------------|----------|----------------------------------------|------------------------------------------------------|
-| `getAvailableTools` | Query    | `{}`                                   | `{ tools: { [toolName]: { displayName: string } } }` |
-| `getModel`          | Query    | `{ agentId: string }`                  | `{ status: "success", model: string \| null }`       |
-| `setModel`          | Mutation | `{ agentId: string, model: string }`   | `{ status: "success", success: boolean }`            |
-| `getEnabledTools`   | Query    | `{ agentId: string }`                  | `{ status: "success", tools: string[] }`             |
-| `setEnabledTools`   | Mutation | `{ agentId: string, tools: string[] }` | `{ status: "success", tools: string[] }`             |
-| `enableTools`       | Mutation | `{ agentId: string, tools: string[] }` | `{ status: "success", tools: string[] }`             |
-| `disableTools`      | Mutation | `{ agentId: string, tools: string[] }` | `{ status: "success", tools: string[] }`             |
+| Endpoint            | Type     | Request                                | Response                                               |
+|---------------------|----------|----------------------------------------|--------------------------------------------------------|
+| `getAvailableTools` | Query    | `{}`                                   | `{ tools: { [toolName]: { displayName: string } } }`   |
+| `getModel`          | Query    | `{ agentId: string }`                  | `{ status: "success", model: string \| null }`         |
+| `setModel`          | Mutation | `{ agentId: string, model: string }`   | `{ status: "success", success: boolean }`              |
+| `getEnabledTools`   | Query    | `{ agentId: string }`                  | `{ status: "success", tools: string[] }`               |
+| `setEnabledTools`   | Mutation | `{ agentId: string, tools: string[] }` | `{ status: "success", tools: string[] }`               |
+| `enableTools`       | Mutation | `{ agentId: string, tools: string[] }` | `{ status: "success", tools: string[] }`               |
+| `disableTools`      | Mutation | `{ agentId: string, tools: string[] }` | `{ status: "success", tools: string[] }`               |
 | `getChatMessages`   | Query    | `{ agentId: string }`                  | `{ status: "success", messages: StoredChatMessage[] }` |
-| `clearChatMessages` | Mutation | `{ agentId: string }`                  | `{ status: "success", success: boolean }`            |
+| `clearChatMessages` | Mutation | `{ agentId: string }`                  | `{ status: "success", success: boolean }`              |
 
 All endpoints return `AgentNotFoundSchema` on error when the agent is not found.
 
@@ -895,7 +906,7 @@ A hook that injects sub-agent results into the chat context.
 ### Basic Chat Setup
 
 ```typescript
-import { TokenRingApp } from "@tokenring-ai/app";
+import {TokenRingApp} from "@tokenring-ai/app";
 import ChatService from "@tokenring-ai/chat";
 
 const app = new TokenRingApp();

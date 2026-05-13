@@ -11,7 +11,7 @@ function execute({ agent }: AgentCommandInputType<typeof inputSchema>): string {
 export default {
   name: "tool list",
   description: "List enabled tools",
-  aliases: ["tools list"],
+  alias: ["tools list"],
   inputSchema,
   execute,
   help: `List all currently enabled tools.

@@ -1,7 +1,7 @@
 import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import { serializeModel } from "@tokenring-ai/ai-client/util/modelSettings";
-import { ChatService } from "../../../index.ts";
+import { ChatService } from "../../../../index.ts";
 
 const inputSchema = {
   args: {},
@@ -24,7 +24,7 @@ function execute({ remainder, agent }: AgentCommandInputType<typeof inputSchema>
 }
 
 export default {
-  name: "model settings disable",
+  name: "chat model settings disable",
   description: "Disable model feature flags",
   inputSchema,
   execute,
@@ -32,6 +32,6 @@ export default {
 
 ## Example
 
-/model settings disable reasoning
-/model settings disable reasoning websearch`,
+/chat model settings disable reasoning
+/chat model settings disable reasoning websearch`,
 } satisfies TokenRingAgentCommand<typeof inputSchema>;

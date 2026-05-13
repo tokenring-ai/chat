@@ -1,6 +1,6 @@
 import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
-import ChatService from "../../ChatService.ts";
+import ChatService from "../../../ChatService.ts";
 
 const inputSchema = {
   args: {},
@@ -21,7 +21,7 @@ function execute({ positionals, agent }: AgentCommandInputType<typeof inputSchem
 }
 
 export default {
-  name: "model set",
+  name: "chat model set",
   description: "Set the model",
   inputSchema,
   execute,
@@ -29,5 +29,5 @@ export default {
 
 ## Example
 
-/model set gpt-5.2`,
+/chat model set gpt-5.2`,
 } satisfies TokenRingAgentCommand<typeof inputSchema>;

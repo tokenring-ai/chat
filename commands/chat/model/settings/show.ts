@@ -1,7 +1,7 @@
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import markdownList from "@tokenring-ai/utility/string/markdownList";
-import { ChatService } from "../../../index.ts";
+import { ChatService } from "../../../../index.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
@@ -30,7 +30,7 @@ function execute({ agent }: AgentCommandInputType<typeof inputSchema>) {
 }
 
 export default {
-  name: "model settings show",
+  name: "chat model settings show",
   description: "Show model settings",
   inputSchema,
   execute,
@@ -38,5 +38,5 @@ export default {
 
 ## Example
 
-/model settings show`,
+/chat model settings show`,
 } satisfies TokenRingAgentCommand<typeof inputSchema>;

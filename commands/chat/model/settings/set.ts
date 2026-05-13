@@ -1,7 +1,7 @@
 import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import { coerceFeatureValue, serializeModel } from "@tokenring-ai/ai-client/util/modelSettings";
-import ChatService from "../../../ChatService.ts";
+import ChatService from "../../../../ChatService.ts";
 
 const inputSchema = {
   args: {},
@@ -33,7 +33,7 @@ function execute({ positionals, agent }: AgentCommandInputType<typeof inputSchem
 }
 
 export default {
-  name: "model settings set",
+  name: "chat model settings set",
   description: "Set a model feature flag",
   inputSchema,
   execute,
@@ -41,6 +41,6 @@ export default {
 
 ## Example
 
-/model settings set websearch
-/model settings set temperature=0.7`,
+/chat model settings set websearch
+/chat model settings set temperature=0.7`,
 } satisfies TokenRingAgentCommand<typeof inputSchema>;
