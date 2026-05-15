@@ -68,7 +68,7 @@ export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>) {
               };
             }
           } catch (err: any) {
-            agent.errorMessage(`Error calling tool ${name}(${JSON.stringify(args)}): ${err}`);
+            agent.errorMessage(`**Error calling tool ${name}(${JSON.stringify(args)}): ${err}`);
             result = {
               summary: `${displayName} (Tool execution failed)`,
               result: `Error calling tool: ${err.message || err}. Please check your tool call for correctness and retry the function call.`,

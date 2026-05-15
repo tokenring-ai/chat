@@ -1,4 +1,5 @@
 import { AgentStateSlice } from "@tokenring-ai/agent/types";
+import deepClone from "@tokenring-ai/utility/object/deepClone";
 import markdownList from "@tokenring-ai/utility/string/markdownList";
 import async from "async";
 import { z } from "zod";
@@ -24,7 +25,7 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
 
   constructor(readonly initialConfig: ParsedChatConfig) {
     super("ChatServiceState", serializationSchema);
-    this.currentConfig = { ...initialConfig };
+    this.currentConfig = deepClone(initialConfig);
   }
 
   async runToolMaybeInParallel<T extends object>(executeToolFunction: () => Promise<T>): Promise<T> {
@@ -33,10 +34,6 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
     } else {
       return await this.toolQueue.push(executeToolFunction);
     }
-  }
-
-  resetSettings(): void {
-    this.currentConfig = { ...this.initialConfig };
   }
 
   serialize(): z.output<typeof serializationSchema> {

@@ -186,7 +186,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
           agent.setCurrentActivity("Preparing context compaction...");
           if (config.compaction.background) {
             void chatService.stageContextCompaction(config.compaction, agent).catch(error => {
-              agent.errorMessage(`Failed to prepare context compaction: ${error instanceof Error ? error.message : String(error)}`);
+              agent.errorMessage(`Failed to prepare context compaction: ${Error.isError(error) ? error.message : String(error)}`);
             });
           } else {
             await chatService.stageContextCompaction(config.compaction, agent);

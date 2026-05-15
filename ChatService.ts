@@ -6,7 +6,7 @@ import { parseModelAndSettings } from "@tokenring-ai/ai-client/util/modelSetting
 import type TokenRingApp from "@tokenring-ai/app";
 import type { TokenRingService } from "@tokenring-ai/app/types";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
-import deepMerge from "@tokenring-ai/utility/object/deepMerge";
+import deepClone from "@tokenring-ai/utility/object/deepClone";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import type { z } from "zod";
 import { AfterChatClear, AfterChatCompaction } from "./lifecycle.ts";
@@ -70,7 +70,7 @@ export default class ChatService implements TokenRingService {
   }
 
   attach(agent: Agent, creationContext: AgentCreationContext): void {
-    const { enabledTools, hiddenTools, ...agentConfig } = deepMerge(this.options.agentDefaults, agent.getAgentConfigSlice("chat", ChatAgentConfigSchema));
+    const { enabledTools, hiddenTools, ...agentConfig } = deepClone(this.options.agentDefaults, agent.getAgentConfigSlice("chat", ChatAgentConfigSchema));
 
     // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
     const initialState = agent.initializeState(ChatServiceState, {

@@ -2,18 +2,14 @@
 
 ## Overview
 
-Tool calling AI chat client for the TokenRing ecosystem. This package provides a comprehensive chat interface for
-AI-powered conversations with advanced features like context management, tool integration, and interactive command-line
-controls. It integrates seamlessly with the Token Ring application framework and supports multiple AI providers.
+Tool calling AI chat client for the TokenRing ecosystem. This package provides a comprehensive chat interface for AI-powered conversations with advanced features like context management, tool integration, and interactive command-line controls. It integrates seamlessly with the Token Ring application framework and supports multiple AI providers.
 
 ## Key Features
 
-- **Multi-Provider Support**: Works with various AI model providers (OpenAI, Anthropic, Google, Groq, etc.) via
-  `@tokenring-ai/ai-client`
+- **Multi-Provider Support**: Works with various AI model providers (OpenAI, Anthropic, Google, Groq, etc.) via `@tokenring-ai/ai-client`
 - **Context Management**: Intelligent context handling with automatic compaction and customizable context sources
 - **Tool Integration**: Extensible tool system with plugin architecture and wildcard matching
-- **Hidden Tools**: Ability to hide tools from the model while keeping them available, with search functionality via
-  `tool_search`
+- **Hidden Tools**: Ability to hide tools from the model while keeping them available, with search functionality via `tool_search`
 - **Interactive Commands**: Rich command set for chat management including `/chat`, `/model`, `/tools`, and `/compact`
 - **State Persistence**: Persistent chat history with message history management and message stack for undo operations
 - **Interactive Selection**: Tree-based UI for model and tool selection
@@ -35,12 +31,291 @@ controls. It integrates seamlessly with the Token Ring application framework and
 bun install @tokenring-ai/chat
 ```
 
+## Chat Commands
+
+The package provides the following chat commands, organized by category:
+
+### Chat Management Commands
+
+| Command                 | Description                  |
+|-------------------------|------------------------------|
+| `/chat send message`    | Send a message to the AI     |
+| `/chat context`         | Display current chat context |
+| `/chat compact [focus]` | Compact conversation context |
+| `/chat reset`           | Reset the chat context       |
+
+### Model Management Commands
+
+| Command                         | Description                    |
+|---------------------------------|--------------------------------|
+| `/model get`                    | Show current model             |
+| `/model set modelName`          | Set the chat model             |
+| `/model select`                 | Interactive model selection    |
+| `/model reset`                  | Reset to initial model         |
+| `/model settings show`          | Show model settings            |
+| `/model settings set key=value` | Set a model setting            |
+| `/model settings select`        | Interactive settings selection |
+| `/model settings enable keys`   | Enable model settings          |
+| `/model settings disable keys`  | Disable model settings         |
+
+### Tool Management Commands
+
+| Command                    | Description                         |
+|----------------------------|-------------------------------------|
+| `/tools list`              | List enabled tools                  |
+| `/tools enable toolNames`  | Enable tools                        |
+| `/tools disable toolNames` | Disable tools                       |
+| `/tools set toolNames`     | Set exactly which tools are enabled |
+| `/tools select`            | Interactive tool selection          |
+| `/tools hide toolNames`    | Hide tools from the model           |
+
+## Chat Command Details
+
+### /chat send message
+
+Send a message to the AI chat service. This is the primary command for communicating with the AI, using your selected model and current context.
+
+**Examples:**
+
+```bash
+/chat send Hello, how are you?
+```
+
+**Features:**
+
+- Uses your selected AI model (see `/model`)
+- Includes conversation context and system prompts
+- Provides available tools if enabled (see `/tools`)
+- Shows detailed token usage analytics after completion
+- Supports attachments via `allowAttachments: true`
+
+### /chat context
+
+Display all context items that would be included in a chat request. Useful for debugging and understanding what information the AI has access to.
+
+**Examples:**
+
+```bash
+/chat context
+```
+
+**Shows:**
+
+- Total number of context messages
+- System prompt configuration
+- Previous conversation messages (with preview)
+
+**Note:** Context display shows the exact data sent to the AI model.
+
+### /chat compact [focus]
+
+Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and maintain context in long conversations.
+
+**Examples:**
+
+```bash
+/chat compact
+/chat compact specifics of the task at hand, including the goal and expected outcome
+```
+
+**How it works:**
+
+- Analyzes all previous messages in the conversation
+- Creates concise summaries while preserving key information
+- Maintains conversation flow and important context
+- Reduces token count for better performance and cost savings
+
+**When to use:**
+
+- After many messages have been exchanged
+- When you notice responses getting slower
+- When approaching token limits
+- Before starting a new topic in a long conversation
+
+**Benefits:**
+
+- Faster response times in long conversations
+- Lower API costs due to reduced token usage
+- Maintains important context without losing information
+- Prevents context overflow errors
+
+### /chat reset
+
+Reset the chat context, clearing prior messages and starting a new conversation.
+
+**Examples:**
+
+```bash
+/chat reset
+```
+
+### /model get
+
+Show the currently active chat model.
+
+**Examples:**
+
+```bash
+/model get
+```
+
+### /model set modelName
+
+Set the chat model to a specific model by name.
+
+**Examples:**
+
+```bash
+/model set gpt-5.2
+```
+
+### /model select
+
+Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
+
+**Examples:**
+
+```bash
+/model select
+```
+
+### /model reset
+
+Reset the chat model to the initial configured value.
+
+**Examples:**
+
+```bash
+/model reset
+```
+
+### /model settings show
+
+Show the currently enabled feature flags and all available settings for the current model.
+
+**Examples:**
+
+```bash
+/model settings show
+```
+
+### /model settings set key=value
+
+Set a single model feature flag.
+
+**Examples:**
+
+```bash
+/model settings set websearch
+/model settings set temperature=0.7
+```
+
+### /model settings select
+
+Open an interactive selector to choose which feature flags to enable for the current model.
+
+**Examples:**
+
+```bash
+/model settings select
+```
+
+### /model settings enable keys
+
+Enable one or more model feature flags.
+
+**Examples:**
+
+```bash
+/model settings enable reasoning
+/model settings enable websearch temperature=0.7
+```
+
+### /model settings disable keys
+
+Disable one or more model feature flags.
+
+**Examples:**
+
+```bash
+/model settings disable reasoning
+/model settings disable reasoning websearch
+```
+
+### /tools list
+
+List all currently enabled tools.
+
+**Examples:**
+
+```bash
+/tools list
+```
+
+### /tools enable toolNames
+
+Enable one or more tools by name. Supports wildcard patterns.
+
+**Examples:**
+
+```bash
+/tools enable web-search
+/tools enable web-search calculator
+```
+
+### /tools disable toolNames
+
+Disable one or more tools by name. Supports wildcard patterns.
+
+**Examples:**
+
+```bash
+/tools disable calculator
+/tools disable web-search calculator
+```
+
+### /tools set toolNames
+
+Set exactly which tools are enabled, replacing the current selection. Supports wildcard patterns.
+
+**Examples:**
+
+```bash
+/tools set web-search calculator
+```
+
+### /tools select
+
+Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by category.
+
+**Examples:**
+
+```bash
+/tools select
+```
+
+### /tools hide toolNames
+
+Hide one or more tools by name, requiring the model to search for the tool to activate it before use.
+
+Saves context tokens; useful for agents that need access to large numbers of tools.
+
+**Examples:**
+
+```bash
+/tools hide calculator
+/tools hide web-search calculator
+```
+
+**Hidden Tools:**
+
+Tools can be hidden to save context tokens. Hidden tools are not visible to the model but remain available. The `tool_search` tool is automatically enabled when hidden tools are configured and can be used to search for and enable hidden tools by regex pattern.
+
 ## Core Components
 
 ### ChatService
 
-The main service class for managing AI chat functionality. Implements `TokenRingService` and provides comprehensive chat
-management capabilities.
+The main service class for managing AI chat functionality. Implements `TokenRingService` and provides comprehensive chat management capabilities.
 
 ```typescript
 import ChatService from "@tokenring-ai/chat";
@@ -198,291 +473,6 @@ const response = await runChat({
 - Hook execution via `AfterChatCompletion` event
 - Auto-activation of tools with `adjustActivation` flag
 
-## Chat Commands
-
-The package provides the following chat commands, organized by category:
-
-### Chat Management Commands
-
-| Command                 | Description                  |
-|-------------------------|------------------------------|
-| `/chat send message`    | Send a message to the AI     |
-| `/chat context`         | Display current chat context |
-| `/chat compact [focus]` | Compact conversation context |
-| `/chat reset`           | Reset the chat context       |
-
-### Model Management Commands
-
-| Command                         | Description                    |
-|---------------------------------|--------------------------------|
-| `/model get`                    | Show current model             |
-| `/model set modelName`          | Set the chat model             |
-| `/model select`                 | Interactive model selection    |
-| `/model reset`                  | Reset to initial model         |
-| `/model settings show`          | Show model settings            |
-| `/model settings set key=value` | Set a model setting            |
-| `/model settings select`        | Interactive settings selection |
-| `/model settings enable keys`   | Enable model settings          |
-| `/model settings disable keys`  | Disable model settings         |
-
-### Tool Management Commands
-
-| Command                    | Description                         |
-|----------------------------|-------------------------------------|
-| `/tools list`              | List enabled tools                  |
-| `/tools enable toolNames`  | Enable tools                        |
-| `/tools disable toolNames` | Disable tools                       |
-| `/tools set toolNames`     | Set exactly which tools are enabled |
-| `/tools select`            | Interactive tool selection          |
-| `/tools hide toolNames`    | Hide tools from the model           |
-
-## Chat Command Details
-
-### /chat send message
-
-Send a message to the AI chat service. This is the primary command for communicating with the AI, using your selected
-model and current context.
-
-**Examples:**
-
-```bash
-/chat send Hello, how are you?
-```
-
-**Features:**
-
-- Uses your selected AI model (see `/model`)
-- Includes conversation context and system prompts
-- Provides available tools if enabled (see `/tools`)
-- Shows detailed token usage analytics after completion
-- Supports attachments via `allowAttachments: true`
-
-### /chat context
-
-Display all context items that would be included in a chat request. Useful for debugging and understanding what
-information the AI has access to.
-
-**Examples:**
-
-```bash
-/chat context
-```
-
-**Shows:**
-
-- Total number of context messages
-- System prompt configuration
-- Previous conversation messages (with preview)
-
-**Note:** Context display shows the exact data sent to the AI model.
-
-### /chat compact [focus]
-
-Compress the conversation context by creating intelligent summaries of prior messages. This helps reduce token usage and
-maintain context in long conversations.
-
-**Examples:**
-
-```bash
-/chat compact
-/chat compact specifics of the task at hand, including the goal and expected outcome
-```
-
-**How it works:**
-
-- Analyzes all previous messages in the conversation
-- Creates concise summaries while preserving key information
-- Maintains conversation flow and important context
-- Reduces token count for better performance and cost savings
-
-**When to use:**
-
-- After many messages have been exchanged
-- When you notice responses getting slower
-- When approaching token limits
-- Before starting a new topic in a long conversation
-
-**Benefits:**
-
-- Faster response times in long conversations
-- Lower API costs due to reduced token usage
-- Maintains important context without losing information
-- Prevents context overflow errors
-
-### /chat reset
-
-Reset the chat context, clearing prior messages and starting a new conversation.
-
-**Examples:**
-
-```bash
-/chat reset
-```
-
-### /model get
-
-Show the currently active chat model.
-
-**Examples:**
-
-```bash
-/model get
-```
-
-### /model set modelName
-
-Set the chat model to a specific model by name.
-
-**Examples:**
-
-```bash
-/model set gpt-5.2
-```
-
-### /model select
-
-Open an interactive tree-based selector to choose a chat model. Models are grouped by provider with availability status.
-
-**Examples:**
-
-```bash
-/model select
-```
-
-### /model reset
-
-Reset the chat model to the initial configured value.
-
-**Examples:**
-
-```bash
-/model reset
-```
-
-### /model settings show
-
-Show the currently enabled feature flags and all available settings for the current model.
-
-**Examples:**
-
-```bash
-/model settings show
-```
-
-### /model settings set token
-
-Set a single model feature flag.
-
-**Examples:**
-
-```bash
-/model settings set websearch
-/model settings set temperature=0.7
-```
-
-### /model settings select
-
-Open an interactive selector to choose which feature flags to enable for the current model.
-
-**Examples:**
-
-```bash
-/model settings select
-```
-
-### /model settings enable keys
-
-Enable one or more model feature flags.
-
-**Examples:**
-
-```bash
-/model settings enable reasoning
-/model settings enable websearch temperature=0.7
-```
-
-### /model settings disable keys
-
-Disable one or more model feature flags.
-
-**Examples:**
-
-```bash
-/model settings disable reasoning
-/model settings disable reasoning websearch
-```
-
-### /tools list
-
-List all currently enabled tools.
-
-**Examples:**
-
-```bash
-/tools list
-```
-
-### /tools enable toolNames
-
-Enable one or more tools by name. Supports wildcard patterns.
-
-**Examples:**
-
-```bash
-/tools enable web-search
-/tools enable web-search calculator
-```
-
-### /tools disable toolNames
-
-Disable one or more tools by name. Supports wildcard patterns.
-
-**Examples:**
-
-```bash
-/tools disable calculator
-/tools disable web-search calculator
-```
-
-### /tools set toolNames
-
-Set exactly which tools are enabled, replacing the current selection. Supports wildcard patterns.
-
-**Examples:**
-
-```bash
-/tools set web-search calculator
-```
-
-### /tools select
-
-Open an interactive tree-based selector to choose which tools to enable. Tools are grouped by category.
-
-**Examples:**
-
-```bash
-/tools select
-```
-
-### /tools hide toolNames
-
-Hide one or more tools by name, requiring the model to search for the tool to activate it before use.
-
-Saves context tokens; useful for agents that need access to large numbers of tools.
-
-**Examples:**
-
-```bash
-/tools hide calculator
-/tools hide web-search calculator
-```
-
-**Hidden Tools:**
-
-Tools can be hidden to save context tokens. Hidden tools are not visible to the model but remain available. The
-`tool_search` tool is automatically enabled when hidden tools are configured and can be used to search for and enable
-hidden tools by regex pattern.
-
 ## Context Handlers
 
 Context handlers build the AI chat request by gathering relevant information from various sources.
@@ -493,7 +483,7 @@ Context handlers build the AI chat request by gathering relevant information fro
 |-------------------|------------------------------------------------------------------------------|
 | `current-message` | Adds the current user input with attachment support                          |
 | `prior-messages`  | Includes previous conversation history with intelligent truncation           |
-| `system-message`  | Adds system prompts (supports dynamic system prompts via functions)          |
+| `system-message`  | Adds system prompts (supports dynamic system prompts via variable interpolation) |
 | `tool-context`    | Includes context from enabled tools based on their required context handlers |
 
 ### Context Handler Configuration
@@ -525,112 +515,6 @@ chatService.registerContextHandler("custom-context", async function* ({ input, a
 const config = chatService.getChatConfig(agent);
 config.context.initial.push({ type: "custom-context" });
 ```
-
-## Plugin Configuration
-
-The chat package is configured through the plugin system with the following schema:
-
-```typescript
-import {z} from "zod";
-import {ChatServiceConfigSchema} from "@tokenring-ai/chat";
-
-const packageConfigSchema = z.object({
-  chat: ChatServiceConfigSchema,
-  tools: z.record(z.string(), ChatToolConfigSchema),
-});
-```
-
-**Configuration Options:**
-
-```typescript
-const config = {
-  chat: {
-    // Array of default model names to try for auto-selection
-    defaultModels: ["auto"],
-
-    // Default configuration for all agents
-    agentDefaults: {
-      // Default model name (supports "auto", "auto:reasoning", "auto:frontier")
-      model: "auto",
-
-      // System instructions for the AI (string or function returning string)
-      systemPrompt: "You are a helpful assistant",
-
-      // Maximum processing steps before prompting for continuation
-      maxSteps: 30,
-
-      // Compaction settings
-      compaction: {
-        policy: "ask", // "automatic" | "ask" | "never"
-        compactionThreshold: 0.5, // Threshold for automatic compaction
-        applyThreshold: 0.7, // Threshold for applying pending compaction (defaults to compactionThreshold)
-        background: false, // Run compaction in background
-        focus: "Default focus text for compaction" // Focus topic for compaction
-      },
-
-      // List of enabled tool names (supports wildcards)
-      enabledTools: [],
-
-      // List of hidden tool names (supports wildcards) - hidden from model but available
-      hiddenTools: [],
-
-      // Context configuration
-      context: {
-        // Context items for initial messages
-        initial: [
-          { type: "system-message" },
-          { type: "tool-context" },
-          { type: "prior-messages" },
-          { type: "current-message" }
-        ],
-        // Context items for follow-up messages
-        followUp: [
-          { type: "prior-messages" },
-          { type: "current-message" }
-        ]
-      }
-    }
-  },
-  // Define custom agent tools
-  tools: {
-    "my-tool": {
-      agentType: "coder",
-      displayName: "My Tool",
-      description: "Does something useful",
-      inputArguments: {
-        param: {
-          description: "A parameter",
-          defaultValue: "default"
-        }
-      },
-      steps: ["Step 1", "Step 2"],
-      subAgent: {}
-    }
-  }
-};
-```
-
-### Context Source Types
-
-| Type              | Description                        |
-|-------------------|------------------------------------|
-| `system-message`  | Adds the system prompt             |
-| `prior-messages`  | Adds previous conversation history |
-| `current-message` | Adds the current user input        |
-| `tool-context`    | Adds context from enabled tools    |
-
-### Compaction Policies
-
-| Policy      | Description                                       |
-|-------------|---------------------------------------------------|
-| `automatic` | Automatically compact when threshold is reached   |
-| `ask`       | Ask user before compacting (in non-headless mode) |
-| `never`     | Never compact automatically                       |
-
-### Compaction Thresholds
-
-- **compactionThreshold**: When context reaches this fraction of max tokens, compaction is triggered
-- **applyThreshold**: When to apply a staged compaction (defaults to compactionThreshold if not set)
 
 ## Tools
 
@@ -790,8 +674,7 @@ await app.start();
 
 ## Providers
 
-The chat package uses the `ChatModelRegistry` from `@tokenring-ai/ai-client` for model selection and client management.
-This registry provides:
+The chat package uses the `ChatModelRegistry` from `@tokenring-ai/ai-client` for model selection and client management. This registry provides:
 
 - Model availability tracking (online, cold, offline)
 - Model cost information
@@ -818,6 +701,106 @@ The chat package provides RPC endpoints for remote chat management:
 
 All endpoints return `AgentNotFoundSchema` on error when the agent is not found.
 
+## Configuration
+
+The chat package is configured through the plugin system with the following schema:
+
+```typescript
+import {z} from "zod";
+import {ChatServiceConfigSchema} from "@tokenring-ai/chat";
+
+const packageConfigSchema = z.object({
+  chat: ChatServiceConfigSchema,
+  tools: z.record(z.string(), ChatToolConfigSchema),
+});
+```
+
+**Configuration Options:**
+
+```yaml
+chat:
+  # Array of default model names to try for auto-selection
+  defaultModels: ["auto"]
+  
+  # Default configuration for all agents
+  agentDefaults:
+    # Default model name (supports "auto", "auto:reasoning", "auto:frontier")
+    model: "auto"
+    
+    # System instructions for the AI (string)
+    systemPrompt: "You are a helpful assistant"
+    
+    # Maximum processing steps before prompting for continuation
+    maxSteps: 30
+    
+    # Allow remote attachments (default: true)
+    allowRemoteAttachments: true
+    
+    # Compaction settings
+    compaction:
+      policy: "ask"  # "automatic" | "ask" | "never"
+      compactionThreshold: 0.5  # Threshold for automatic compaction
+      applyThreshold: 0.7  # Threshold for applying pending compaction (defaults to compactionThreshold)
+      background: false  # Run compaction in background
+      focus: "Default focus text for compaction"  # Focus topic for compaction
+    
+    # List of enabled tool names (supports wildcards)
+    enabledTools: []
+    
+    # List of hidden tool names (supports wildcards) - hidden from model but available
+    hiddenTools: []
+    
+    # Context configuration
+    context:
+      # Context items for initial messages
+      initial:
+        - type: "system-message"
+        - type: "tool-context"
+        - type: "prior-messages"
+        - type: "current-message"
+      # Context items for follow-up messages
+      followUp:
+        - type: "prior-messages"
+        - type: "current-message"
+
+# Define custom agent tools
+tools:
+  "my-tool":
+    agentType: "coder"
+    displayName: "My Tool"
+    description: "Does something useful"
+    inputArguments:
+      param:
+        description: "A parameter"
+        defaultValue: "default"
+    steps:
+      - "Step 1"
+      - "Step 2"
+    subAgent: {}
+```
+
+### Context Source Types
+
+| Type              | Description                        |
+|-------------------|------------------------------------|
+| `system-message`  | Adds the system prompt             |
+| `prior-messages`  | Adds previous conversation history |
+| `current-message` | Adds the current user input        |
+| `tool-context`    | Adds context from enabled tools    |
+
+### Compaction Policies
+
+| Policy      | Description                                       |
+|-------------|---------------------------------------------------|
+| `automatic` | Automatically compact when threshold is reached   |
+| `ask`       | Ask user before compacting (in non-headless mode) |
+| `never`     | Never compact automatically                       |
+
+### Compaction Thresholds
+
+- **compactionThreshold**: When context reaches this fraction of max tokens, compaction is triggered
+- **applyThreshold**: When to apply a staged compaction (defaults to compactionThreshold if not set)
+
 ## State Management
 
 The chat service maintains state including:
@@ -841,10 +824,11 @@ State is automatically managed and preserved across sessions through the ChatSer
 {
   currentConfig: {
     model: string,
-    systemPrompt: string \| Function,
+    systemPrompt: string,
     maxSteps: number,
+    allowRemoteAttachments: boolean,
     compaction: {
-      policy: "automatic" \| "ask" \| "never",
+      policy: "automatic" | "ask" | "never",
       compactionThreshold: number,
       applyThreshold: number,
       background: boolean,
@@ -861,7 +845,7 @@ State is automatically managed and preserved across sessions through the ChatSer
   parallelTools: boolean,
   toolQueue: async.queue,
   injectedMessages: string[],
-  pendingCompaction: StoredChatCompaction \| null,
+  pendingCompaction: StoredChatCompaction | null,
   compactionInProgress: boolean
 }
 ```
@@ -1129,10 +1113,10 @@ import ChatService from "@tokenring-ai/chat";
 
 const chatService = agent.requireServiceByType(ChatService);
 
-// Use a function for dynamic system prompts
-chatService.updateChatConfig({
-  systemPrompt: () => `You are helping with task: ${currentTask}`
-}, agent);
+// System prompts support variable interpolation
+// DATE variable is automatically replaced with current date
+const config = chatService.getChatConfig(agent);
+config.systemPrompt = "You are helping on DATE";
 ```
 
 ### Registering Custom Tools
@@ -1214,7 +1198,7 @@ bun test --coverage
 
 ### Package Structure
 
-```text
+```
 pkg/chat/
 ├── index.ts                    # Main exports
 ├── ChatService.ts              # Core chat service class
@@ -1281,6 +1265,7 @@ pkg/chat/
 - `@tokenring-ai/rpc` (0.2.0) - RPC endpoints
 - `zod` (^4.3.6) - Schema validation
 - `async` (^3.2.6) - Async utilities
+- `@types/async` (^3.2.25) - TypeScript types for async
 
 ### Development Dependencies
 
