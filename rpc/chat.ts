@@ -1,4 +1,5 @@
 import AgentManager from "@tokenring-ai/agent/services/AgentManager";
+import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import type TokenRingApp from "@tokenring-ai/app";
 import { createRPCEndpoint } from "@tokenring-ai/rpc/createRPCEndpoint";
 import ChatService from "../ChatService.ts";
@@ -19,9 +20,37 @@ export default createRPCEndpoint(ChatRpcSchema, {
       return { status: "agentNotFound" };
     }
     const chatService = app.requireService(ChatService);
+    const model = chatService.getModel(agent);
+
+    let modelSpec = null;
+    if (model) {
+      try {
+        const { base } = chatService.getModelAndSettings(agent);
+        const registry = agent.requireServiceByType(ChatModelRegistry);
+        const spec = registry.getClient(base).getModelSpec();
+        modelSpec = {
+          modelId: spec.modelId,
+          providerDisplayName: spec.providerDisplayName,
+          maxContextLength: spec.maxContextLength,
+          costPerMillionInputTokens: spec.costPerMillionInputTokens,
+          costPerMillionOutputTokens: spec.costPerMillionOutputTokens,
+          ...(spec.costPerMillionCachedInputTokens !== undefined && { costPerMillionCachedInputTokens: spec.costPerMillionCachedInputTokens }),
+          ...(spec.costPerMillionReasoningTokens !== undefined && { costPerMillionReasoningTokens: spec.costPerMillionReasoningTokens }),
+          ...(spec.maxCompletionTokens !== undefined && { maxCompletionTokens: spec.maxCompletionTokens }),
+          tools: spec.tools ?? true,
+          structuredOutput: spec.structuredOutput ?? true,
+          ...(spec.webSearch !== undefined && { webSearch: spec.webSearch }),
+          ...(spec.inputCapabilities !== undefined && { inputCapabilities: spec.inputCapabilities }),
+        };
+      } catch {
+        // Model spec unavailable (e.g. model not in registry)
+      }
+    }
+
     return {
       status: "success",
-      model: chatService.getModel(agent),
+      model,
+      modelSpec,
     };
   },
 

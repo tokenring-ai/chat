@@ -22,6 +22,31 @@ export default {
         z.object({
           status: z.literal("success"),
           model: z.string().nullable(),
+          modelSpec: z
+            .object({
+              modelId: z.string(),
+              providerDisplayName: z.string(),
+              maxContextLength: z.number(),
+              costPerMillionInputTokens: z.number(),
+              costPerMillionOutputTokens: z.number(),
+              costPerMillionCachedInputTokens: z.number().optional(),
+              costPerMillionReasoningTokens: z.number().optional(),
+              maxCompletionTokens: z.number().optional(),
+              tools: z.boolean(),
+              structuredOutput: z.boolean(),
+              webSearch: z.boolean().optional(),
+              inputCapabilities: z
+                .object({
+                  text: z.boolean(),
+                  image: z.union([z.boolean(), z.array(z.string())]),
+                  video: z.union([z.boolean(), z.array(z.string())]),
+                  audio: z.union([z.boolean(), z.array(z.string())]),
+                  file: z.union([z.boolean(), z.array(z.string())]),
+                })
+                .partial()
+                .optional(),
+            })
+            .nullable(),
         }),
         AgentNotFoundSchema,
       ]),
