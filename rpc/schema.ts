@@ -1,6 +1,12 @@
 import { AgentNotFoundSchema } from "@tokenring-ai/agent/schema";
+import { SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
+import { SerializedModelSpecSchema } from "@tokenring-ai/ai-client/ModelTypeRegistry";
 import type { RPCSchema } from "@tokenring-ai/rpc/types";
 import { z } from "zod";
+
+const ModelNotFoundSchema = z.object({
+  status: z.literal("modelNotFound"),
+});
 
 export default {
   name: "Chat RPC",
@@ -22,33 +28,25 @@ export default {
         z.object({
           status: z.literal("success"),
           model: z.string().nullable(),
-          modelSpec: z
-            .object({
-              modelId: z.string(),
-              providerDisplayName: z.string(),
-              maxContextLength: z.number(),
-              costPerMillionInputTokens: z.number(),
-              costPerMillionOutputTokens: z.number(),
-              costPerMillionCachedInputTokens: z.number().optional(),
-              costPerMillionReasoningTokens: z.number().optional(),
-              maxCompletionTokens: z.number().optional(),
-              tools: z.boolean(),
-              structuredOutput: z.boolean(),
-              webSearch: z.boolean().optional(),
-              inputCapabilities: z
-                .object({
-                  text: z.boolean(),
-                  image: z.union([z.boolean(), z.array(z.string())]),
-                  video: z.union([z.boolean(), z.array(z.string())]),
-                  audio: z.union([z.boolean(), z.array(z.string())]),
-                  file: z.union([z.boolean(), z.array(z.string())]),
-                })
-                .partial()
-                .optional(),
-            })
-            .nullable(),
+          modelSpec: SerializedChatModelSpecSchema
         }),
         AgentNotFoundSchema,
+        ModelNotFoundSchema,
+      ]),
+    },
+    streamModel: {
+      type: "stream",
+      input: z.object({
+        agentId: z.string(),
+      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal("success"),
+          model: z.string().nullable(),
+          modelSpec: SerializedModelSpecSchema
+        }),
+        AgentNotFoundSchema,
+        ModelNotFoundSchema,
       ]),
     },
     setModel: {
@@ -67,6 +65,19 @@ export default {
     },
     getEnabledTools: {
       type: "query",
+      input: z.object({
+        agentId: z.string(),
+      }),
+      result: z.discriminatedUnion("status", [
+        z.object({
+          status: z.literal("success"),
+          tools: z.array(z.string()),
+        }),
+        AgentNotFoundSchema,
+      ]),
+    },
+    streamEnabledTools: {
+      type: "stream",
       input: z.object({
         agentId: z.string(),
       }),

@@ -5,7 +5,7 @@ import { ChatService } from "../index.ts";
 import type { ParsedChatConfig } from "../schema.ts";
 
 const toolCallParamsSchema = z.object({
-  role: z.enum(["system", "user"]),
+  role: z.never().exactOptional(),
   header: z.string(),
   toolName: z.string(),
   toolInput: z.record(z.string(), z.any()),
@@ -24,7 +24,7 @@ export default async function* getContextItems(_input: string, _chatConfig: Pars
   const result = await execute(inputSchema.parse(validatedParams.toolInput), agent);
 
   yield {
-    role: validatedParams.role,
+    role: 'user',
     content: `
 ${validatedParams.header}
 

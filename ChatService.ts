@@ -8,6 +8,7 @@ import type { TokenRingService } from "@tokenring-ai/app/types";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
 import deepClone from "@tokenring-ai/utility/object/deepClone";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
+import interpolateString from "@tokenring-ai/utility/string/interpolateString";
 import type { z } from "zod";
 import { AfterChatClear, AfterChatCompaction } from "./lifecycle.ts";
 import {
@@ -52,7 +53,8 @@ export default class ChatService implements TokenRingService {
   constructor(
     readonly app: TokenRingApp,
     readonly options: z.output<typeof ChatServiceConfigSchema>,
-  ) {}
+  ) {
+  }
 
   start() {
     const chatModelRegistry = this.app.requireService(ChatModelRegistry);
@@ -94,6 +96,17 @@ export default class ChatService implements TokenRingService {
   async buildChatMessages({ input, attachments, chatConfig, agent }: BuildChatMessagesOptions) {
     const lastMessage = this.getLastMessage(agent);
 
+    let instructions: string;
+    if (lastMessage?.request.instructions) {
+      instructions = lastMessage.request.instructions;
+    } else {
+      const replacementFunctions = {
+        DATE: () => new Date().toLocaleDateString(),
+      } as Record<string, () => string>;
+
+      instructions = interpolateString(chatConfig.systemPrompt, replacementFunctions);
+    }
+
     const messages: ContextItem[] = [];
 
     for (const sourceConfig of lastMessage ? chatConfig.context.followUp : chatConfig.context.initial) {
@@ -109,7 +122,7 @@ export default class ChatService implements TokenRingService {
         messages.push(item);
       }
     }
-    return messages;
+    return { messages, instructions };
   }
 
   addTools(...tools: TokenRingToolDefinition<any>[]) {
@@ -323,7 +336,7 @@ export default class ChatService implements TokenRingService {
     const lastMessage = this.getLastMessage(agent);
     if (!lastMessage) return false;
 
-    const systemMessages = lastMessage.request.messages.filter(message => message.role === "system");
+    //const systemMessages = lastMessage.request.messages.filter(message => message.role === "system");
     const priorMessageStream = [...lastMessage.request.messages, ...(lastMessage.response.messages ?? [])];
 
     if (priorMessageStream.length === 0) return false;
@@ -340,8 +353,8 @@ export default class ChatService implements TokenRingService {
         "Waiting for response from AI...",
         client.streamChat(
           {
+            instructions: lastMessage.request.instructions,
             messages: [
-              ...systemMessages,
               ...priorMessageStream,
               {
                 role: "user",
@@ -379,10 +392,10 @@ ${compactionConfig.focus}
   async compactContext(compactionConfig: ParsedChatConfig["compaction"], agent: Agent): Promise<void> {
     const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
 
-    const messages = this.getChatMessages(agent);
-    if (messages.length === 0) return;
+    const previousMessages = this.getChatMessages(agent);
+    if (previousMessages.length === 0) return;
 
-    const requestMessages = await this.buildChatMessages({
+    const { instructions, messages } = await this.buildChatMessages({
       input: `
 Please provide a long and detailed and comprehensive summary of the prior conversation, focusing on the following:
 
@@ -398,7 +411,8 @@ ${compactionConfig.focus}
       "Waiting for response from AI...",
       client.streamChat(
         {
-          messages: requestMessages,
+          instructions,
+          messages,
           tools: {},
         },
         agent,
@@ -411,7 +425,8 @@ ${compactionConfig.focus}
     this.pushChatMessage(
       {
         request: {
-          messages: requestMessages.filter(message => message.role === "system"),
+          instructions,
+          messages
         },
         response,
         createdAt: Date.now(),

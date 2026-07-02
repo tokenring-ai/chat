@@ -1,7 +1,9 @@
 import type { AIResponse } from "@tokenring-ai/ai-client/client/AIChatClient";
 
 export function getChatAnalytics(response: AIResponse) {
-  const { inputTokens, cachedInputTokens, outputTokens, reasoningTokens } = response.totalUsage;
+  const { inputTokens, outputTokens, inputTokenDetails, outputTokenDetails } = response.totalUsage;
+  const cachedInputTokens = inputTokenDetails.cacheReadTokens;
+  const reasoningTokens = outputTokenDetails.reasoningTokens;
 
   const usage = [
     `Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,

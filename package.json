@@ -9,7 +9,7 @@
     "@tokenring-ai/utility": "workspace:*",
     "@tokenring-ai/lifecycle": "workspace:*",
     "@tokenring-ai/rpc": "workspace:*",
-    "zod": "^4.3.6",
+    "zod": "^4.4.3",
     "@types/async": "^3.2.25",
     "async": "^3.2.6"
   },

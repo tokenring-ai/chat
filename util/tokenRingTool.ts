@@ -2,7 +2,8 @@ import type { Agent } from "@tokenring-ai/agent";
 import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
 import { chatTool } from "@tokenring-ai/ai-client";
 import type { MaybePromise } from "bun";
-import type { z } from "zod";
+import { z } from "zod";
+import type { NamedTool } from "../schema.ts";
 import type { TokenRingFullToolResult, TokenRingToolDefinition } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
 
@@ -37,20 +38,16 @@ export type ToolResultOutput = {
   value: Array<ToolResultValue>;
 };
 
-//export type ToolResultOutput = Awaited<ReturnType<NonNullable<Parameters<typeof chatTool>["0"]["toModelOutput"]>>>
-
-export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>) {
+export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>) : NamedTool {
   const { name, displayName, description, inputSchema, execute } = toolDefinition;
   return {
     name,
     displayName,
     toolDefinition,
-    tool: chatTool({
+    tool: (agent: Agent) => chatTool({
       description,
       inputSchema,
-      async execute(args: z.output<typeof inputSchema>, { experimental_context }: Record<string, any>): Promise<ToolResultOutput> {
-        const agent = experimental_context.agent as Agent;
-
+      async execute(args: z.output<typeof inputSchema>): Promise<ToolResultOutput> {
         const executeToolFunction = async (): Promise<ToolResultOutput> => {
           let result: TokenRingFullToolResult;
           try {
@@ -150,48 +147,3 @@ function decodeAsText(body: string, encoding: BaseAttachment["encoding"], chatSt
     }
   }
 }
-
-/*
-type ToolResultOutput = {
-type: "content";
-value: Array<{
-  type: "text";
-  text: string;
-  providerOptions?: ProviderOptions;
-} | {
-  type: "media";
-  data: string;
-  mediaType: string;
-} | {
-  type: "file-data";
-  data: string;
-  mediaType: string;
-  filename?: string | undefined;
-  providerOptions?: ProviderOptions;
-} | {
-  type: "file-url";
-  url: string;
-  providerOptions?: ProviderOptions;
-} | {
-  type: "file-id";
-  fileId: string | Record<string, string>;
-  providerOptions?: ProviderOptions;
-} | {
-  type: "image-data";
-  data: string;
-  mediaType: string;
-  providerOptions?: ProviderOptions;
-} | {
-  type: "image-url";
-  url: string;
-  providerOptions?: ProviderOptions;
-} | {
-  type: "image-file-id";
-  fileId: string | Record<string, string>;
-  providerOptions?: ProviderOptions;
-} | {
-  type: "custom";
-  providerOptions?: ProviderOptions;
-}>;
-}
-*/

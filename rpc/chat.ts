@@ -1,9 +1,50 @@
+import type Agent from "@tokenring-ai/agent/Agent";
 import AgentManager from "@tokenring-ai/agent/services/AgentManager";
+import { SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import type TokenRingApp from "@tokenring-ai/app";
+import { createAgentStateSliceStream } from "@tokenring-ai/rpc/createAgentStateStream";
 import { createRPCEndpoint } from "@tokenring-ai/rpc/createRPCEndpoint";
+import { deepEquals } from "bun";
+import { z } from "zod";
 import ChatService from "../ChatService.ts";
+import { ChatServiceState } from "../state/chatServiceState.ts";
 import ChatRpcSchema from "./schema.ts";
+
+type ModelQueryResult =
+  | { status: "agentNotFound" }
+  | { status: "modelNotFound"}
+  | {
+      status: "success";
+      model: string | null;
+      modelSpec: z.output<typeof SerializedChatModelSpecSchema>
+    };
+
+function buildModelResult(chatService: ChatService, agent: Agent): ModelQueryResult {
+  const model = chatService.getModel(agent);
+
+  if (model) {
+    const registry = agent.requireServiceByType(ChatModelRegistry);
+    const client = registry.getClient(model);
+    return {
+      status: "success" as const,
+      model,
+      modelSpec: SerializedChatModelSpecSchema.parse(client.getModelSpec() satisfies z.input<typeof SerializedChatModelSpecSchema>)
+    };
+  } else {
+    return {
+      status: "modelNotFound"
+    }
+  }
+}
+
+const streamEnabledTools = createAgentStateSliceStream({
+  SliceClass: ChatServiceState,
+  project: state => ({
+    status: "success" as const,
+    tools: state.currentConfig.enabledTools ?? [],
+  }),
+});
 
 export default createRPCEndpoint(ChatRpcSchema, {
   getAvailableTools(_args, app: TokenRingApp) {
@@ -19,39 +60,27 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) {
       return { status: "agentNotFound" };
     }
-    const chatService = app.requireService(ChatService);
-    const model = chatService.getModel(agent);
+    return buildModelResult(app.requireService(ChatService), agent);
+  },
 
-    let modelSpec = null;
-    if (model) {
-      try {
-        const { base } = chatService.getModelAndSettings(agent);
-        const registry = agent.requireServiceByType(ChatModelRegistry);
-        const spec = registry.getClient(base).getModelSpec();
-        modelSpec = {
-          modelId: spec.modelId,
-          providerDisplayName: spec.providerDisplayName,
-          maxContextLength: spec.maxContextLength,
-          costPerMillionInputTokens: spec.costPerMillionInputTokens,
-          costPerMillionOutputTokens: spec.costPerMillionOutputTokens,
-          ...(spec.costPerMillionCachedInputTokens !== undefined && { costPerMillionCachedInputTokens: spec.costPerMillionCachedInputTokens }),
-          ...(spec.costPerMillionReasoningTokens !== undefined && { costPerMillionReasoningTokens: spec.costPerMillionReasoningTokens }),
-          ...(spec.maxCompletionTokens !== undefined && { maxCompletionTokens: spec.maxCompletionTokens }),
-          tools: spec.tools ?? true,
-          structuredOutput: spec.structuredOutput ?? true,
-          ...(spec.webSearch !== undefined && { webSearch: spec.webSearch }),
-          ...(spec.inputCapabilities !== undefined && { inputCapabilities: spec.inputCapabilities }),
-        };
-      } catch {
-        // Model spec unavailable (e.g. model not in registry)
-      }
+  async *streamModel(args, app: TokenRingApp, signal) {
+    const agent = app.requireService(AgentManager).getAgent(args.agentId);
+    if (!agent) {
+      yield { status: "agentNotFound" };
+      return;
     }
 
-    return {
-      status: "success",
-      model,
-      modelSpec,
-    };
+    const chatService = app.requireService(ChatService);
+    let last: ModelQueryResult | undefined;
+
+    for await (const _slice of agent.subscribeStateAsync(ChatServiceState, signal)) {
+      const result = buildModelResult(chatService, agent);
+      if (last !== undefined && deepEquals(last, result, true)) {
+        continue;
+      }
+      last = result;
+      yield result;
+    }
   },
 
   setModel(args, app: TokenRingApp) {
@@ -75,6 +104,8 @@ export default createRPCEndpoint(ChatRpcSchema, {
       tools: chatService.getEnabledTools(agent),
     };
   },
+
+  streamEnabledTools,
 
   setEnabledTools(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);

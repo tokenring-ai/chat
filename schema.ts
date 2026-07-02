@@ -7,7 +7,7 @@ import type { AIResponse, ChatInputMessage, ChatRequest } from "@tokenring-ai/ai
 import type { MaybePromise } from "bun";
 import { z } from "zod";
 
-const initialContextItems = [{ type: "system-message" }, { type: "tool-context" }, { type: "prior-messages" }, { type: "current-message" }];
+const initialContextItems = [{ type: "tool-context" }, { type: "prior-messages" }, { type: "current-message" }];
 
 const followUpContextItems = [{ type: "prior-messages" }, { type: "current-message" }];
 
@@ -15,7 +15,8 @@ export type ToolArtifact = Omit<z.input<typeof OutputArtifactSchema>, "type">;
 
 export type NamedTool = {
   name: string;
-  tool: AITool;
+  displayName: string;
+  tool: (agent: Agent) => AITool;
   toolDefinition?: TokenRingToolDefinition<any>;
 };
 

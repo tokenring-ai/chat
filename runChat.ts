@@ -74,7 +74,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     });
   }
 
-  const requestMessages = await chatService.buildChatMessages({
+  const { messages, instructions } = await chatService.buildChatMessages({
     input,
     ...(attachments?.length && { attachments }),
     chatConfig,
@@ -89,7 +89,8 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
   try {
     const response = await client.streamChat(
       {
-        messages: requestMessages,
+        instructions,
+        messages,
         async stopWhen(options) {
           stepCount = options.steps.length;
           if (stepCount > 0) {
@@ -126,7 +127,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
         tools: Object.fromEntries(
           chatConfig.enabledTools.map(toolName => {
             const toolDefinition = chatService.requireTool(toolName);
-            return [toolDefinition.name, toolDefinition.tool];
+            return [toolDefinition.name, toolDefinition.tool(agent)];
           }),
         ),
       },
@@ -136,7 +137,10 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     // Update the current message to follow up to the previous
     chatService.pushChatMessage(
       {
-        request: { messages: requestMessages },
+        request: {
+          instructions,
+          messages
+        },
         response,
         createdAt: Date.now(),
         updatedAt: Date.now(),

@@ -11,13 +11,17 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
     const chatService = agent.requireServiceByType(ChatService);
     const chatConfig = chatService.getChatConfig(agent);
 
-    const messages = await chatService.buildChatMessages({
+    const { instructions, messages } = await chatService.buildChatMessages({
       input: "input",
       chatConfig,
       agent,
     });
 
-    const lines: string[] = ["Context items that would be added to chat request:", `Total messages: ${messages.length}`];
+    const lines: string[] = [
+      "System Prompt:",
+      instructions,
+      `Messages: (${messages.length})`
+    ];
 
     messages.slice(0, -1).forEach((msg, index) => {
       const content =

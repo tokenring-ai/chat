@@ -483,7 +483,6 @@ Context handlers build the AI chat request by gathering relevant information fro
 |-------------------|------------------------------------------------------------------------------|
 | `current-message` | Adds the current user input with attachment support                          |
 | `prior-messages`  | Includes previous conversation history with intelligent truncation           |
-| `system-message`  | Adds system prompts (supports dynamic system prompts via variable interpolation) |
 | `tool-context`    | Includes context from enabled tools based on their required context handlers |
 
 ### Context Handler Configuration
@@ -656,7 +655,6 @@ app.addServices(new ChatService({
     hiddenTools: [],
     context: {
       initial: [
-        { type: "system-message" },
         { type: "tool-context" },
         { type: "prior-messages" },
         { type: "current-message" }
@@ -754,7 +752,6 @@ chat:
     context:
       # Context items for initial messages
       initial:
-        - type: "system-message"
         - type: "tool-context"
         - type: "prior-messages"
         - type: "current-message"
@@ -783,7 +780,6 @@ tools:
 
 | Type              | Description                        |
 |-------------------|------------------------------------|
-| `system-message`  | Adds the system prompt             |
 | `prior-messages`  | Adds previous conversation history |
 | `current-message` | Adds the current user input        |
 | `tool-context`    | Adds context from enabled tools    |
@@ -909,7 +905,6 @@ app.addServices(new ChatService({
     hiddenTools: [],
     context: {
       initial: [
-        { type: "system-message" },
         { type: "tool-context" },
         { type: "prior-messages" },
         { type: "current-message" }
