@@ -24,7 +24,7 @@ export default async function* getContextItems(_input: string, _chatConfig: Pars
   const result = await execute(inputSchema.parse(validatedParams.toolInput), agent);
 
   yield {
-    role: 'user',
+    role: "user",
     content: `
 ${validatedParams.header}
 

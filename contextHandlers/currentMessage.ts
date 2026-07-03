@@ -45,9 +45,8 @@ export default async function* getContextItems({ input, attachments, sourceConfi
           text = await fetch(attachment.body).then(res => res.text());
           break;
         default: {
-          // noinspection JSUnusedLocalSymbols
-          const unknownEncoding: never = attachment.encoding;
-          throw new Error(`Unsupported attachment encoding: ${unknownEncoding as string}`);
+          const exhaustive: any = attachment.encoding satisfies never;
+          throw new Error(`Unsupported attachment encoding: ${exhaustive}`);
         }
       }
 
@@ -83,8 +82,8 @@ ${text}`.trim();
           });
           break;
         default: {
-          const unknownEncoding: never = attachment.encoding;
-          throw new Error(`Unsupported attachment encoding: ${unknownEncoding as string}`);
+          const exhaustive: any = attachment.encoding satisfies never;
+          throw new Error(`Unsupported attachment encoding: ${exhaustive}`);
         }
       }
     } else {
@@ -113,9 +112,8 @@ ${text}`.trim();
           });
           break;
         default: {
-          // noinspection JSUnusedLocalSymbols
-          const unknownEncoding: never = attachment.encoding;
-          throw new Error(`Unsupported attachment encoding: ${unknownEncoding as string}`);
+          const exhaustive: any = attachment.encoding satisfies never;
+          throw new Error(`Unsupported attachment encoding: ${exhaustive}`);
         }
       }
     }

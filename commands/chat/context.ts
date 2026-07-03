@@ -17,11 +17,7 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
       agent,
     });
 
-    const lines: string[] = [
-      "System Prompt:",
-      instructions,
-      `Messages: (${messages.length})`
-    ];
+    const lines: string[] = ["System Prompt:", instructions, `Messages: (${messages.length})`];
 
     messages.slice(0, -1).forEach((msg, index) => {
       const content =

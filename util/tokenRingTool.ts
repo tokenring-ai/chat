@@ -38,95 +38,95 @@ export type ToolResultOutput = {
   value: Array<ToolResultValue>;
 };
 
-export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>) : NamedTool {
+export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>): NamedTool {
   const { name, displayName, description, inputSchema, execute } = toolDefinition;
   return {
     name,
     displayName,
     toolDefinition,
-    tool: (agent: Agent) => chatTool({
-      description,
-      inputSchema,
-      async execute(args: z.output<typeof inputSchema>): Promise<ToolResultOutput> {
-        const executeToolFunction = async (): Promise<ToolResultOutput> => {
-          let result: TokenRingFullToolResult;
-          try {
-            const tmp = await execute(args, agent);
+    tool: (agent: Agent) =>
+      chatTool({
+        description,
+        inputSchema,
+        async execute(args: z.output<typeof inputSchema>): Promise<ToolResultOutput> {
+          const executeToolFunction = async (): Promise<ToolResultOutput> => {
+            let result: TokenRingFullToolResult;
+            try {
+              const tmp = await execute(args, agent);
 
-            if (typeof tmp === "string") {
+              if (typeof tmp === "string") {
+                result = {
+                  summary: displayName,
+                  result: tmp,
+                };
+              } else {
+                result = {
+                  ...tmp,
+                  summary: tmp.summary || displayName,
+                };
+              }
+            } catch (err: any) {
+              agent.errorMessage(`**Error calling tool ${name}(${JSON.stringify(args)}): ${err}`);
               result = {
-                summary: displayName,
-                result: tmp,
-              };
-            } else {
-              result = {
-                ...tmp,
-                summary: tmp.summary || displayName,
+                summary: `${displayName} (Tool execution failed)`,
+                result: `Error calling tool: ${err.message || err}. Please check your tool call for correctness and retry the function call.`,
               };
             }
-          } catch (err: any) {
-            agent.errorMessage(`**Error calling tool ${name}(${JSON.stringify(args)}): ${err}`);
-            result = {
-              summary: `${displayName} (Tool execution failed)`,
-              result: `Error calling tool: ${err.message || err}. Please check your tool call for correctness and retry the function call.`,
-            };
-          }
 
-          agent.toolCallResult({
-            name,
-            args,
-            ...result,
-            summary: `${displayName} (Success)`,
-          });
+            agent.toolCallResult({
+              name,
+              args,
+              ...result,
+              summary: `${displayName} (Success)`,
+            });
 
-          const chatState = agent.getState(ChatServiceState);
+            const chatState = agent.getState(ChatServiceState);
 
-          const values: ToolResultOutput["value"] = [{ type: "text", text: result.result }];
+            const values: ToolResultOutput["value"] = [{ type: "text", text: result.result }];
 
-          if (result.attachments) {
-            values.push(
-              ...(await Promise.all(
-                result.attachments
-                  .filter(a => a.sendToLLM)
-                  .map(async (result): Promise<ToolResultValue> => {
-                    switch (result.mimeType) {
-                      case "application/json":
-                      case "text/plain":
-                      case "text/markdown":
-                      case "text/x-diff":
-                      case "message/rfc822":
-                      case "text/html":
-                        return {
-                          type: "text",
-                          text: await decodeAsText(result.body, result.encoding, chatState),
-                        };
-                      case "image/jpeg":
-                      case "image/png":
-                        return {
-                          type: "image-data",
-                          data: result.body,
-                          mediaType: result.mimeType,
-                        };
-                      default: {
-                        // noinspection JSUnusedLocalSymbols
-                        const _foo: never = result.mimeType;
-                        throw new Error(`Unsupported MIME type: ${result.mimeType as string}`);
+            if (result.attachments) {
+              values.push(
+                ...(await Promise.all(
+                  result.attachments
+                    .filter(a => a.sendToLLM)
+                    .map(async (result): Promise<ToolResultValue> => {
+                      switch (result.mimeType) {
+                        case "application/json":
+                        case "text/plain":
+                        case "text/markdown":
+                        case "text/x-diff":
+                        case "message/rfc822":
+                        case "text/html":
+                          return {
+                            type: "text",
+                            text: await decodeAsText(result.body, result.encoding, chatState),
+                          };
+                        case "image/jpeg":
+                        case "image/png":
+                          return {
+                            type: "image-data",
+                            data: result.body,
+                            mediaType: result.mimeType,
+                          };
+                        default: {
+                          const exhaustive: any = result.mimeType satisfies never;
+                          throw new Error(`Unsupported MIME type: ${exhaustive}`);
+                        }
                       }
-                    }
-                  }),
-              )),
-            );
-          }
+                    }),
+                )),
+              );
+            }
 
-          return {
-            type: "content",
-            value: values,
+            return {
+              type: "content",
+              value: values,
+            };
           };
-        };
 
-        return await agent.getState(ChatServiceState).runToolMaybeInParallel(executeToolFunction);
-      },
-    }),
+          return await agent.getState(ChatServiceState).runToolMaybeInParallel(executeToolFunction);
+        },
+      }),
   };
 }
 
@@ -141,9 +141,8 @@ function decodeAsText(body: string, encoding: BaseAttachment["encoding"], chatSt
 
       return fetch(body).then(res => res.text());
     default: {
-      // noinspection UnnecessaryLocalVariableJS
-      const unknownEncoding: never = encoding;
-      throw new Error(`Unsupported encoding: ${unknownEncoding as string}`);
+      const exhaustive: any = encoding satisfies never;
+      throw new Error(`Unsupported encoding: ${exhaustive}`);
     }
   }
 }

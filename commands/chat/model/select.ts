@@ -35,7 +35,7 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
       tree,
     },
   });
-  if (selection) {
+  if (selection?.[0]) {
     chatService.setModel(selection[0], agent);
     return `Model set to ${selection[0]}`;
   }

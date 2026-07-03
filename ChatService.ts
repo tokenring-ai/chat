@@ -53,8 +53,7 @@ export default class ChatService implements TokenRingService {
   constructor(
     readonly app: TokenRingApp,
     readonly options: z.output<typeof ChatServiceConfigSchema>,
-  ) {
-  }
+  ) {}
 
   start() {
     const chatModelRegistry = this.app.requireService(ChatModelRegistry);
@@ -181,7 +180,7 @@ export default class ChatService implements TokenRingService {
   getLastMessage(agent: Agent): StoredChatMessage | null {
     const messages = this.getChatMessages(agent);
     if (messages.length > 0) {
-      return messages[messages.length - 1];
+      return messages[messages.length - 1]!;
     }
     return null;
   }
@@ -426,7 +425,7 @@ ${compactionConfig.focus}
       {
         request: {
           instructions,
-          messages
+          messages,
         },
         response,
         createdAt: Date.now(),

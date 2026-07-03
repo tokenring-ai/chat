@@ -13,11 +13,11 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
     const [, category, displayName] = tool.toolDefinition?.displayName.match(/^(.*)\/(.*)/) ?? [null, "Unknown", tool.toolDefinition?.displayName ?? toolName];
     (toolsByCategory[category] ??= []).push({ displayName, toolName });
   }
-  const tree: TreeLeaf[] = Object.keys(toolsByCategory)
+  const tree: TreeLeaf[] = Object.entries(toolsByCategory)
     .sort()
-    .map(category => ({
+    .map(([category, items]) => ({
       name: `${category}`,
-      children: toolsByCategory[category].map(t => ({
+      children: items.map(t => ({
         name: `${t.displayName}`,
         value: t.toolName,
       })),

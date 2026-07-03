@@ -12,7 +12,7 @@ const description = "Injects the results of subagent into the parent agents chat
 const callbacks = [
   new HookCallback(AfterSubAgentResponse, (data, agent) => {
     const lastStep = data.request.steps[data.request.steps.length - 1];
-    const lastMessage = typeof lastStep === "string" ? lastStep : lastStep.message;
+    const lastMessage = typeof lastStep === "string" ? lastStep : lastStep?.message;
 
     agent.mutateState(ChatServiceState, state => {
       state.injectedMessages.push(

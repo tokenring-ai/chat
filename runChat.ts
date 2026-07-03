@@ -95,7 +95,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
           stepCount = options.steps.length;
           if (stepCount > 0) {
             const { compactionThreshold } = agent.getState(ChatServiceState).currentConfig.compaction;
-            if (isThresholdReached(options.steps[stepCount - 1].usage, client, compactionThreshold)) {
+            if (isThresholdReached(options.steps[stepCount - 1]!.usage, client, compactionThreshold)) {
               stopReason = "longContext";
               return true;
             }
@@ -139,7 +139,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
       {
         request: {
           instructions,
-          messages
+          messages,
         },
         response,
         createdAt: Date.now(),

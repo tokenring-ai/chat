@@ -13,11 +13,11 @@ import ChatRpcSchema from "./schema.ts";
 
 type ModelQueryResult =
   | { status: "agentNotFound" }
-  | { status: "modelNotFound"}
+  | { status: "modelNotFound" }
   | {
       status: "success";
       model: string | null;
-      modelSpec: z.output<typeof SerializedChatModelSpecSchema>
+      modelSpec: z.output<typeof SerializedChatModelSpecSchema>;
     };
 
 function buildModelResult(chatService: ChatService, agent: Agent): ModelQueryResult {
@@ -29,12 +29,12 @@ function buildModelResult(chatService: ChatService, agent: Agent): ModelQueryRes
     return {
       status: "success" as const,
       model,
-      modelSpec: SerializedChatModelSpecSchema.parse(client.getModelSpec() satisfies z.input<typeof SerializedChatModelSpecSchema>)
+      modelSpec: SerializedChatModelSpecSchema.parse(client.getModelSpec() satisfies z.input<typeof SerializedChatModelSpecSchema>),
     };
   } else {
     return {
-      status: "modelNotFound"
-    }
+      status: "modelNotFound",
+    };
   }
 }
 

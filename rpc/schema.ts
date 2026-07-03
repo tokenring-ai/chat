@@ -1,6 +1,7 @@
-import { AgentNotFoundSchema } from "@tokenring-ai/agent/schema";
 import { SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { SerializedModelSpecSchema } from "@tokenring-ai/ai-client/ModelTypeRegistry";
+import { AgentNotFoundSchema } from "@tokenring-ai/rpc/types";
+import { SuccessSchema } from "@tokenring-ai/rpc/types";
 import type { RPCSchema } from "@tokenring-ai/rpc/types";
 import { z } from "zod";
 
@@ -25,10 +26,9 @@ export default {
         agentId: z.string(),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           model: z.string().nullable(),
-          modelSpec: SerializedChatModelSpecSchema
+          modelSpec: SerializedChatModelSpecSchema,
         }),
         AgentNotFoundSchema,
         ModelNotFoundSchema,
@@ -40,10 +40,9 @@ export default {
         agentId: z.string(),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           model: z.string().nullable(),
-          modelSpec: SerializedModelSpecSchema
+          modelSpec: SerializedModelSpecSchema,
         }),
         AgentNotFoundSchema,
         ModelNotFoundSchema,
@@ -56,8 +55,7 @@ export default {
         model: z.string(),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           success: z.boolean(),
         }),
         AgentNotFoundSchema,
@@ -69,8 +67,7 @@ export default {
         agentId: z.string(),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           tools: z.array(z.string()),
         }),
         AgentNotFoundSchema,
@@ -82,8 +79,7 @@ export default {
         agentId: z.string(),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           tools: z.array(z.string()),
         }),
         AgentNotFoundSchema,
@@ -96,8 +92,7 @@ export default {
         tools: z.array(z.string()),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           tools: z.array(z.string()),
         }),
         AgentNotFoundSchema,
@@ -110,8 +105,7 @@ export default {
         tools: z.array(z.string()),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           tools: z.array(z.string()),
         }),
         AgentNotFoundSchema,
@@ -124,8 +118,7 @@ export default {
         tools: z.array(z.string()),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           tools: z.array(z.string()),
         }),
         AgentNotFoundSchema,
@@ -137,8 +130,7 @@ export default {
         agentId: z.string(),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           messages: z.array(
             z.object({
               request: z.any(),
@@ -157,8 +149,7 @@ export default {
         agentId: z.string(),
       }),
       result: z.discriminatedUnion("status", [
-        z.object({
-          status: z.literal("success"),
+        SuccessSchema.extend({
           success: z.boolean(),
         }),
         AgentNotFoundSchema,
