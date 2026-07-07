@@ -3,8 +3,7 @@ import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
 import { chatTool } from "@tokenring-ai/ai-client";
 import formatError from "@tokenring-ai/utility/error/formatError";
 import type { MaybePromise } from "bun";
-import type { ZodObject } from "zod";
-import type { z } from "zod";
+import type { ZodObject, z } from "zod";
 import type { NamedTool, TokenRingFullToolResult, TokenRingToolDefinition } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
 

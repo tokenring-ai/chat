@@ -3,9 +3,8 @@ import type { InputAttachment, OutputArtifactSchema, ToolCallResult } from "@tok
 import { SubAgentConfigSchema } from "@tokenring-ai/agent/schema";
 
 import type { Tool as AITool } from "@tokenring-ai/ai-client";
-import { AIResponseSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
-import { ChatInputMessageSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
+import { AIResponseSchema, ChatInputMessageSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import type { MaybePromise } from "bun";
 import type { ZodObject } from "zod";
 import { z } from "zod";

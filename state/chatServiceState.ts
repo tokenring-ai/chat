@@ -3,8 +3,7 @@ import deepClone from "@tokenring-ai/utility/object/deepClone";
 import markdownList from "@tokenring-ai/utility/string/markdownList";
 import async from "async";
 import { z } from "zod";
-import { StoredChatMessageSchema } from "../schema.ts";
-import { ChatConfigMergedSchema, type ParsedChatConfig, StoredChatCompactionSchema, type StoredChatMessage } from "../schema.ts";
+import { ChatConfigMergedSchema, type ParsedChatConfig, StoredChatCompactionSchema, type StoredChatMessage, StoredChatMessageSchema } from "../schema.ts";
 
 const serializationSchema = z.object({
   currentConfig: ChatConfigMergedSchema,
