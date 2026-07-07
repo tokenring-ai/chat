@@ -48,14 +48,12 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     return chatModelRegistry.getClient(model);
   });
 
-  if (!client) throw new Error(`No online client found for model ${model}`);
-
   const enabledTools = new Set(chatConfig.enabledTools);
   let updatedTools = false;
 
   for (const [, tool] of chatService.getAvailableToolEntries()) {
     const enabled = enabledTools.has(tool.name);
-    if (tool?.toolDefinition?.adjustActivation) {
+    if (tool.toolDefinition?.adjustActivation) {
       const newEnabled = await tool.toolDefinition.adjustActivation(enabled, agent);
       if (newEnabled && !enabled) {
         enabledTools.add(tool.name);
@@ -137,10 +135,8 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     // Update the current message to follow up to the previous
     chatService.pushChatMessage(
       {
-        request: {
-          instructions,
-          messages,
-        },
+        messages,
+        instructions,
         response,
         createdAt: Date.now(),
         updatedAt: Date.now(),

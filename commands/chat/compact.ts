@@ -22,8 +22,8 @@ async function execute({ remainder, agent }: AgentCommandInputType<typeof inputS
       agent,
     );
     return "Context compacted successfully.";
-  } catch (error: unknown) {
-    throw new CommandFailedError(`Failed to compact context: ${Error.isError(error) ? error.message : String(error)}`);
+  } catch (err) {
+    throw new CommandFailedError(`Failed to compact context`, { cause: err });
   }
 }
 

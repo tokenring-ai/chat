@@ -28,7 +28,7 @@ export function createAgentTool(toolName: string, toolConfig: ChatToolConfig) {
     execute: async (args, agent): Promise<string> => {
       const replacements: Record<string, () => string> = {};
       for (const key of Object.keys(toolConfig.inputArguments)) {
-        replacements[key] = () => (args[key] as string) ?? "undefined";
+        replacements[key] = () => args[key] as string;
       }
 
       const steps = toolConfig.steps.map(step => interpolateString(step, replacements));

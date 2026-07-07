@@ -3,6 +3,7 @@ import { z } from "zod";
 import ChatService from "../ChatService.ts";
 import type { TokenRingToolDefinition, TokenRingToolResult } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
+import { ToolCallError } from "../util/tokenRingTool.ts";
 
 const name = "tool_search";
 const displayName = "Chat/toolSearch";
@@ -10,7 +11,7 @@ const displayName = "Chat/toolSearch";
 function execute({ regex }: z.output<typeof inputSchema>, agent: Agent): TokenRingToolResult {
   const chatService = agent.requireServiceByType(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
-  const hiddenTools = chatConfig.hiddenTools ?? [];
+  const hiddenTools = chatConfig.hiddenTools;
 
   if (hiddenTools.length === 0) {
     return "No searchable tools are configured for this agent.";
@@ -20,7 +21,7 @@ function execute({ regex }: z.output<typeof inputSchema>, agent: Agent): TokenRi
   try {
     pattern = new RegExp(regex, "i");
   } catch {
-    throw new Error(`Invalid regex pattern: ${regex}`);
+    throw new ToolCallError(name, `Invalid regex pattern: ${regex}`);
   }
 
   const matched: string[] = [];

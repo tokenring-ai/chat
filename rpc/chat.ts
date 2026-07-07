@@ -6,7 +6,7 @@ import type TokenRingApp from "@tokenring-ai/app";
 import { createAgentStateSliceStream } from "@tokenring-ai/rpc/createAgentStateStream";
 import { createRPCEndpoint } from "@tokenring-ai/rpc/createRPCEndpoint";
 import { deepEquals } from "bun";
-import { z } from "zod";
+import type { z } from "zod";
 import ChatService from "../ChatService.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
 import ChatRpcSchema from "./schema.ts";
@@ -42,7 +42,7 @@ const streamEnabledTools = createAgentStateSliceStream({
   SliceClass: ChatServiceState,
   project: state => ({
     status: "success" as const,
-    tools: state.currentConfig.enabledTools ?? [],
+    tools: state.currentConfig.enabledTools,
   }),
 });
 

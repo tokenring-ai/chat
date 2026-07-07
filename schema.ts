@@ -3,8 +3,11 @@ import type { InputAttachment, OutputArtifactSchema, ToolCallResult } from "@tok
 import { SubAgentConfigSchema } from "@tokenring-ai/agent/schema";
 
 import type { Tool as AITool } from "@tokenring-ai/ai-client";
-import type { AIResponse, ChatInputMessage, ChatRequest } from "@tokenring-ai/ai-client/client/AIChatClient";
+import { AIResponseSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
+import { ChatInputMessageSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
+import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
 import type { MaybePromise } from "bun";
+import type { ZodObject } from "zod";
 import { z } from "zod";
 
 const initialContextItems = [{ type: "tool-context" }, { type: "prior-messages" }, { type: "current-message" }];
@@ -13,11 +16,11 @@ const followUpContextItems = [{ type: "prior-messages" }, { type: "current-messa
 
 export type ToolArtifact = Omit<z.input<typeof OutputArtifactSchema>, "type">;
 
-export type NamedTool = {
+export type NamedTool<InputSchema extends ZodObject<{}, z.core.$strip> = ZodObject<{}, z.core.$strip>> = {
   name: string;
   displayName: string;
   tool: (agent: Agent) => AITool;
-  toolDefinition?: TokenRingToolDefinition<any>;
+  toolDefinition?: TokenRingToolDefinition<InputSchema>;
 };
 
 export type TokenRingFullToolResult = Omit<ToolCallResult, "type" | "timestamp" | "summary" | "name" | "args"> & {
@@ -31,7 +34,7 @@ export type TokenRingFullToolResult = Omit<ToolCallResult, "type" | "timestamp" 
 
 export type TokenRingToolResult = string | TokenRingFullToolResult;
 
-export type TokenRingToolDefinition<InputSchema extends AITool["inputSchema"]> = {
+export type TokenRingToolDefinition<InputSchema extends ZodObject<{}, z.core.$strip> = ZodObject<{}, z.core.$strip>> = {
   /* The name of the tool, as seen by the model */
   name: string;
   /* The display name of the tool, as seen by the user */
@@ -155,24 +158,29 @@ export type ContextHandlerOptions = {
   agent: Agent;
 };
 export type ContextHandler = (options: ContextHandlerOptions) => AsyncGenerator<ContextItem> | Generator<ContextItem>;
+
 /**
  * Represents a chat message in the storage system
  */
-export type StoredChatMessage = {
-  /** The AI request */
-  request: Omit<ChatRequest, "tools"> & { tools?: never };
+export const StoredChatMessageSchema = z.object({
+  /** The system prompt */
+  instructions: z.string(),
+  /** The conversation messages */
+  messages: z.array(ChatInputMessageSchema),
   /** The response from AI */
-  response: AIResponse;
+  response: AIResponseSchema,
   /** The creation time in milliseconds since the epoch format */
-  createdAt: number;
+  createdAt: z.number(),
   /** The update time in milliseconds since the epoch format */
-  updatedAt: number;
-};
+  updatedAt: z.number(),
+});
+
+export type StoredChatMessage = z.infer<typeof StoredChatMessageSchema>;
 
 export const StoredChatCompactionSchema = z.object({
   startIndex: z.number().int().nonnegative(),
   endIndex: z.number().int().nonnegative(),
-  messages: z.array(z.any()),
+  messages: z.array(ChatInputMessageSchema),
   createdAt: z.number(),
 });
 

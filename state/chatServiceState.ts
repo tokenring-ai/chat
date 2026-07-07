@@ -3,12 +3,13 @@ import deepClone from "@tokenring-ai/utility/object/deepClone";
 import markdownList from "@tokenring-ai/utility/string/markdownList";
 import async from "async";
 import { z } from "zod";
+import { StoredChatMessageSchema } from "../schema.ts";
 import { ChatConfigMergedSchema, type ParsedChatConfig, StoredChatCompactionSchema, type StoredChatMessage } from "../schema.ts";
 
 const serializationSchema = z.object({
   currentConfig: ChatConfigMergedSchema,
   injectedMessages: z.array(z.string()).default([]),
-  messages: z.array(z.any()),
+  messages: z.array(StoredChatMessageSchema),
   pendingCompaction: StoredChatCompactionSchema.nullable().default(null),
   compactionInProgress: z.boolean().default(false),
 });
@@ -47,17 +48,17 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
   }
 
   deserialize(data: z.output<typeof serializationSchema>): void {
-    this.currentConfig = data.currentConfig || { ...this.initialConfig };
-    this.injectedMessages = data.injectedMessages || [];
-    this.messages = data.messages || [];
-    this.pendingCompaction = data.pendingCompaction ?? null;
-    this.compactionInProgress = data.compactionInProgress ?? false;
+    this.currentConfig = data.currentConfig;
+    this.injectedMessages = data.injectedMessages;
+    this.messages = data.messages;
+    this.pendingCompaction = data.pendingCompaction;
+    this.compactionInProgress = data.compactionInProgress;
   }
 
   show(): string {
     return `Messages: ${this.messages.length}
 ${markdownList([
-  `Enabled Tools: ${this.currentConfig.enabledTools?.join(", ") || "None"}`,
+  `Enabled Tools: ${this.currentConfig.enabledTools.join(", ") || "None"}`,
   `Compaction Policy: ${this.currentConfig.compaction.policy}`,
   `Compaction Threshold: ${this.currentConfig.compaction.compactionThreshold}`,
   `Compaction Apply Threshold: ${this.currentConfig.compaction.applyThreshold}`,

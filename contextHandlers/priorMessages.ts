@@ -12,7 +12,7 @@ export default function* getContextItems({ sourceConfig, agent }: ContextHandler
   const chatService = agent.requireServiceByType(ChatService);
   const lastMessage = chatService.getLastMessage(agent);
 
-  let messages = [...(lastMessage?.request.messages ?? []), ...(lastMessage?.response.messages ?? [])];
+  let messages = [...(lastMessage?.messages ?? []), ...(lastMessage?.messages ?? [])];
 
   if (messages.length > safeParams.maxMessages) {
     const messagesToRemove = messages.length - safeParams.maxMessages;

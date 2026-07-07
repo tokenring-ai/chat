@@ -1,11 +1,22 @@
 import type { Agent } from "@tokenring-ai/agent";
 import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
 import { chatTool } from "@tokenring-ai/ai-client";
+import formatError from "@tokenring-ai/utility/error/formatError";
 import type { MaybePromise } from "bun";
-import { z } from "zod";
-import type { NamedTool } from "../schema.ts";
-import type { TokenRingFullToolResult, TokenRingToolDefinition } from "../schema.ts";
+import type { ZodObject } from "zod";
+import type { z } from "zod";
+import type { NamedTool, TokenRingFullToolResult, TokenRingToolDefinition } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
+
+export class ToolCallError extends Error {
+  constructor(
+    public readonly toolName: string,
+    message: string,
+    options?: ErrorOptions,
+  ) {
+    super(`[${toolName}] ${message}`, options);
+  }
+}
 
 //TODO: This is fucking stupid but less pain than the alternatives
 export type ToolResultValue =
@@ -38,7 +49,9 @@ export type ToolResultOutput = {
   value: Array<ToolResultValue>;
 };
 
-export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>): NamedTool {
+export function tokenRingTool<ToolInputSchema extends ZodObject<{}, z.core.$strip>>(
+  toolDefinition: TokenRingToolDefinition<ToolInputSchema>,
+): NamedTool<ToolInputSchema> {
   const { name, displayName, description, inputSchema, execute } = toolDefinition;
   return {
     name,
@@ -65,11 +78,11 @@ export function tokenRingTool(toolDefinition: TokenRingToolDefinition<any>): Nam
                   summary: tmp.summary || displayName,
                 };
               }
-            } catch (err: any) {
-              agent.errorMessage(`**Error calling tool ${name}(${JSON.stringify(args)}): ${err}`);
+            } catch (err) {
+              agent.errorMessage(`**Error calling tool ${name}(${JSON.stringify(args)}):`, err);
               result = {
                 summary: `${displayName} (Tool execution failed)`,
-                result: `Error calling tool: ${err.message || err}. Please check your tool call for correctness and retry the function call.`,
+                result: `Error calling tool: ${formatError(err)}. Please check your tool call for correctness and retry the function call.`,
               };
             }
 

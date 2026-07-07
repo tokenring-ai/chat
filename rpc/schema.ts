@@ -1,9 +1,9 @@
 import { SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { SerializedModelSpecSchema } from "@tokenring-ai/ai-client/ModelTypeRegistry";
-import { AgentNotFoundSchema } from "@tokenring-ai/rpc/types";
-import { SuccessSchema } from "@tokenring-ai/rpc/types";
 import type { RPCSchema } from "@tokenring-ai/rpc/types";
+import { AgentNotFoundSchema, SuccessSchema } from "@tokenring-ai/rpc/types";
 import { z } from "zod";
+import { StoredChatMessageSchema } from "../schema.ts";
 
 const ModelNotFoundSchema = z.object({
   status: z.literal("modelNotFound"),
@@ -131,14 +131,7 @@ export default {
       }),
       result: z.discriminatedUnion("status", [
         SuccessSchema.extend({
-          messages: z.array(
-            z.object({
-              request: z.any(),
-              response: z.any(),
-              createdAt: z.number(),
-              updatedAt: z.number(),
-            }),
-          ),
+          messages: z.array(StoredChatMessageSchema),
         }),
         AgentNotFoundSchema,
       ]),

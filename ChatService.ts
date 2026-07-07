@@ -5,6 +5,7 @@ import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import { parseModelAndSettings } from "@tokenring-ai/ai-client/util/modelSettings";
 import type TokenRingApp from "@tokenring-ai/app";
 import type { TokenRingService } from "@tokenring-ai/app/types";
+import { ConfigurationError } from "@tokenring-ai/app/types";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
 import deepClone from "@tokenring-ai/utility/object/deepClone";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
@@ -96,8 +97,8 @@ export default class ChatService implements TokenRingService {
     const lastMessage = this.getLastMessage(agent);
 
     let instructions: string;
-    if (lastMessage?.request.instructions) {
-      instructions = lastMessage.request.instructions;
+    if (lastMessage?.instructions) {
+      instructions = lastMessage.instructions;
     } else {
       const replacementFunctions = {
         DATE: () => new Date().toLocaleDateString(),
@@ -128,7 +129,7 @@ export default class ChatService implements TokenRingService {
     for (const tool of tools) {
       // Check for duplicate tool registration
       if (this.tools.get(tool.name)) {
-        throw new Error(`Tool "${tool.name}" is already registered`);
+        throw new ConfigurationError(this.name, `Tool "${tool.name}" is already registered`);
       }
 
       this.tools.set(tool.name, tokenRingTool(tool));
@@ -148,7 +149,7 @@ export default class ChatService implements TokenRingService {
 
   requireModel(agent: Agent): string {
     const model = this.getChatConfig(agent).model ?? this.defaultModel;
-    if (!model) throw new Error(`No model selected`);
+    if (!model) throw new ConfigurationError(this.name, `No model selected`);
     return model;
   }
 
@@ -226,11 +227,11 @@ export default class ChatService implements TokenRingService {
   }
 
   getEnabledTools(agent: Agent): string[] {
-    return agent.getState(ChatServiceState).currentConfig.enabledTools ?? [];
+    return agent.getState(ChatServiceState).currentConfig.enabledTools;
   }
 
   getHiddenTools(agent: Agent): string[] {
-    return agent.getState(ChatServiceState).currentConfig.hiddenTools ?? [];
+    return agent.getState(ChatServiceState).currentConfig.hiddenTools;
   }
 
   setEnabledTools(toolNames: string[], agent: Agent): string[] {
@@ -309,16 +310,16 @@ export default class ChatService implements TokenRingService {
         return false;
       }
 
-      if (lastMessage.request.messages.length < pendingCompaction.endIndex) {
+      if (lastMessage.messages.length < pendingCompaction.endIndex) {
         agent.warningMessage("Skipping stored compaction because the prior message stream no longer matches the recorded span");
         state.pendingCompaction = null;
         return false;
       }
 
-      lastMessage.request.messages = [
-        ...lastMessage.request.messages.slice(0, pendingCompaction.startIndex),
+      lastMessage.messages = [
+        ...lastMessage.messages.slice(0, pendingCompaction.startIndex),
         ...pendingCompaction.messages,
-        ...lastMessage.request.messages.slice(pendingCompaction.endIndex),
+        ...lastMessage.messages.slice(pendingCompaction.endIndex),
       ];
       lastMessage.updatedAt = Date.now();
       state.pendingCompaction = null;
@@ -336,7 +337,7 @@ export default class ChatService implements TokenRingService {
     if (!lastMessage) return false;
 
     //const systemMessages = lastMessage.request.messages.filter(message => message.role === "system");
-    const priorMessageStream = [...lastMessage.request.messages, ...(lastMessage.response.messages ?? [])];
+    const priorMessageStream = [...lastMessage.messages, ...(lastMessage.response.messages ?? [])];
 
     if (priorMessageStream.length === 0) return false;
 
@@ -352,7 +353,7 @@ export default class ChatService implements TokenRingService {
         "Waiting for response from AI...",
         client.streamChat(
           {
-            instructions: lastMessage.request.instructions,
+            instructions: lastMessage.instructions,
             messages: [
               ...priorMessageStream,
               {
@@ -423,10 +424,8 @@ ${compactionConfig.focus}
     // Update the current message to follow up to the previous
     this.pushChatMessage(
       {
-        request: {
-          instructions,
-          messages,
-        },
+        instructions,
+        messages,
         response,
         createdAt: Date.now(),
         updatedAt: Date.now(),

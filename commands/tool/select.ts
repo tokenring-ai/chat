@@ -14,7 +14,7 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
     (toolsByCategory[category] ??= []).push({ displayName, toolName });
   }
   const tree: TreeLeaf[] = Object.entries(toolsByCategory)
-    .sort()
+    .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([category, items]) => ({
       name: `${category}`,
       children: items.map(t => ({

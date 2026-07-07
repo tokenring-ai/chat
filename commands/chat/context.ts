@@ -1,5 +1,6 @@
 import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
+import indent from "@tokenring-ai/utility/string/indent";
 import ChatService from "../../ChatService.ts";
 
 const description = "Show the current context for the chat session";
@@ -17,24 +18,47 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
       agent,
     });
 
-    const lines: string[] = ["System Prompt:", instructions, `Messages: (${messages.length})`];
+    const lines: string[] = [
+      "System Prompt:",
+      instructions,
+      `Messages: (${messages.length})`,
 
-    messages.slice(0, -1).forEach((msg, index) => {
-      const content =
-        typeof msg.content === "string"
-          ? msg.content
-            ? Array.isArray(msg.content)
-              ? msg.content[0].text
-              : msg.content
-            : msg.content
-          : JSON.stringify(msg.content);
-      const preview = content.length > 100 ? content.substring(0, 130) + "..." : content;
-      lines.push(`${index + 1}. [${msg.role}] ${preview}`);
-    });
+      ...messages.slice(0, -1).map((msg, index) => {
+        let content: string;
+        if (msg.content === "string") {
+          content = msg.content;
+        } else if (Array.isArray(msg.content)) {
+          content = msg.content
+            .map(c => {
+              if (c.type === "text") {
+                return `- [TextPart]:\n${indent(c.text, 2)}`;
+              } else if (c.type === "image") {
+                return `- [ImagePart]: ${c.mediaType} (${c.image.constructor.name})`;
+              } else if (c.type === "file") {
+                return `- [FilePart]: ${c.mediaType} (${c.data.constructor.name})`;
+              } else if (c.type === "tool-call") {
+                return `- [ToolCall]: ${c.toolCallId}`;
+              } else if (c.type === "tool-result") {
+                return `- [ToolResult]: ${c.toolCallId}`;
+              } else if (c.type === "reasoning") {
+                return `- [Reasoning]:\n${indent(c.text, 2)}`;
+              } else {
+                return `- [UnknownPart]: ${c.type}`;
+              }
+            })
+            .join("\n");
+        } else {
+          content = JSON.stringify(msg.content);
+        }
+
+        const preview = content.length > 200 ? content.substring(0, 20) + `...[${200 - content.length} addl characters]` : content;
+        return `${index + 1}. [${msg.role}] ${indent(preview, 2)}`;
+      }),
+    ];
 
     return lines.join("\n");
-  } catch (error: unknown) {
-    throw new CommandFailedError(`Error building context:`, error as Error);
+  } catch (err) {
+    throw new CommandFailedError(`Error building context`, { cause: err });
   }
 }
 
