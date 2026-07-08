@@ -1,9 +1,9 @@
 import type Agent from "@tokenring-ai/agent/Agent";
+import { createAgentStateSliceStream } from "@tokenring-ai/agent/rpc/createAgentStateStream";
 import AgentManager from "@tokenring-ai/agent/services/AgentManager";
 import { SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import type TokenRingApp from "@tokenring-ai/app";
-import { createAgentStateSliceStream } from "@tokenring-ai/rpc/createAgentStateStream";
 import { createRPCEndpoint } from "@tokenring-ai/rpc/createRPCEndpoint";
 import { deepEquals } from "bun";
 import type { z } from "zod";
