@@ -1,5 +1,5 @@
 import type Agent from "@tokenring-ai/agent/Agent";
-import type { InputAttachment, OutputArtifactSchema, ToolCallResult } from "@tokenring-ai/agent/AgentEvents";
+import type { InputAttachment, ToolCallResult } from "@tokenring-ai/agent/AgentEvents";
 import { SubAgentConfigSchema } from "@tokenring-ai/agent/schema";
 
 import type { Tool as AITool } from "@tokenring-ai/ai-client";
@@ -12,8 +12,6 @@ import { z } from "zod";
 const initialContextItems = [{ type: "tool-context" }, { type: "prior-messages" }, { type: "current-message" }];
 
 const followUpContextItems = [{ type: "prior-messages" }, { type: "current-message" }];
-
-export type ToolArtifact = Omit<z.input<typeof OutputArtifactSchema>, "type">;
 
 export type NamedTool<InputSchema extends ZodObject<{}, z.core.$strip> = ZodObject<{}, z.core.$strip>> = {
   name: string;
@@ -54,6 +52,7 @@ export const ContextSourceSchema = z.looseObject({
 export const ChatAgentConfigSchema = z
   .object({
     model: z.string().exactOptional(),
+    transcriptionModel: z.string().exactOptional(),
     systemPrompt: z.string(),
     maxSteps: z.number().exactOptional(),
     allowRemoteAttachments: z.boolean().exactOptional(),
@@ -80,6 +79,7 @@ export const ChatAgentConfigSchema = z
 const ChatAgentDefaultConfig = z
   .object({
     model: z.string().exactOptional(),
+    transcriptionModel: z.string().exactOptional(),
     enabledTools: z.array(z.string()).default([]),
     hiddenTools: z.array(z.string()).default([]),
     maxSteps: z.number().default(0),
@@ -113,6 +113,7 @@ const ChatAgentDefaultConfig = z
 
 export const ChatServiceConfigSchema = z.object({
   defaultModels: z.array(z.string()).default([]),
+  defaultTranscriptionModels: z.array(z.string()).default([]),
   agentDefaults: ChatAgentDefaultConfig.prefault({}),
 });
 

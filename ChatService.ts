@@ -1,7 +1,10 @@
 import type Agent from "@tokenring-ai/agent/Agent";
+import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import type { InputAttachment } from "@tokenring-ai/agent/AgentEvents";
+import { mimeTypeClassifications } from "@tokenring-ai/agent/AgentEvents";
 import type { AgentCreationContext } from "@tokenring-ai/agent/types";
-import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
+import type { ChatModelSpec } from "@tokenring-ai/ai-client/client/AIChatClient";
+import { ChatModelRegistry, TranscriptionModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import { parseModelAndSettings } from "@tokenring-ai/ai-client/util/modelSettings";
 import type TokenRingApp from "@tokenring-ai/app";
 import type { TokenRingService } from "@tokenring-ai/app/types";
@@ -33,10 +36,18 @@ export type BuildChatMessagesOptions = {
   agent: Agent;
 };
 
+export type ResolveAttachmentsOptions = {
+  attachments?: InputAttachment[] | undefined;
+  modelSpec: ChatModelSpec;
+  allowRemoteAttachments?: boolean | undefined;
+  agent: Agent;
+};
+
 export default class ChatService implements TokenRingService {
   readonly name = "ChatService";
   description = "A service for managing AI configuration";
   defaultModel: string | null = null;
+  defaultTranscriptionModel: string | null = null;
   private tools = new KeyedRegistry<NamedTool>();
   requireTool = this.tools.require;
   registerTool = this.tools.set;
@@ -69,6 +80,21 @@ export default class ChatService implements TokenRingService {
     } else {
       this.app.serviceError(this, `No default model was selected for chat`);
     }
+
+    const transcriptionModelRegistry = this.app.requireService(TranscriptionModelRegistry);
+    for (const modelName of this.options.defaultTranscriptionModels) {
+      const matchedModels = Object.keys(transcriptionModelRegistry.getModelSpecsByRequirements(modelName));
+      if (matchedModels[0]) {
+        this.defaultTranscriptionModel = matchedModels[0];
+        break;
+      }
+    }
+
+    if (this.defaultTranscriptionModel) {
+      this.app.serviceOutput(this, `Selected ${this.defaultTranscriptionModel} as default transcription model for chat`);
+    } else if (this.options.defaultTranscriptionModels.length > 0) {
+      this.app.serviceError(this, `No default transcription model was selected for chat`);
+    }
   }
 
   attach(agent: Agent, creationContext: AgentCreationContext): void {
@@ -90,6 +116,11 @@ export default class ChatService implements TokenRingService {
     } else {
       creationContext.items.push(`Chat Model: No model selected`);
       agent.warningMessage(`No model was selected for chat, please manually select a model with /model`);
+    }
+
+    const selectedTranscriptionModel = initialState.currentConfig.transcriptionModel ?? this.defaultTranscriptionModel;
+    if (selectedTranscriptionModel) {
+      creationContext.items.push(`Transcription Model: ${selectedTranscriptionModel}`);
     }
   }
 
@@ -156,6 +187,92 @@ export default class ChatService implements TokenRingService {
   getModelAndSettings(agent: Agent) {
     const currentModel = this.requireModel(agent);
     return { currentModel, ...parseModelAndSettings(currentModel) };
+  }
+
+  /**
+   * Set transcription model for the current agent
+   */
+  setTranscriptionModel(transcriptionModel: string, agent: Agent): void {
+    this.updateChatConfig({ transcriptionModel }, agent);
+  }
+
+  getTranscriptionModel(agent: Agent): string | null {
+    return this.getChatConfig(agent).transcriptionModel ?? this.defaultTranscriptionModel;
+  }
+
+  requireTranscriptionModel(agent: Agent): string {
+    const model = this.getTranscriptionModel(agent);
+    if (!model) throw new CommandFailedError(`No transcription model selected`);
+    return model;
+  }
+
+  /**
+   * When the chat model does not support audio input, replace audio attachments with text transcripts
+   * produced by the selected transcription model.
+   */
+  async resolveAttachmentsForModel({
+    attachments,
+    modelSpec,
+    allowRemoteAttachments = true,
+    agent,
+  }: ResolveAttachmentsOptions): Promise<InputAttachment[] | undefined> {
+    if (!attachments?.length) return attachments;
+
+    const hasUnsupportedAttachments = attachments.some(attachment => !modelSpec.inputCapabilities.includes(attachment.mimeType));
+    if (!hasUnsupportedAttachments) return attachments;
+
+    // TODO: This can happen in parallel, but we might want to limit the number of concurrent transcodings
+    return await Promise.all(
+      attachments.map(async attachment => {
+        if (modelSpec.inputCapabilities.includes(attachment.mimeType)) {
+          return attachment;
+        }
+
+        const mimeTypeClassification = mimeTypeClassifications.get(attachment.mimeType);
+        switch (mimeTypeClassification) {
+          case "audio":
+            return await this.transcodeAudioAttachment(attachment, agent, allowRemoteAttachments);
+          default:
+            throw new CommandFailedError(`Attachment "${attachment.name}" has unsupported mime type ${attachment.mimeType} and cannot be transcoded`);
+        }
+      }),
+    );
+  }
+
+  async transcodeAudioAttachment(attachment: InputAttachment, agent: Agent, allowRemoteAttachments: boolean): Promise<InputAttachment> {
+    const transcriptionModel = this.requireTranscriptionModel(agent);
+    const transcriptionModelRegistry = agent.requireServiceByType(TranscriptionModelRegistry);
+    const transcriptionClient = transcriptionModelRegistry.getClient(transcriptionModel);
+
+    let audio: string | URL | Buffer;
+    switch (attachment.encoding) {
+      case "base64":
+        audio = attachment.body;
+        break;
+      case "href":
+        if (!allowRemoteAttachments) {
+          throw new CommandFailedError(`Remote audio attachments are not allowed (${attachment.name})`);
+        }
+        audio = new URL(attachment.body);
+        break;
+      case "text":
+        throw new CommandFailedError(`Audio attachment "${attachment.name}" cannot use text encoding; use base64 or href`);
+      default: {
+        const exhaustive: any = attachment.encoding satisfies never;
+        throw new CommandFailedError(`Unsupported attachment encoding: ${exhaustive}`);
+      }
+    }
+
+    agent.infoMessage(`Transcribing audio attachment "${attachment.name}" with ${transcriptionModel} (chat model does not support this attachment type)`);
+    const [transcript] = await agent.busyWithActivity(`Transcribing ${attachment.name}...`, transcriptionClient.transcribe({ audio }, agent));
+
+    return {
+      ...attachment,
+      encoding: "text",
+      mimeType: "text/plain",
+      body: transcript,
+      description: attachment.description ?? `Transcript of audio attachment ${attachment.name}`,
+    };
   }
 
   getChatConfig(agent: Agent): ParsedChatConfig {

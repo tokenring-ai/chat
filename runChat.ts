@@ -72,9 +72,17 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     });
   }
 
+  const resolvedAttachments = await chatService.resolveAttachmentsForModel({
+    attachments,
+    modelSpec: client.getModelSpec(),
+    allowRemoteAttachments: chatConfig.allowRemoteAttachments,
+    agent,
+  });
+
+  agent.infoMessage(`Resolved attachments: ${JSON.stringify(resolvedAttachments, null, 2)}`);
   const { messages, instructions } = await chatService.buildChatMessages({
     input,
-    ...(attachments?.length && { attachments }),
+    ...(resolvedAttachments?.length && { attachments: resolvedAttachments }),
     chatConfig,
     agent,
   });
