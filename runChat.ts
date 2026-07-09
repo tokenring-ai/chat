@@ -79,7 +79,6 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     agent,
   });
 
-  agent.infoMessage(`Resolved attachments: ${JSON.stringify(resolvedAttachments, null, 2)}`);
   const { messages, instructions } = await chatService.buildChatMessages({
     input,
     ...(resolvedAttachments?.length && { attachments: resolvedAttachments }),
