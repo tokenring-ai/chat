@@ -147,6 +147,10 @@ export type ChatAgentConfig = {
   chat: z.input<typeof ChatAgentConfigSchema>;
 };
 
+export function hasChatConfig<T extends object>(config: T): config is T & ChatAgentConfig {
+  return "chat" in config;
+}
+
 export type ParsedChatConfig = z.output<typeof ChatConfigMergedSchema>;
 export type ContextItem = ChatInputMessage;
 
