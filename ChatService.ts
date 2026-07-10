@@ -1,6 +1,6 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
-import type { InputAttachment } from "@tokenring-ai/agent/AgentEvents";
+import type { ChatAttachment } from "@tokenring-ai/agent/AgentEvents";
 import { mimeTypeClassifications } from "@tokenring-ai/agent/AgentEvents";
 import type { AgentCreationContext } from "@tokenring-ai/agent/types";
 import type { ChatModelSpec } from "@tokenring-ai/ai-client/client/AIChatClient";
@@ -31,13 +31,13 @@ import { tokenRingTool } from "./util/tokenRingTool.ts";
 
 export type BuildChatMessagesOptions = {
   input: string;
-  attachments?: InputAttachment[];
+  attachments?: ChatAttachment[];
   chatConfig: ParsedChatConfig;
   agent: Agent;
 };
 
 export type ResolveAttachmentsOptions = {
-  attachments?: InputAttachment[] | undefined;
+  attachments?: ChatAttachment[] | undefined;
   modelSpec: ChatModelSpec;
   allowRemoteAttachments?: boolean | undefined;
   agent: Agent;
@@ -215,7 +215,7 @@ export default class ChatService implements TokenRingService {
     modelSpec,
     allowRemoteAttachments = true,
     agent,
-  }: ResolveAttachmentsOptions): Promise<InputAttachment[] | undefined> {
+  }: ResolveAttachmentsOptions): Promise<ChatAttachment[] | undefined> {
     if (!attachments?.length) return attachments;
 
     const hasUnsupportedAttachments = attachments.some(attachment => !modelSpec.inputCapabilities.includes(attachment.mimeType));
@@ -239,7 +239,7 @@ export default class ChatService implements TokenRingService {
     );
   }
 
-  async transcodeAudioAttachment(attachment: InputAttachment, agent: Agent, allowRemoteAttachments: boolean): Promise<InputAttachment> {
+  async transcodeAudioAttachment(attachment: ChatAttachment, agent: Agent, allowRemoteAttachments: boolean): Promise<ChatAttachment> {
     const transcriptionModel = this.requireTranscriptionModel(agent);
     const transcriptionModelRegistry = agent.requireServiceByType(TranscriptionModelRegistry);
     const transcriptionClient = transcriptionModelRegistry.getClient(transcriptionModel);

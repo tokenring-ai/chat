@@ -1,5 +1,5 @@
 import type Agent from "@tokenring-ai/agent/Agent";
-import type { InputAttachment, ToolCallResult } from "@tokenring-ai/agent/AgentEvents";
+import type { ChatAttachment, ToolCallResult } from "@tokenring-ai/agent/AgentEvents";
 import { SubAgentConfigSchema } from "@tokenring-ai/agent/schema";
 
 import type { Tool as AITool } from "@tokenring-ai/ai-client";
@@ -156,7 +156,7 @@ export type ContextItem = ChatInputMessage;
 
 export type ContextHandlerOptions = {
   input: string;
-  attachments?: InputAttachment[];
+  attachments?: ChatAttachment[];
   chatConfig: ParsedChatConfig;
   sourceConfig: z.infer<typeof ContextSourceSchema>;
   agent: Agent;

@@ -1,5 +1,5 @@
 import type Agent from "@tokenring-ai/agent/Agent";
-import type { InputAttachment } from "@tokenring-ai/agent/AgentEvents";
+import type { ChatAttachment } from "@tokenring-ai/agent/AgentEvents";
 
 import type AIChatClient from "@tokenring-ai/ai-client/client/AIChatClient";
 import type { AIResponse } from "@tokenring-ai/ai-client/client/AIChatClient";
@@ -26,7 +26,7 @@ function isThresholdReached(
 
 export type RunChatOptions = {
   input: string;
-  attachments?: InputAttachment[];
+  attachments?: ChatAttachment[];
   chatConfig: ParsedChatConfig;
   agent: Agent;
 };
