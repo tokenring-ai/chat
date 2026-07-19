@@ -79,14 +79,26 @@ export const ChatAgentConfigSchema = z
 
 const ChatAgentDefaultConfig = z
   .object({
-    model: z.string().exactOptional().meta({ description: "Model new agents use by default" } satisfies ConfigFieldMeta),
+    model: z
+      .string()
+      .exactOptional()
+      .meta({ description: "Model new agents use by default" } satisfies ConfigFieldMeta),
     transcriptionModel: z
       .string()
       .exactOptional()
       .meta({ advanced: true, description: "Model used to transcribe audio attachments" } satisfies ConfigFieldMeta),
-    enabledTools: z.array(z.string()).default([]).meta({ description: "Tools enabled by default for new agents" } satisfies ConfigFieldMeta),
-    hiddenTools: z.array(z.string()).default([]).meta({ advanced: true, description: "Tools hidden from new agents" } satisfies ConfigFieldMeta),
-    maxSteps: z.number().default(0).meta({ advanced: true, description: "Maximum tool-call steps per turn (0 = unlimited)" } satisfies ConfigFieldMeta),
+    enabledTools: z
+      .array(z.string())
+      .default([])
+      .meta({ description: "Tools enabled by default for new agents" } satisfies ConfigFieldMeta),
+    hiddenTools: z
+      .array(z.string())
+      .default([])
+      .meta({ advanced: true, description: "Tools hidden from new agents" } satisfies ConfigFieldMeta),
+    maxSteps: z
+      .number()
+      .default(0)
+      .meta({ advanced: true, description: "Maximum tool-call steps per turn (0 = unlimited)" } satisfies ConfigFieldMeta),
     allowRemoteAttachments: z
       .boolean()
       .default(true) //TODO: Evaluate security risks associated with this
@@ -134,7 +146,10 @@ const ChatAgentDefaultConfig = z
 
 export const ChatServiceConfigSchema = z
   .object({
-    defaultModels: z.array(z.string()).default([]).meta({ description: "Model fallback chain used when no model is specified" } satisfies ConfigFieldMeta),
+    defaultModels: z
+      .array(z.string())
+      .default([])
+      .meta({ description: "Model fallback chain used when no model is specified" } satisfies ConfigFieldMeta),
     defaultTranscriptionModels: z
       .array(z.string())
       .default([])
