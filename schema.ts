@@ -5,6 +5,7 @@ import { SubAgentConfigSchema } from "@tokenring-ai/agent/schema";
 import type { Tool as AITool } from "@tokenring-ai/ai-client";
 import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { AIResponseSchema, ChatInputMessageSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
+import type { ConfigFieldMeta } from "@tokenring-ai/app/config/metadata";
 import type { MaybePromise } from "bun";
 import type { ZodObject } from "zod";
 import { z } from "zod";
@@ -78,18 +79,36 @@ export const ChatAgentConfigSchema = z
 
 const ChatAgentDefaultConfig = z
   .object({
-    model: z.string().exactOptional(),
-    transcriptionModel: z.string().exactOptional(),
-    enabledTools: z.array(z.string()).default([]),
-    hiddenTools: z.array(z.string()).default([]),
-    maxSteps: z.number().default(0),
-    allowRemoteAttachments: z.boolean().default(true), //TODO: Evaluate security risks associated with this
+    model: z.string().exactOptional().meta({ description: "Model new agents use by default" } satisfies ConfigFieldMeta),
+    transcriptionModel: z
+      .string()
+      .exactOptional()
+      .meta({ advanced: true, description: "Model used to transcribe audio attachments" } satisfies ConfigFieldMeta),
+    enabledTools: z.array(z.string()).default([]).meta({ description: "Tools enabled by default for new agents" } satisfies ConfigFieldMeta),
+    hiddenTools: z.array(z.string()).default([]).meta({ advanced: true, description: "Tools hidden from new agents" } satisfies ConfigFieldMeta),
+    maxSteps: z.number().default(0).meta({ advanced: true, description: "Maximum tool-call steps per turn (0 = unlimited)" } satisfies ConfigFieldMeta),
+    allowRemoteAttachments: z
+      .boolean()
+      .default(true) //TODO: Evaluate security risks associated with this
+      .meta({ advanced: true, description: "Allow agents to fetch attachments from remote URLs" } satisfies ConfigFieldMeta),
     compaction: z
       .object({
-        policy: z.enum(["automatic", "ask", "never"]).default("ask"),
-        compactionThreshold: z.number().default(0.5),
-        applyThreshold: z.number().exactOptional(),
-        background: z.boolean().default(false),
+        policy: z
+          .enum(["automatic", "ask", "never"])
+          .default("ask")
+          .meta({ description: "When to compact long conversation history" } satisfies ConfigFieldMeta),
+        compactionThreshold: z
+          .number()
+          .default(0.5)
+          .meta({ advanced: true, description: "Context usage fraction that triggers compaction" } satisfies ConfigFieldMeta),
+        applyThreshold: z
+          .number()
+          .exactOptional()
+          .meta({ advanced: true, description: "Context usage fraction at which compaction is applied" } satisfies ConfigFieldMeta),
+        background: z
+          .boolean()
+          .default(false)
+          .meta({ advanced: true, description: "Run compaction in the background instead of blocking the turn" } satisfies ConfigFieldMeta),
         focus: z.string().default(
           `
 - Important Details
@@ -101,21 +120,28 @@ const ChatAgentDefaultConfig = z
     `.trim(),
         ),
       })
-      .prefault({}),
+      .prefault({})
+      .meta({ label: "Compaction", advanced: true, description: "Long conversation history compaction behavior" } satisfies ConfigFieldMeta),
     context: z
       .object({
         initial: z.array(ContextSourceSchema).default(initialContextItems),
         followUp: z.array(ContextSourceSchema).default(followUpContextItems),
       })
-      .prefault({}),
+      .prefault({})
+      .meta({ label: "Context", advanced: true, description: "Context items included in outgoing messages" } satisfies ConfigFieldMeta),
   })
   .strict();
 
-export const ChatServiceConfigSchema = z.object({
-  defaultModels: z.array(z.string()).default([]),
-  defaultTranscriptionModels: z.array(z.string()).default([]),
-  agentDefaults: ChatAgentDefaultConfig.prefault({}),
-});
+export const ChatServiceConfigSchema = z
+  .object({
+    defaultModels: z.array(z.string()).default([]).meta({ description: "Model fallback chain used when no model is specified" } satisfies ConfigFieldMeta),
+    defaultTranscriptionModels: z
+      .array(z.string())
+      .default([])
+      .meta({ advanced: true, description: "Transcription model fallback chain" } satisfies ConfigFieldMeta),
+    agentDefaults: ChatAgentDefaultConfig.prefault({}).meta({ label: "Agent Defaults" } satisfies ConfigFieldMeta),
+  })
+  .meta({ label: "Chat", description: "Conversation and tool-use behavior for agents" } satisfies ConfigFieldMeta);
 
 export const ChatConfigMergedSchema = z.object({
   ...ChatAgentConfigSchema.shape,
