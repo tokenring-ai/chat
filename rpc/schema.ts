@@ -3,7 +3,6 @@ import { SerializedModelSpecSchema } from "@tokenring-ai/ai-client/ModelTypeRegi
 import type { RPCSchema } from "@tokenring-ai/rpc/types";
 import { AgentNotFoundSchema, SuccessSchema } from "@tokenring-ai/rpc/types";
 import { z } from "zod";
-import { StoredChatMessageSchema } from "../schema.ts";
 
 const ModelNotFoundSchema = z.object({
   status: z.literal("modelNotFound"),

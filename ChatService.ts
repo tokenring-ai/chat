@@ -142,8 +142,10 @@ export default class ChatService implements TokenRingService {
 
     for (const sourceConfig of lastMessage ? chatConfig.context.followUp : chatConfig.context.initial) {
       const handler = this.getContextHandlerByName(sourceConfig.type);
-      if (! handler) {
-        agent.warningMessage(`No context handler found for type "${sourceConfig.type}", this indicates that your agent has been configured to inject context from a sub-system that is not enabled`);
+      if (!handler) {
+        agent.warningMessage(
+          `No context handler found for type "${sourceConfig.type}", this indicates that your agent has been configured to inject context from a sub-system that is not enabled`,
+        );
         continue;
       }
 
