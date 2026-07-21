@@ -124,18 +124,6 @@ export default {
         AgentNotFoundSchema,
       ]),
     },
-    getChatMessages: {
-      type: "query",
-      input: z.object({
-        agentId: z.string(),
-      }),
-      result: z.discriminatedUnion("status", [
-        SuccessSchema.extend({
-          messages: z.array(StoredChatMessageSchema),
-        }),
-        AgentNotFoundSchema,
-      ]),
-    },
     clearChatMessages: {
       type: "mutation",
       input: z.object({

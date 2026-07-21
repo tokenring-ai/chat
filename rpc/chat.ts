@@ -137,18 +137,6 @@ export default createRPCEndpoint(ChatRpcSchema, {
     return { status: "success", tools };
   },
 
-  getChatMessages(args, app: TokenRingApp) {
-    const agent = app.requireService(AgentManager).getAgent(args.agentId);
-    if (!agent) {
-      return { status: "agentNotFound" };
-    }
-    const chatService = app.requireService(ChatService);
-    return {
-      status: "success",
-      messages: chatService.getChatMessages(agent),
-    };
-  },
-
   async clearChatMessages(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);
     if (!agent) {
