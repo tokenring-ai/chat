@@ -14,7 +14,11 @@ function execute({ regex }: z.output<typeof inputSchema>, agent: Agent): TokenRi
   const hiddenTools = chatConfig.hiddenTools;
 
   if (hiddenTools.length === 0) {
-    return "No searchable tools are configured for this agent.";
+    return {
+      failed: true,
+      message: "**Tools** Searched for tools",
+      result: "No searchable tools are configured for this agent.",
+    };
   }
 
   let pattern: RegExp;
@@ -35,12 +39,19 @@ function execute({ regex }: z.output<typeof inputSchema>, agent: Agent): TokenRi
   }
 
   if (matched.length === 0) {
-    return `No searchable tools matched the pattern /${regex}/`;
+    return {
+      failed: true,
+      message: "**Tools** Searched for tools",
+      result: `No searchable tools matched the pattern /${regex}/`,
+    };
   }
 
   chatService.enableTools(matched, agent);
 
-  return `Enabled tool(s): ${matched.join(", ")}, you may now use them.`;
+  return {
+    message: `**Tools** Searched for ${matched.length} tools`,
+    result: `Enabled tool(s): ${matched.join(", ")}, you may now use them.`,
+  };
 }
 
 function adjustActivation(_enabled: boolean, agent: Agent) {
