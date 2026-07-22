@@ -1245,7 +1245,6 @@ pkg/chat/
 │   └── schema.ts               # RPC schema definitions
 ├── tools/
 │   └── toolSearch.ts           # Tool search utility
-└── vitest.config.ts            # Test configuration
 ```
 
 ## Dependencies
@@ -1265,7 +1264,6 @@ pkg/chat/
 ### Development Dependencies
 
 - `typescript` (^6.0.2) - TypeScript compiler
-- `vitest` (^4.1.1) - Testing framework
 
 ## License
 
