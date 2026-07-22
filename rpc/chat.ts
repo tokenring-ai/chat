@@ -1,7 +1,7 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import { createAgentStateSliceStream } from "@tokenring-ai/agent/rpc/createAgentStateStream";
 import AgentManager from "@tokenring-ai/agent/services/AgentManager";
-import { SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
+import { AIResponseCostSchema, LanguageModelUsageSchema, SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import type TokenRingApp from "@tokenring-ai/app";
 import { createRPCEndpoint } from "@tokenring-ai/rpc/createRPCEndpoint";
@@ -44,6 +44,26 @@ const streamEnabledTools = createAgentStateSliceStream({
     status: "success" as const,
     tools: state.currentConfig.enabledTools,
   }),
+});
+
+const streamChatUsage = createAgentStateSliceStream({
+  SliceClass: ChatServiceState,
+  project: (state, agent) => {
+    const lastMessage = state.messages[state.messages.length - 1];
+    const model = state.currentConfig.model ?? null;
+    const maxContextLength = model ? agent.requireServiceByType(ChatModelRegistry).getClient(model).getModelSpec().maxContextLength : null;
+
+    return {
+      status: "success" as const,
+      model,
+      cost: AIResponseCostSchema.parse(lastMessage?.response.cost ?? {}),
+      contextLength: (lastMessage?.response.lastStepUsage.inputTokens ?? 0) + (lastMessage?.response.lastStepUsage.outputTokens ?? 0),
+      maxContextLength,
+      totalUsage: LanguageModelUsageSchema.parse(lastMessage?.response.totalUsage),
+      lastStepUsage: LanguageModelUsageSchema.parse(lastMessage?.response.lastStepUsage),
+      toolCount: state.currentConfig.enabledTools.length,
+    };
+  },
 });
 
 export default createRPCEndpoint(ChatRpcSchema, {
@@ -104,6 +124,8 @@ export default createRPCEndpoint(ChatRpcSchema, {
       tools: chatService.getEnabledTools(agent),
     };
   },
+
+  streamChatUsage,
 
   streamEnabledTools,
 

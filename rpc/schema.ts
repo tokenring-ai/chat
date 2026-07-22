@@ -1,4 +1,4 @@
-import { SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
+import { AIResponseCostSchema, LanguageModelUsageSchema, SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { SerializedModelSpecSchema } from "@tokenring-ai/ai-client/ModelTypeRegistry";
 import type { RPCSchema } from "@tokenring-ai/rpc/types";
 import { AgentNotFoundSchema, SuccessSchema } from "@tokenring-ai/rpc/types";
@@ -60,6 +60,25 @@ export default {
         AgentNotFoundSchema,
       ]),
     },
+    streamChatUsage: {
+      type: "stream",
+      input: z.object({
+        agentId: z.string(),
+      }),
+      result: z.discriminatedUnion("status", [
+        SuccessSchema.extend({
+          model: z.string().nullable(),
+          cost: AIResponseCostSchema,
+          contextLength: z.number(),
+          maxContextLength: z.number().int().nonnegative().nullable(),
+          lastStepUsage: LanguageModelUsageSchema,
+          totalUsage: LanguageModelUsageSchema,
+          toolCount: z.number().int().nonnegative(),
+        }),
+        AgentNotFoundSchema,
+      ]),
+    },
+
     getEnabledTools: {
       type: "query",
       input: z.object({

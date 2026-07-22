@@ -2,6 +2,7 @@ import type { Agent } from "@tokenring-ai/agent";
 import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
 import { chatTool } from "@tokenring-ai/ai-client";
 import formatError from "@tokenring-ai/utility/error/formatError";
+import codeBlock from "@tokenring-ai/utility/string/codeBlock";
 import type { MaybePromise } from "bun";
 import type { ZodObject, z } from "zod";
 import type { NamedTool, TokenRingFullToolResult, TokenRingToolDefinition } from "../schema.ts";
@@ -64,24 +65,29 @@ export function tokenRingTool<ToolInputSchema extends ZodObject<{}, z.core.$stri
           const executeToolFunction = async (): Promise<ToolResultOutput> => {
             let result: TokenRingFullToolResult;
             try {
-              const tmp = await execute(args, agent);
-
-              if (typeof tmp === "string") {
-                result = {
-                  summary: displayName,
-                  result: tmp,
-                };
-              } else {
-                result = {
-                  ...tmp,
-                  summary: tmp.summary || displayName,
-                };
-              }
+              result = await execute(args, agent);
             } catch (err) {
               agent.errorMessage(`**Error calling tool ${name}(${JSON.stringify(args)}):`, err);
               result = {
-                summary: `${displayName} (Tool execution failed)`,
-                result: `Error calling tool: ${formatError(err)}. Please check your tool call for correctness and retry the function call.`,
+                message: `**Tool Call Failure** An error was thrown while calling tool ${displayName}`,
+                attachments: [
+                  {
+                    name: "Tool Call Debugging Information",
+                    mimeType: "text/markdown",
+                    body: `## Tool Call Error   
+### Tool Name:
+${displayName}
+
+### Arguments:
+${codeBlock(JSON.stringify(args, null, 2), "json")}
+
+### Stack Trace:
+${codeBlock(formatError(err), "text")}`,
+                    encoding: "text",
+                    sendToLLM: true,
+                  },
+                ],
+                result: `An error was thrown while calling the tool. Use your best judgement on whether to retry the tool call or to use a different strategy.`,
               };
             }
 
@@ -89,7 +95,6 @@ export function tokenRingTool<ToolInputSchema extends ZodObject<{}, z.core.$stri
               name,
               args,
               ...result,
-              summary: `${displayName} (Success)`,
             });
 
             const chatState = agent.getState(ChatServiceState);

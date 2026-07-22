@@ -28,7 +28,7 @@ async function execute({ remainder, attachments, agent }: AgentCommandInputType<
   const { totalTokens, inputTokens, outputTokens } = response.totalUsage;
 
   return {
-    message: `Response Complete [Tokens in: ${inputTokens?.toLocaleString() ?? "Unknown"}, out: ${outputTokens?.toLocaleString() ?? "Unknown"}, total: ${totalTokens?.toLocaleString() ?? "Unknown"}]`,
+    message: `Response Complete [Tokens in: ${inputTokens.toLocaleString()}, out: ${outputTokens.toLocaleString()}, total: ${totalTokens.toLocaleString()}]`,
     details: getChatAnalytics(response),
   };
 }

@@ -25,7 +25,7 @@ export function createAgentTool(toolName: string, toolConfig: ChatToolConfig) {
     description: toolConfig.description,
     inputSchema,
 
-    execute: async (args, agent): Promise<string> => {
+    execute: async (args, agent) => {
       const replacements: Record<string, () => string> = {};
       for (const key of Object.keys(toolConfig.inputArguments)) {
         replacements[key] = () => args[key] as string;
@@ -50,7 +50,10 @@ export function createAgentTool(toolName: string, toolConfig: ChatToolConfig) {
       await lifecycleService?.executeHooks(new AfterSubAgentResponse(request, result), agent);
 
       if (result.status === "success") {
-        return result.response || "Agent completed successfully.";
+        return {
+          message: `**Ran** ${toolConfig.displayName}`,
+          result: result.response || "Agent completed successfully.",
+        };
       } else if (result.status === "cancelled") {
         throw new CommandFailedError(`Agent was cancelled: ${result.response}`);
       } else {

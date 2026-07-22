@@ -98,11 +98,23 @@ export default class ChatService implements TokenRingService {
   }
 
   attach(agent: Agent, creationContext: AgentCreationContext): void {
-    const { enabledTools, hiddenTools, ...agentConfig } = deepClone(this.options.agentDefaults, agent.getAgentConfigSlice("chat", ChatAgentConfigSchema));
+    const {
+      enabledTools,
+      hiddenTools,
+      model = this.defaultModel,
+      transcriptionModel = this.defaultTranscriptionModel,
+      ...agentConfig
+    } = deepClone(this.options.agentDefaults, agent.getAgentConfigSlice("chat", ChatAgentConfigSchema));
 
     // The enabled tools can include wildcards, so they need to be mapped to actual tool names with ensureItemNamesLike
-    const initialState = agent.initializeState(ChatServiceState, {
+    agent.initializeState(ChatServiceState, {
       ...agentConfig,
+      ...(model && {
+        model,
+      }),
+      ...(transcriptionModel && {
+        transcriptionModel,
+      }),
       enabledTools: [],
       hiddenTools: [],
     });
@@ -110,17 +122,17 @@ export default class ChatService implements TokenRingService {
     this.hideTools(hiddenTools, agent);
     this.enableTools(enabledTools, agent);
 
-    const selectedModel = initialState.currentConfig.model ?? this.defaultModel;
-    if (selectedModel) {
-      creationContext.items.push(`Chat Model: ${selectedModel}`);
+    if (model) {
+      creationContext.items.push(`Chat Model: ${model}`);
     } else {
       creationContext.items.push(`Chat Model: No model selected`);
       agent.warningMessage(`No model was selected for chat, please manually select a model with /model`);
     }
 
-    const selectedTranscriptionModel = initialState.currentConfig.transcriptionModel ?? this.defaultTranscriptionModel;
-    if (selectedTranscriptionModel) {
-      creationContext.items.push(`Transcription Model: ${selectedTranscriptionModel}`);
+    if (transcriptionModel) {
+      creationContext.items.push(`Transcription Model: ${transcriptionModel}`);
+    } else {
+      creationContext.items.push(`Transcription Model: No transcription model selected`);
     }
   }
 

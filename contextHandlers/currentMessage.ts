@@ -1,5 +1,5 @@
 import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
-import type { FilePart, ImagePart, TextPart, UserModelMessage } from "@tokenring-ai/ai-client/schema";
+import type { FilePart, TextPart, UserModelMessage } from "@tokenring-ai/ai-client/schema";
 import z from "zod";
 import type { ContextHandlerOptions } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
@@ -28,93 +28,37 @@ export default async function* getContextItems({ input, attachments, sourceConfi
         type: "text",
         text: input,
       },
-    ] as Array<TextPart | ImagePart | FilePart>,
+    ] as Array<TextPart | FilePart>,
   } satisfies UserModelMessage;
 
   for (const attachment of attachments ?? []) {
-    if (attachment.mimeType.startsWith("text/")) {
-      let text = attachment.body;
-      switch (attachment.encoding) {
-        case "text":
-          break;
-        case "base64":
-          text = Buffer.from(attachment.body, "base64").toString("utf-8");
-          break;
-        case "href":
-          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
-          text = await fetch(attachment.body).then(res => res.text());
-          break;
-        default: {
-          const exhaustive: any = attachment.encoding satisfies never;
-          throw new Error(`Unsupported attachment encoding: ${exhaustive}`);
-        }
-      }
+    switch (attachment.encoding) {
+      case "text":
+        result.content.push({
+          type: "file",
+          mediaType: attachment.mimeType,
+          data: Buffer.from(attachment.body, "utf-8"),
+        });
+        break;
+      case "href":
+        if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
 
-      text = `
---- The user has attached the following file ---
-File Name: ${attachment.name}
-File Type: ${attachment.mimeType}
-
-${text}`.trim();
-
-      result.content.push({
-        type: "text",
-        text,
-      });
-    } else if (attachment.mimeType.startsWith("image/")) {
-      switch (attachment.encoding) {
-        case "text":
-          throw new Error("Image attachments cannot be text, only base64 or href");
-        case "href":
-          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
-
-          result.content.push({
-            type: "image",
-            mediaType: attachment.mimeType,
-            image: new URL(attachment.body),
-          });
-          break;
-        case "base64":
-          result.content.push({
-            type: "image",
-            mediaType: attachment.mimeType,
-            image: attachment.body,
-          });
-          break;
-        default: {
-          const exhaustive: any = attachment.encoding satisfies never;
-          throw new Error(`Unsupported attachment encoding: ${exhaustive}`);
-        }
-      }
-    } else {
-      switch (attachment.encoding) {
-        case "text":
-          result.content.push({
-            type: "file",
-            mediaType: attachment.mimeType,
-            data: Buffer.from(attachment.body, "utf-8"),
-          });
-          break;
-        case "href":
-          if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
-
-          result.content.push({
-            type: "file",
-            mediaType: attachment.mimeType,
-            data: new URL(attachment.body),
-          });
-          break;
-        case "base64":
-          result.content.push({
-            type: "file",
-            mediaType: attachment.mimeType,
-            data: attachment.body,
-          });
-          break;
-        default: {
-          const exhaustive: any = attachment.encoding satisfies never;
-          throw new Error(`Unsupported attachment encoding: ${exhaustive}`);
-        }
+        result.content.push({
+          type: "file",
+          mediaType: attachment.mimeType,
+          data: new URL(attachment.body),
+        });
+        break;
+      case "base64":
+        result.content.push({
+          type: "file",
+          mediaType: attachment.mimeType,
+          data: attachment.body,
+        });
+        break;
+      default: {
+        const exhaustive: any = attachment.encoding satisfies never;
+        throw new Error(`Unsupported attachment encoding: ${exhaustive}`);
       }
     }
   }

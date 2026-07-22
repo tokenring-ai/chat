@@ -6,8 +6,8 @@ export function getChatAnalytics(response: AIResponse) {
   const reasoningTokens = outputTokenDetails.reasoningTokens;
 
   const usage = [
-    `Input Tokens: ${inputTokens?.toLocaleString() ?? "unknown"}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
-    `Output Tokens: ${outputTokens?.toLocaleString() ?? "unknown"}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`,
+    `Input Tokens: ${inputTokens.toLocaleString()}${cachedInputTokens ? ` (+${cachedInputTokens} cached)` : ""}`,
+    `Output Tokens: ${outputTokens.toLocaleString()}${reasoningTokens ? ` (+${reasoningTokens} reasoning)` : ""}`,
   ];
 
   if (response.lastStepUsage.inputTokens && response.lastStepUsage.outputTokens) {
