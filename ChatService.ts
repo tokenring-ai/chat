@@ -3,8 +3,9 @@ import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import type { ChatAttachment } from "@tokenring-ai/agent/AgentEvents";
 import { mimeTypeClassifications } from "@tokenring-ai/agent/AgentEvents";
 import type { AgentCreationContext } from "@tokenring-ai/agent/types";
-import type { ChatModelSpec } from "@tokenring-ai/ai-client/client/AIChatClient";
+
 import { ChatModelRegistry, TranscriptionModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
+import type { ChatModelSpec } from "@tokenring-ai/ai-client/schema.client";
 import { parseModelAndSettings } from "@tokenring-ai/ai-client/util/modelSettings";
 import type TokenRingApp from "@tokenring-ai/app";
 import type { TokenRingService } from "@tokenring-ai/app/types";

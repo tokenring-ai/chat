@@ -1,10 +1,9 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import type { ChatAttachment } from "@tokenring-ai/agent/AgentEvents";
-
 import type AIChatClient from "@tokenring-ai/ai-client/client/AIChatClient";
 import type { AIResponse } from "@tokenring-ai/ai-client/client/AIChatClient";
-
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
+import { LanguageModelUsageSchema } from "@tokenring-ai/ai-client/schema.client";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
 import { backoff } from "@tokenring-ai/utility/promise/backoff";
 import ChatService from "./ChatService.ts";
@@ -97,6 +96,15 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
         instructions,
         messages,
         async stopWhen(options) {
+          const lastStep = options.steps[stepCount - 1];
+          if (lastStep) {
+            agent.mutateState(ChatServiceState, state => {
+              state.contextLength = (lastStep.usage.inputTokens ?? 0) + (lastStep.usage.outputTokens ?? 0);
+              state.addCosts(client.calculateCost(lastStep.usage));
+              state.addUsage(LanguageModelUsageSchema.parse(lastStep.usage));
+            });
+          }
+
           stepCount = options.steps.length;
           if (stepCount > 0) {
             const { compactionThreshold } = agent.getState(ChatServiceState).currentConfig.compaction;

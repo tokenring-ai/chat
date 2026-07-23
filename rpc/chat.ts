@@ -1,8 +1,8 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import { createAgentStateSliceStream } from "@tokenring-ai/agent/rpc/createAgentStateStream";
 import AgentManager from "@tokenring-ai/agent/services/AgentManager";
-import { AIResponseCostSchema, LanguageModelUsageSchema, SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
+import { AIResponseCostSchema, LanguageModelUsageSchema, SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/schema.client";
 import type TokenRingApp from "@tokenring-ai/app";
 import { createRPCEndpoint } from "@tokenring-ai/rpc/createRPCEndpoint";
 import { deepEquals } from "bun";
@@ -57,7 +57,7 @@ const streamChatUsage = createAgentStateSliceStream({
       status: "success" as const,
       model,
       cost: AIResponseCostSchema.parse(lastMessage?.response.cost ?? {}),
-      contextLength: (lastMessage?.response.lastStepUsage.inputTokens ?? 0) + (lastMessage?.response.lastStepUsage.outputTokens ?? 0),
+      contextLength: state.contextLength,
       maxContextLength,
       totalUsage: LanguageModelUsageSchema.parse(lastMessage?.response.totalUsage),
       lastStepUsage: LanguageModelUsageSchema.parse(lastMessage?.response.lastStepUsage),

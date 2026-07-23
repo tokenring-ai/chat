@@ -1,5 +1,9 @@
-import { AIResponseCostSchema, LanguageModelUsageSchema, SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/client/AIChatClient";
-import { SerializedModelSpecSchema } from "@tokenring-ai/ai-client/ModelTypeRegistry";
+import {
+  AIResponseCostSchema,
+  LanguageModelUsageSchema,
+  SerializedChatModelSpecSchema,
+  SerializedModelSpecSchema,
+} from "@tokenring-ai/ai-client/schema.client";
 import type { RPCSchema } from "@tokenring-ai/rpc/types";
 import { AgentNotFoundSchema, SuccessSchema } from "@tokenring-ai/rpc/types";
 import { z } from "zod";
@@ -71,7 +75,7 @@ export default {
           cost: AIResponseCostSchema,
           contextLength: z.number(),
           maxContextLength: z.number().int().nonnegative().nullable(),
-          lastStepUsage: LanguageModelUsageSchema,
+          //lastStepUsage: LanguageModelUsageSchema,
           totalUsage: LanguageModelUsageSchema,
           toolCount: z.number().int().nonnegative(),
         }),
