@@ -53,5 +53,5 @@ export default {
       lifecycleService.addHooks(injectSubagentResults);
     });
   },
-  config: packageConfigSchema,
+  configSchema: packageConfigSchema,
 } satisfies TokenRingPlugin<typeof packageConfigSchema>;
