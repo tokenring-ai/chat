@@ -1,18 +1,13 @@
+import { mimeTypeClassifications } from "@tokenring-ai/agent/AgentEvents";
 import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
 import type { FilePart, TextPart, UserModelMessage } from "@tokenring-ai/ai-client/schema.server";
-import z from "zod";
 import type { ContextHandlerOptions } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
+import { decodeAttachmentAsBase64, decodeAttachmentAsText } from "../util/decodeAttachment.ts";
 
-//TODO: we should evaluate whether this should default to true or false
-const sourceConfigSchema = z
-  .object({
-    allowRemoteAttachments: z.boolean().default(true),
-  })
-  .prefault({});
+type RestrictiveFilePart = FilePart & { data: { type: "url" | "data" } };
 
-export default async function* getContextItems({ input, attachments, sourceConfig, agent }: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
-  const { allowRemoteAttachments } = sourceConfigSchema.parse(sourceConfig);
+export default async function* getContextItems({ input, attachments, chatConfig, agent }: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
   const { injectedMessages } = agent.getState(ChatServiceState);
   for (const message of injectedMessages) {
     yield {
@@ -28,37 +23,41 @@ export default async function* getContextItems({ input, attachments, sourceConfi
         type: "text",
         text: input,
       },
-    ] as Array<TextPart | FilePart>,
+    ] as Array<TextPart | RestrictiveFilePart>,
   } satisfies UserModelMessage;
 
   for (const attachment of attachments ?? []) {
-    switch (attachment.encoding) {
-      case "text":
-        result.content.push({
-          type: "file",
-          mediaType: attachment.mimeType,
-          data: Buffer.from(attachment.body, "utf-8"),
-        });
-        break;
-      case "href":
-        if (!allowRemoteAttachments) throw new Error("Remote attachments are not allowed");
+    const mimeTypeClassification = mimeTypeClassifications.get(attachment.mimeType);
 
+    switch (mimeTypeClassification) {
+      case undefined:
+        agent.infoMessage(`Skipping attachment with unsupported mime type: ${attachment.mimeType}`);
+        break;
+      case "text": {
+        const text = await decodeAttachmentAsText(attachment.body, attachment.encoding, chatConfig);
+        result.content.push({
+          type: "text",
+          text: `BEGIN FILE ATTACHMENT: ${attachment.name}\n${text}\nEND FILE ATTACHMENT`,
+        });
+        break;
+      }
+      case "image":
+      case "audio":
+      case "video": {
+        const contents = await decodeAttachmentAsBase64(attachment.body, attachment.encoding, chatConfig);
         result.content.push({
           type: "file",
           mediaType: attachment.mimeType,
-          data: new URL(attachment.body),
+          data: {
+            type: "data",
+            data: contents,
+          },
         });
         break;
-      case "base64":
-        result.content.push({
-          type: "file",
-          mediaType: attachment.mimeType,
-          data: attachment.body,
-        });
-        break;
+      }
       default: {
-        const exhaustive: any = attachment.encoding satisfies never;
-        throw new Error(`Unsupported attachment encoding: ${exhaustive}`);
+        const exhaustive: any = mimeTypeClassification satisfies never;
+        throw new Error(`Unsupported attachment mime type: ${exhaustive}`);
       }
     }
   }

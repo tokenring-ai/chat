@@ -13,13 +13,7 @@ function execute({ agent }: AgentCommandInputType<typeof inputSchema>) {
     lines.push("Enabled settings: (none)");
   } else {
     lines.push("Enabled settings:");
-    lines.push(
-      markdownList(
-        Array.from(settings.entries())
-          .sort((a, b) => a[0].localeCompare(b[0]))
-          .map(e => `${e[0]}: ${e[1]}`),
-      ),
-    );
+    lines.push(markdownList(settings.sortedEntries((a, b) => a[0].localeCompare(b[0])).map(e => `${e[0]}: ${e[1]}`)));
   }
   const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
   const client = chatModelRegistry.getClient(base);

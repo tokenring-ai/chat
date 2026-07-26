@@ -6,6 +6,7 @@ import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import { LanguageModelUsageSchema } from "@tokenring-ai/ai-client/schema.client";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
 import { backoff } from "@tokenring-ai/utility/promise/backoff";
+import EnhancedSet from "@tokenring-ai/utility/set/enhancedSet";
 import ChatService from "./ChatService.ts";
 
 import { AfterChatCompletion } from "./lifecycle.ts";
@@ -47,7 +48,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     return chatModelRegistry.getClient(model);
   });
 
-  const enabledTools = new Set(chatConfig.enabledTools);
+  const enabledTools = new EnhancedSet(chatConfig.enabledTools);
   let updatedTools = false;
 
   for (const [, tool] of chatService.getAvailableToolEntries()) {
@@ -67,7 +68,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
 
   if (updatedTools) {
     agent.mutateState(ChatServiceState, state => {
-      state.currentConfig.enabledTools = Array.from(enabledTools);
+      state.currentConfig.enabledTools = enabledTools.valuesArray();
     });
   }
 

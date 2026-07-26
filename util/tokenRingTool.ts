@@ -69,6 +69,7 @@ export function tokenRingTool<ToolInputSchema extends ZodObject<{}, z.core.$stri
             } catch (err) {
               agent.errorMessage(`**Error calling tool ${name}(${JSON.stringify(args)}):`, err);
               result = {
+                failed: true,
                 message: `**Tool Call Failure** An error was thrown while calling tool ${displayName}`,
                 attachments: [
                   {
@@ -119,6 +120,7 @@ ${codeBlock(formatError(err), "text")}`,
                             text: await decodeAsText(result.body, result.encoding, chatState),
                           };
                         case "image/jpeg":
+                        case "image/webp":
                         case "image/png":
                           return {
                             type: "image-data",

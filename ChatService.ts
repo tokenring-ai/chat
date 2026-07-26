@@ -13,6 +13,7 @@ import { ConfigurationError } from "@tokenring-ai/app/types";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
 import deepClone from "@tokenring-ai/utility/object/deepClone";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
+import EnhancedSet from "@tokenring-ai/utility/set/enhancedSet";
 import interpolateString from "@tokenring-ai/utility/string/interpolateString";
 import type { z } from "zod";
 import { AfterChatClear, AfterChatCompaction } from "./lifecycle.ts";
@@ -383,11 +384,11 @@ export default class ChatService implements TokenRingService {
     const matchedToolNames = toolNames.flatMap(toolName => this.tools.requireKeysLike(toolName));
 
     return agent.mutateState(ChatServiceState, state => {
-      const newTools = new Set(state.currentConfig.enabledTools);
+      const newTools = new EnhancedSet(state.currentConfig.enabledTools);
       matchedToolNames.forEach(tool => {
         newTools.add(tool);
       });
-      state.currentConfig.enabledTools = Array.from(newTools.values());
+      state.currentConfig.enabledTools = newTools.valuesArray();
 
       return state.currentConfig.enabledTools;
     });
@@ -397,11 +398,11 @@ export default class ChatService implements TokenRingService {
     const matchedToolNames = toolNames.flatMap(toolName => this.tools.requireKeysLike(toolName));
 
     return agent.mutateState(ChatServiceState, state => {
-      const newTools = new Set(state.currentConfig.enabledTools);
+      const newTools = new EnhancedSet(state.currentConfig.enabledTools);
       matchedToolNames.forEach(tool => {
         newTools.delete(tool);
       });
-      state.currentConfig.enabledTools = Array.from(newTools.values());
+      state.currentConfig.enabledTools = newTools.valuesArray();
 
       return state.currentConfig.enabledTools;
     });
@@ -410,17 +411,17 @@ export default class ChatService implements TokenRingService {
   hideTools(toolNames: string[], agent: Agent): string[] {
     const matchedToolNames = toolNames.flatMap(toolName => this.tools.requireKeysLike(toolName));
     return agent.mutateState(ChatServiceState, state => {
-      const newTools = new Set(state.currentConfig.enabledTools);
+      const newTools = new EnhancedSet(state.currentConfig.enabledTools);
       matchedToolNames.forEach(tool => {
         newTools.delete(tool);
       });
-      state.currentConfig.enabledTools = Array.from(newTools.values());
+      state.currentConfig.enabledTools = newTools.valuesArray();
 
-      const newHiddenTools = new Set(state.currentConfig.hiddenTools);
+      const newHiddenTools = new EnhancedSet(state.currentConfig.hiddenTools);
       matchedToolNames.forEach(tool => {
         newHiddenTools.add(tool);
       });
-      state.currentConfig.hiddenTools = Array.from(newHiddenTools.values());
+      state.currentConfig.hiddenTools = newHiddenTools.valuesArray();
       return state.currentConfig.hiddenTools;
     });
   }
