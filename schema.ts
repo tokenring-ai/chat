@@ -149,7 +149,11 @@ export const ChatServiceConfigSchema = z
       .meta({ advanced: true, description: "Transcription model fallback chain" } satisfies ConfigFieldMeta),
     agentDefaults: ChatAgentDefaultConfig.prefault({}).meta({ label: "Agent Defaults" } satisfies ConfigFieldMeta),
   })
+  .prefault({})
   .meta({ label: "Chat", description: "Conversation and tool-use behavior for agents" } satisfies ConfigFieldMeta);
+
+export type ChatServiceConfig = z.input<typeof ChatServiceConfigSchema>;
+export type ParsedChatServiceConfig = z.output<typeof ChatServiceConfigSchema>;
 
 export const ChatConfigMergedSchema = z.object({
   ...ChatAgentConfigSchema.shape,

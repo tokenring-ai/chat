@@ -11,24 +11,28 @@ import type TokenRingApp from "@tokenring-ai/app";
 import type { TokenRingService } from "@tokenring-ai/app/types";
 import { ConfigurationError } from "@tokenring-ai/app/types";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
+import { deepEqual } from "@tokenring-ai/one-frontend/src/lib/utils";
+import EnhancedStringMap from "@tokenring-ai/utility/map/enhancedStringMap";
 import deepClone from "@tokenring-ai/utility/object/deepClone";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import EnhancedSet from "@tokenring-ai/utility/set/enhancedSet";
 import interpolateString from "@tokenring-ai/utility/string/interpolateString";
-import type { z } from "zod";
 import { AfterChatClear, AfterChatCompaction } from "./lifecycle.ts";
+import type { ChatToolConfig } from "./schema.ts";
 import {
   ChatAgentConfigSchema,
-  type ChatServiceConfigSchema,
+  ChatServiceConfigSchema,
   type ContextHandler,
   type ContextItem,
   type NamedTool,
   type ParsedChatConfig,
+  type ParsedChatServiceConfig,
   type StoredChatCompaction,
   type StoredChatMessage,
   type TokenRingToolDefinition,
 } from "./schema.ts";
 import { ChatServiceState } from "./state/chatServiceState.ts";
+import { createAgentTool } from "./util/createAgentTool.ts";
 import { tokenRingTool } from "./util/tokenRingTool.ts";
 
 export type BuildChatMessagesOptions = {
@@ -53,6 +57,7 @@ export default class ChatService implements TokenRingService {
   private tools = new KeyedRegistry<NamedTool>();
   requireTool = this.tools.require;
   registerTool = this.tools.set;
+  unregisterTool = this.tools.unregister;
   getAvailableToolNames = this.tools.keysArray;
   getAvailableToolEntries = this.tools.entriesArray;
 
@@ -64,10 +69,40 @@ export default class ChatService implements TokenRingService {
   registerContextHandler = this.contextHandlers.set;
   registerContextHandlers = this.contextHandlers.setAll;
 
+  private options = ChatServiceConfigSchema.parse({});
+  private toolDefinitions = new EnhancedStringMap<ChatToolConfig>();
+
   constructor(
     readonly app: TokenRingApp,
-    readonly options: z.output<typeof ChatServiceConfigSchema>,
-  ) {}
+    options?: ParsedChatServiceConfig,
+  ) {
+    if (options) this.options = options;
+  }
+
+  reconfigure(options: ParsedChatServiceConfig): void {
+    this.options = options;
+  }
+
+  /**
+   * Reconciles package-config agent tools against the live tool registry.
+   * Built-in tools registered via {@link addTools} are left alone.
+   */
+  reconfigureTools(toolDefinitions: Record<string, ChatToolConfig>): void {
+    this.toolDefinitions.reconcileAgainst(toolDefinitions, {
+      creating: (name, definition) => {
+        this.tools.set(name, tokenRingTool(createAgentTool(name, definition)));
+        return definition;
+      },
+      deleting: name => {
+        this.tools.unregister(name);
+      },
+      updating: (name, existing, definition) => {
+        if (deepEqual(existing, definition)) return existing;
+        this.tools.set(name, tokenRingTool(createAgentTool(name, definition)));
+        return definition;
+      },
+    });
+  }
 
   start() {
     const chatModelRegistry = this.app.requireService(ChatModelRegistry);
