@@ -8,7 +8,7 @@ const inputSchema = {} as const satisfies AgentCommandInputSchema;
 function execute({ agent }: AgentCommandInputType<typeof inputSchema>): string {
   const initialModel = agent.getState(ChatServiceState).initialConfig.model;
   if (!initialModel) throw new CommandFailedError("No initial model configured");
-  agent.requireServiceByType(ChatService).setModel(initialModel, agent);
+  agent.requireService(ChatService).setModel(initialModel, agent);
   return `Model reset to ${initialModel}`;
 }
 

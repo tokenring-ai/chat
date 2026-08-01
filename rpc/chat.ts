@@ -24,7 +24,7 @@ function buildModelResult(chatService: ChatService, agent: Agent): ModelQueryRes
   const model = chatService.getModel(agent);
 
   if (model) {
-    const registry = agent.requireServiceByType(ChatModelRegistry);
+    const registry = agent.requireService(ChatModelRegistry);
     const client = registry.getClient(model);
     return {
       status: "success" as const,
@@ -51,7 +51,7 @@ const streamChatUsage = createAgentStateSliceStream({
   project: (state, agent) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const model = state.currentConfig.model ?? null;
-    const maxContextLength = model ? agent.requireServiceByType(ChatModelRegistry).getClient(model).getModelSpec().maxContextLength : null;
+    const maxContextLength = model ? agent.requireService(ChatModelRegistry).getClient(model).getModelSpec().maxContextLength : null;
 
     return {
       status: "success" as const,

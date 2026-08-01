@@ -4,7 +4,7 @@ import ChatService from "../../../ChatService.ts";
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
 function execute({ agent }: AgentCommandInputType<typeof inputSchema>): string {
-  return `Current model: ${agent.requireServiceByType(ChatService).getModel(agent) ?? "(none)"}`;
+  return `Current model: ${agent.requireService(ChatService).getModel(agent) ?? "(none)"}`;
 }
 
 export default {

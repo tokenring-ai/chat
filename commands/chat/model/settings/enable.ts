@@ -15,7 +15,7 @@ const inputSchema = {
 function execute({ remainder, agent }: AgentCommandInputType<typeof inputSchema>): string {
   const args = remainder.split(/\s+/).filter(Boolean);
   if (!args.length) throw new CommandFailedError("/model settings enable requires at least one key or key=value");
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const { base, settings } = chatService.getModelAndSettings(agent);
   for (const token of args) {
     const eq = token.indexOf("=");

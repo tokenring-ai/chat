@@ -6,8 +6,8 @@ import ChatService from "../../../ChatService.ts";
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
 async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
-  const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatModelRegistry = agent.requireService(ChatModelRegistry);
+  const chatService = agent.requireService(ChatService);
   const modelsByProvider = await agent.busyWithActivity("Checking online status of models...", chatModelRegistry.getModelsByProvider());
   const tree: TreeLeaf[] = Object.entries(modelsByProvider)
     .sort(([a], [b]) => a.localeCompare(b))

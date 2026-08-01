@@ -11,9 +11,9 @@ import type TokenRingApp from "@tokenring-ai/app";
 import type { TokenRingService } from "@tokenring-ai/app/types";
 import { ConfigurationError } from "@tokenring-ai/app/types";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
-import { deepEqual } from "@tokenring-ai/one-frontend/src/lib/utils";
 import EnhancedStringMap from "@tokenring-ai/utility/map/enhancedStringMap";
 import deepClone from "@tokenring-ai/utility/object/deepClone";
+import deepEqual from "@tokenring-ai/utility/object/deepEqual";
 import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import EnhancedSet from "@tokenring-ai/utility/set/enhancedSet";
 import interpolateString from "@tokenring-ai/utility/string/interpolateString";
@@ -137,7 +137,6 @@ export default class ChatService implements TokenRingService {
   attach(agent: Agent, creationContext: AgentCreationContext): void {
     const {
       enabledTools,
-      hiddenTools,
       model = this.defaultModel,
       transcriptionModel = this.defaultTranscriptionModel,
       ...agentConfig
@@ -156,7 +155,6 @@ export default class ChatService implements TokenRingService {
       hiddenTools: [],
     });
 
-    this.hideTools(hiddenTools, agent);
     this.enableTools(enabledTools, agent);
 
     if (model) {
@@ -211,7 +209,17 @@ export default class ChatService implements TokenRingService {
     return { messages, instructions };
   }
 
-  addTools(...tools: TokenRingToolDefinition<any>[]) {
+  addTool<T extends TokenRingToolDefinition<any>>(tool: T): T {
+    // Check for duplicate tool registration
+    if (this.tools.get(tool.name)) {
+      throw new ConfigurationError(this.name, `Tool "${tool.name}" is already registered`);
+    }
+
+    this.tools.set(tool.name, tokenRingTool(tool));
+    return tool;
+  }
+
+  addTools(tools: TokenRingToolDefinition<any>[]) {
     for (const tool of tools) {
       // Check for duplicate tool registration
       if (this.tools.get(tool.name)) {
@@ -296,7 +304,7 @@ export default class ChatService implements TokenRingService {
 
   async transcodeAudioAttachment(attachment: ChatAttachment, agent: Agent, allowRemoteAttachments: boolean): Promise<ChatAttachment> {
     const transcriptionModel = this.requireTranscriptionModel(agent);
-    const transcriptionModelRegistry = agent.requireServiceByType(TranscriptionModelRegistry);
+    const transcriptionModelRegistry = agent.requireService(TranscriptionModelRegistry);
     const transcriptionClient = transcriptionModelRegistry.getClient(transcriptionModel);
 
     let audio: string | URL | Buffer;
@@ -382,7 +390,7 @@ export default class ChatService implements TokenRingService {
       state.compactionInProgress = false;
     });
 
-    await agent.getServiceByType(AgentLifecycleService)?.executeHooks(new AfterChatClear(), agent);
+    await agent.getService(AgentLifecycleService)?.executeHooks(new AfterChatClear(), agent);
   }
 
   /**
@@ -402,11 +410,7 @@ export default class ChatService implements TokenRingService {
     return agent.getState(ChatServiceState).currentConfig.enabledTools;
   }
 
-  getHiddenTools(agent: Agent): string[] {
-    return agent.getState(ChatServiceState).currentConfig.hiddenTools;
-  }
-
-  setEnabledTools(toolNames: string[], agent: Agent): string[] {
+  setEnabledTools(toolNames: string[], agent: Agent): Readonly<string[]> {
     const matchedToolNames = toolNames.flatMap(toolName => this.tools.requireKeysLike(toolName));
 
     return agent.mutateState(ChatServiceState, state => {
@@ -415,7 +419,7 @@ export default class ChatService implements TokenRingService {
     });
   }
 
-  enableTools(toolNames: string[], agent: Agent): string[] {
+  enableTools(toolNames: string[], agent: Agent): Readonly<string[]> {
     const matchedToolNames = toolNames.flatMap(toolName => this.tools.requireKeysLike(toolName));
 
     return agent.mutateState(ChatServiceState, state => {
@@ -429,7 +433,7 @@ export default class ChatService implements TokenRingService {
     });
   }
 
-  disableTools(toolNames: string[], agent: Agent): string[] {
+  disableTools(toolNames: string[], agent: Agent): Readonly<string[]> {
     const matchedToolNames = toolNames.flatMap(toolName => this.tools.requireKeysLike(toolName));
 
     return agent.mutateState(ChatServiceState, state => {
@@ -440,24 +444,6 @@ export default class ChatService implements TokenRingService {
       state.currentConfig.enabledTools = newTools.valuesArray();
 
       return state.currentConfig.enabledTools;
-    });
-  }
-
-  hideTools(toolNames: string[], agent: Agent): string[] {
-    const matchedToolNames = toolNames.flatMap(toolName => this.tools.requireKeysLike(toolName));
-    return agent.mutateState(ChatServiceState, state => {
-      const newTools = new EnhancedSet(state.currentConfig.enabledTools);
-      matchedToolNames.forEach(tool => {
-        newTools.delete(tool);
-      });
-      state.currentConfig.enabledTools = newTools.valuesArray();
-
-      const newHiddenTools = new EnhancedSet(state.currentConfig.hiddenTools);
-      matchedToolNames.forEach(tool => {
-        newHiddenTools.add(tool);
-      });
-      state.currentConfig.hiddenTools = newHiddenTools.valuesArray();
-      return state.currentConfig.hiddenTools;
     });
   }
 
@@ -518,7 +504,7 @@ export default class ChatService implements TokenRingService {
     });
 
     try {
-      const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
+      const chatModelRegistry = agent.requireService(ChatModelRegistry);
       const client = chatModelRegistry.getClient(this.requireModel(agent));
 
       const response = await agent.busyWithActivity(
@@ -562,7 +548,7 @@ ${compactionConfig.focus}
   }
 
   async compactContext(compactionConfig: ParsedChatConfig["compaction"], agent: Agent): Promise<void> {
-    const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
+    const chatModelRegistry = agent.requireService(ChatModelRegistry);
 
     const previousMessages = this.getChatMessages(agent);
     if (previousMessages.length === 0) return;
@@ -605,7 +591,7 @@ ${compactionConfig.focus}
       agent,
     );
 
-    await agent.getServiceByType(AgentLifecycleService)?.executeHooks(new AfterChatCompaction(), agent);
+    await agent.getService(AgentLifecycleService)?.executeHooks(new AfterChatCompaction(), agent);
 
     agent.infoMessage("Context compacted successfully");
   }

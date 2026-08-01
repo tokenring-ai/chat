@@ -500,7 +500,7 @@ You can register custom context handlers to extend the context building process:
 import ChatService from "@tokenring-ai/chat";
 import type { ContextHandler } from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 
 // Register custom context handler
 chatService.registerContextHandler("custom-context", async function* ({ input, agent }) {
@@ -927,7 +927,7 @@ await app.start();
 import runChat from "@tokenring-ai/chat/runChat";
 import ChatService from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 const chatConfig = chatService.getChatConfig(agent);
 
 const response = await runChat({
@@ -942,7 +942,7 @@ const response = await runChat({
 ```typescript
 import ChatService from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 
 // Enable specific tools
 chatService.enableTools(["web-search", "calculator"], agent);
@@ -971,7 +971,7 @@ const hiddenTools = chatService.getHiddenTools(agent);
 ```typescript
 import ChatService from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 
 // Get all messages
 const allMessages = chatService.getChatMessages(agent);
@@ -999,7 +999,7 @@ chatService.pushChatMessage({
 ```typescript
 import ChatService from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 
 // Build chat messages from context
 const messages = await chatService.buildChatMessages({
@@ -1014,7 +1014,7 @@ const messages = await chatService.buildChatMessages({
 ```typescript
 import ChatService from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 const chatConfig = chatService.getChatConfig(agent);
 
 // Compact all prior messages
@@ -1032,7 +1032,7 @@ await chatService.compactContext({
 ```typescript
 import ChatService from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 const chatConfig = chatService.getChatConfig(agent);
 
 // Stage compaction for later application
@@ -1058,7 +1058,7 @@ console.log(analytics);
 import ChatService from "@tokenring-ai/chat";
 import {ChatServiceState} from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 const state = agent.getState(ChatServiceState);
 
 // Enable parallel tool execution
@@ -1072,7 +1072,7 @@ state.parallelTools = true;
 ```typescript
 import ChatService from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 
 // Configure hidden tools
 chatService.hideTools(["advanced-search", "database-query"], agent);
@@ -1106,7 +1106,7 @@ config.context.initial = [
 ```typescript
 import ChatService from "@tokenring-ai/chat";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 
 // System prompts support variable interpolation
 // DATE variable is automatically replaced with current date
@@ -1120,7 +1120,7 @@ config.systemPrompt = "You are helping on DATE";
 import ChatService from "@tokenring-ai/chat";
 import { z } from "zod";
 
-const chatService = agent.requireServiceByType(ChatService);
+const chatService = agent.requireService(ChatService);
 
 // Register tools from a package
 chatService.addTools({

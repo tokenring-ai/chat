@@ -1,6 +1,7 @@
-import { type RunSubAgentOptions, SubAgentService } from "@tokenring-ai/agent";
+import type { RunSubAgentOptions } from "@tokenring-ai/agent";
 import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import { AfterSubAgentResponse } from "@tokenring-ai/agent/hooks";
+import { runSubAgent } from "@tokenring-ai/agent/util/runSubAgent";
 import type { TokenRingToolDefinition } from "@tokenring-ai/chat";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
 import interpolateString from "@tokenring-ai/utility/string/interpolateString";
@@ -33,7 +34,6 @@ export function createAgentTool(toolName: string, toolConfig: ChatToolConfig) {
 
       const steps = toolConfig.steps.map(step => interpolateString(step, replacements));
 
-      const subAgentService = agent.requireServiceByType(SubAgentService);
       const request: RunSubAgentOptions = {
         agentType: toolConfig.agentType,
         background: false,
@@ -44,9 +44,9 @@ export function createAgentTool(toolName: string, toolConfig: ChatToolConfig) {
         options: toolConfig.subAgent,
       };
 
-      const result = await subAgentService.runSubAgent(request);
+      const result = await runSubAgent(request);
 
-      const lifecycleService = agent.getServiceByType(AgentLifecycleService);
+      const lifecycleService = agent.getService(AgentLifecycleService);
       await lifecycleService?.executeHooks(new AfterSubAgentResponse(request, result), agent);
 
       if (result.status === "success") {

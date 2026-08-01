@@ -1,3 +1,7 @@
-import toolSearch from "./tools/toolSearch.ts";
+import enableTools from "./tools/enableTools.ts";
+import getCurrentDatetime from "./tools/getCurrentDatetime.ts";
+import giveUp from "./tools/giveUp.ts";
+import listTools from "./tools/listTools.ts";
+import sleep from "./tools/sleep.ts";
 
-export default [toolSearch];
+export default [listTools, enableTools, getCurrentDatetime, giveUp, sleep];

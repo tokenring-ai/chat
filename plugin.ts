@@ -26,10 +26,9 @@ export default {
   install(app) {
     app.waitForService(AgentCommandService, agentCommandService => agentCommandService.addAgentCommands(agentCommands));
 
-    const chatService = new ChatService(app);
+    const chatService = app.addService(new ChatService(app));
     chatService.registerContextHandlers(contextHandlers);
-    chatService.addTools(...tools);
-    app.addServices(chatService);
+    chatService.addTools(tools);
 
     app.waitForService(RpcService, rpcService => {
       rpcService.registerEndpoint(chatRPC);

@@ -6,7 +6,7 @@ import { ChatService } from "../../../../index.ts";
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
 function execute({ agent }: AgentCommandInputType<typeof inputSchema>) {
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const { currentModel, base, settings } = chatService.getModelAndSettings(agent);
   const lines: string[] = [`Current model: ${currentModel}`, `Base model: ${base}`];
   if (settings.size === 0) {
@@ -15,7 +15,7 @@ function execute({ agent }: AgentCommandInputType<typeof inputSchema>) {
     lines.push("Enabled settings:");
     lines.push(markdownList(settings.sortedEntries((a, b) => a[0].localeCompare(b[0])).map(e => `${e[0]}: ${e[1]}`)));
   }
-  const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
+  const chatModelRegistry = agent.requireService(ChatModelRegistry);
   const client = chatModelRegistry.getClient(base);
   const availableKeys = Object.keys(client.getModelSpec().settings || {});
   lines.push(availableKeys.length === 0 ? "Available settings: (none)" : "Available settings:");

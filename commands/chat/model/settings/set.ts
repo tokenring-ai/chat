@@ -14,10 +14,10 @@ const inputSchema = {
   ],
 } as const satisfies AgentCommandInputSchema;
 
-function execute({ positionals, agent }: AgentCommandInputType<typeof inputSchema>): string {
-  const token = positionals.token;
+function execute({ args, agent }: AgentCommandInputType<typeof inputSchema>): string {
+  const token = args.token;
   if (!token) throw new CommandFailedError("/model settings set requires a key or key=value");
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const { base, settings } = chatService.getModelAndSettings(agent);
   const eq = token.indexOf("=");
   if (eq === -1) {

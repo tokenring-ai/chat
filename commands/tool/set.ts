@@ -15,7 +15,7 @@ const inputSchema = {
 function execute({ remainder, agent }: AgentCommandInputType<typeof inputSchema>): string {
   const toolNames = remainder.split(/\s+/).filter(Boolean);
   if (!toolNames.length) throw new CommandFailedError("Tool names required. Usage: /tools set <tool1> <tool2> ...");
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   chatService.setEnabledTools(
     toolNames.flatMap(n => chatService.ensureToolNamesLike(n)),
     agent,

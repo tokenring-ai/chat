@@ -14,7 +14,7 @@ const toolCallParamsSchema = z.object({
 export default async function* getContextItems(_input: string, _chatConfig: ParsedChatConfig, params: any, agent: Agent): AsyncGenerator<ChatInputMessage> {
   const validatedParams = toolCallParamsSchema.parse(params);
 
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const { toolDefinition } = chatService.requireTool(validatedParams.toolName);
 
   if (!toolDefinition) throw new Error(`Tool ${validatedParams.toolName} is not a native TokenRing tool, and cannot be injected into the chat context.`);

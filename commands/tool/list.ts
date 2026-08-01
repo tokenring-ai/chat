@@ -5,7 +5,7 @@ import ChatService from "../../ChatService.ts";
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
 function execute({ agent }: AgentCommandInputType<typeof inputSchema>): string {
-  return `Enabled tools: ${joinDefault(", ", agent.requireServiceByType(ChatService).getEnabledTools(agent), "(none)")}`;
+  return `Enabled tools: ${joinDefault(", ", agent.requireService(ChatService).getEnabledTools(agent), "(none)")}`;
 }
 
 export default {

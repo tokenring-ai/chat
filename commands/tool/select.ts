@@ -6,7 +6,7 @@ import ChatService from "../../ChatService.ts";
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
 async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const enabledTools = chatService.getEnabledTools(agent);
   const toolsByCategory: Record<string, Array<{ displayName: string; toolName: string }>> = {};
   for (const [toolName, tool] of chatService.getAvailableToolEntries()) {

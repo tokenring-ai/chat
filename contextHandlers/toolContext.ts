@@ -3,7 +3,7 @@ import { ChatService } from "../index.ts";
 import type { ContextHandlerOptions } from "../schema.ts";
 
 export default async function* getContextItems({ input, chatConfig, agent }: ContextHandlerOptions): AsyncGenerator<ChatInputMessage> {
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const requiredContextHandlers = new Set<string>();
 
   for (const tool of chatService.getEnabledTools(agent)) {

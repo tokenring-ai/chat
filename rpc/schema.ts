@@ -102,7 +102,7 @@ export default {
       }),
       result: z.discriminatedUnion("status", [
         SuccessSchema.extend({
-          tools: z.array(z.string()),
+          tools: z.array(z.string()).readonly(),
         }),
         AgentNotFoundSchema,
       ]),
@@ -115,7 +115,7 @@ export default {
       }),
       result: z.discriminatedUnion("status", [
         SuccessSchema.extend({
-          tools: z.array(z.string()),
+          tools: z.array(z.string()).readonly(),
         }),
         AgentNotFoundSchema,
       ]),
@@ -128,7 +128,7 @@ export default {
       }),
       result: z.discriminatedUnion("status", [
         SuccessSchema.extend({
-          tools: z.array(z.string()),
+          tools: z.array(z.string()).readonly(),
         }),
         AgentNotFoundSchema,
       ]),
@@ -141,7 +141,7 @@ export default {
       }),
       result: z.discriminatedUnion("status", [
         SuccessSchema.extend({
-          tools: z.array(z.string()),
+          tools: z.array(z.string()).readonly(),
         }),
         AgentNotFoundSchema,
       ]),

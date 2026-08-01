@@ -16,7 +16,7 @@ const inputSchema = {
 } as const satisfies AgentCommandInputSchema;
 
 async function execute({ remainder, attachments, agent }: AgentCommandInputType<typeof inputSchema>): Promise<TokenRingAgentCommandResult> {
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const chatConfig = chatService.getChatConfig(agent);
   const response = await runChat({
     input: remainder,

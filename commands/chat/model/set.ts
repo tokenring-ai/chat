@@ -13,10 +13,10 @@ const inputSchema = {
   ],
 } as const satisfies AgentCommandInputSchema;
 
-function execute({ positionals, agent }: AgentCommandInputType<typeof inputSchema>): string {
-  const modelName = positionals.modelName;
+function execute({ args, agent }: AgentCommandInputType<typeof inputSchema>): string {
+  const modelName = args.modelName;
   if (!modelName) throw new CommandFailedError("Model name required. Usage: /model set <model_name>");
-  agent.requireServiceByType(ChatService).setModel(modelName, agent);
+  agent.requireService(ChatService).setModel(modelName, agent);
   return `Model set to ${modelName}`;
 }
 

@@ -33,8 +33,6 @@ export type TokenRingToolDefinition<InputSchema extends ZodObject<{}, z.core.$st
   description: string;
   execute: (input: z.output<InputSchema>, agent: Agent) => MaybePromise<TokenRingToolResult>;
   inputSchema: InputSchema;
-  start?: (agent: Agent) => Promise<void>;
-  stop?: (agent: Agent) => Promise<void>;
   requiredContextHandlers?: string[] | undefined;
   adjustActivation?: (enabled: boolean, agent: Agent) => boolean | Promise<boolean>;
 };
@@ -60,7 +58,7 @@ export const ChatAgentConfigSchema = z
       })
       .prefault({}),
     enabledTools: z.array(z.string()).exactOptional(),
-    hiddenTools: z.array(z.string()).exactOptional(),
+    parallelTools: z.boolean().exactOptional(),
     context: z
       .object({
         initial: z.array(ContextSourceSchema).default(initialContextItems),
@@ -84,10 +82,10 @@ const ChatAgentDefaultConfig = z
       .array(z.string())
       .default([])
       .meta({ description: "Tools enabled by default for new agents" } satisfies ConfigFieldMeta),
-    hiddenTools: z
-      .array(z.string())
-      .default([])
-      .meta({ advanced: true, description: "Tools hidden from new agents" } satisfies ConfigFieldMeta),
+    parallelTools: z
+      .boolean()
+      .default(false)
+      .meta({ advanced: true, description: "Allow tools to be executed in parallel" } satisfies ConfigFieldMeta),
     maxSteps: z
       .number()
       .default(0)

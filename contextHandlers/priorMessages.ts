@@ -9,10 +9,10 @@ const priorMessagesParamsSchema = z.object({
 
 export default function* getContextItems({ sourceConfig, agent }: ContextHandlerOptions): Generator<ChatInputMessage> {
   const safeParams = priorMessagesParamsSchema.parse(sourceConfig);
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const lastMessage = chatService.getLastMessage(agent);
 
-  let messages = [...(lastMessage?.messages ?? []), ...(lastMessage?.messages ?? [])];
+  let messages = [...(lastMessage?.messages ?? []), ...(lastMessage?.response.messages ?? [])];
 
   if (messages.length > safeParams.maxMessages) {
     const messagesToRemove = messages.length - safeParams.maxMessages;

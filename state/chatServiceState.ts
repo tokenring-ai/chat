@@ -21,7 +21,6 @@ const serializationSchema = z.object({
 
 export class ChatServiceState extends AgentStateSlice<typeof serializationSchema> {
   currentConfig: ParsedChatConfig;
-  parallelTools = false;
   toolQueue = async.queue(async (task: () => Promise<object>) => task(), 1);
   /** History of chat messages */
   injectedMessages: string[] = [];
@@ -45,7 +44,7 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
   }
 
   async runToolMaybeInParallel<T extends object>(executeToolFunction: () => Promise<T>): Promise<T> {
-    if (this.parallelTools) {
+    if (this.currentConfig.parallelTools) {
       return await executeToolFunction();
     } else {
       return await this.toolQueue.push(executeToolFunction);

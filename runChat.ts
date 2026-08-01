@@ -35,8 +35,8 @@ export type RunChatOptions = {
  * runChat tool: Runs a chat with the AI model, combining streamChat and runChat functionality.
  */
 export default async function runChat({ input, attachments, chatConfig, agent }: RunChatOptions): Promise<AIResponse> {
-  const chatModelRegistry = agent.requireServiceByType(ChatModelRegistry);
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatModelRegistry = agent.requireService(ChatModelRegistry);
+  const chatService = agent.requireService(ChatService);
 
   const model = chatService.requireModel(agent);
 
@@ -160,7 +160,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
       agent,
     );
 
-    await agent.getServiceByType(AgentLifecycleService)?.executeHooks(new AfterChatCompletion(response), agent);
+    await agent.getService(AgentLifecycleService)?.executeHooks(new AfterChatCompletion(response), agent);
 
     const config = chatService.getChatConfig(agent);
 

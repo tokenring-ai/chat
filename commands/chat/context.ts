@@ -9,7 +9,7 @@ const inputSchema = {} as const satisfies AgentCommandInputSchema;
 
 async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Promise<string> {
   try {
-    const chatService = agent.requireServiceByType(ChatService);
+    const chatService = agent.requireService(ChatService);
     const chatConfig = chatService.getChatConfig(agent);
 
     const { instructions, messages } = await chatService.buildChatMessages({

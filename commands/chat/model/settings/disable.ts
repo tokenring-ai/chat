@@ -15,7 +15,7 @@ const inputSchema = {
 function execute({ remainder, agent }: AgentCommandInputType<typeof inputSchema>): string {
   const keys = remainder.split(/\s+/).filter(Boolean);
   if (!keys.length) throw new CommandFailedError("/model settings disable requires at least one key");
-  const chatService = agent.requireServiceByType(ChatService);
+  const chatService = agent.requireService(ChatService);
   const { base, settings } = chatService.getModelAndSettings(agent);
   for (const key of keys) settings.delete(key);
   const newModel = serializeModel(base, settings);
