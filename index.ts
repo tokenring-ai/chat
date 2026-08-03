@@ -1,3 +1,4 @@
+export type { CheckToolApprovalOptions } from "./ChatService.ts";
 export { default as ChatService } from "./ChatService.ts";
 export { default as runChat } from "./runChat.ts";
 export {
@@ -9,6 +10,11 @@ export {
   type ParsedChatConfig,
   type StoredChatMessage,
   type TokenRingToolDefinition,
+  ToolApprovalClassificationLevels,
+  type ToolApprovalMode,
+  ToolApprovalModeSchema,
+  type ToolApprovalSafetyAssessment,
+  ToolApprovalSafetyAssessmentSchema,
 } from "./schema.ts";
 export { ChatServiceState } from "./state/chatServiceState.ts";
 export { getChatAnalytics } from "./util/getChatAnalytics.ts";

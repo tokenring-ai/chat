@@ -12,6 +12,16 @@ const ModelNotFoundSchema = z.object({
   status: z.literal("modelNotFound"),
 });
 
+// Mirrors ToolApprovalModeSchema in ../schema.ts; redeclared here so the client bundle
+// only ever pulls in this file, never the server-side chat schema.
+const ToolApprovalModeSchema = z.enum(["ask", "reject", "auto"]);
+const AutoToolApprovalLevelSchema = z.number().int().min(0).max(10);
+
+const ToolApprovalSettingsSchema = SuccessSchema.extend({
+  autoToolApprovalLevel: AutoToolApprovalLevelSchema,
+  toolApprovalMode: ToolApprovalModeSchema,
+});
+
 export default {
   name: "Chat RPC",
   path: "/rpc/chat",
@@ -145,6 +155,34 @@ export default {
         }),
         AgentNotFoundSchema,
       ]),
+    },
+    getToolApprovalLevels: {
+      type: "query",
+      input: z.object({}),
+      result: z.object({
+        levels: z.array(
+          z.object({
+            level: AutoToolApprovalLevelSchema,
+            description: z.string(),
+          }),
+        ),
+      }),
+    },
+    streamToolApproval: {
+      type: "stream",
+      input: z.object({
+        agentId: z.string(),
+      }),
+      result: z.discriminatedUnion("status", [ToolApprovalSettingsSchema, AgentNotFoundSchema]),
+    },
+    setToolApproval: {
+      type: "mutation",
+      input: z.object({
+        agentId: z.string(),
+        autoToolApprovalLevel: AutoToolApprovalLevelSchema.exactOptional(),
+        toolApprovalMode: ToolApprovalModeSchema.exactOptional(),
+      }),
+      result: z.discriminatedUnion("status", [ToolApprovalSettingsSchema, AgentNotFoundSchema]),
     },
     clearChatMessages: {
       type: "mutation",

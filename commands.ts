@@ -1,3 +1,4 @@
+import approve from "./commands/approve.ts";
 import chatCompact from "./commands/chat/compact.ts";
 import chatContext from "./commands/chat/context.ts";
 import modelGet from "./commands/chat/model/get.ts";
@@ -23,6 +24,7 @@ export default [
   chatContext,
   chatCompact,
   chatReset,
+  approve,
 
   // Model commands
   modelGet,

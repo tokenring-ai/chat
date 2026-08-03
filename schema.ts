@@ -48,6 +48,15 @@ export const ChatAgentConfigSchema = z
     systemPrompt: z.string(),
     maxSteps: z.number().exactOptional(),
     allowRemoteAttachments: z.boolean().exactOptional(),
+    /** Auto-approve tool actions whose safety level is at or below this value (0–10). */
+    autoToolApprovalLevel: z.number().int().min(0).max(10).exactOptional(),
+    /**
+     * How to handle tool actions above {@link autoToolApprovalLevel}:
+     * - ask: prompt the user
+     * - reject: deny without prompting
+     * - auto: re-assess with the chat model, then auto-approve or ask
+     */
+    toolApprovalMode: z.enum(["ask", "reject", "auto"]).exactOptional(),
     compaction: z
       .object({
         policy: z.enum(["automatic", "ask", "never"]).exactOptional(),
@@ -67,6 +76,39 @@ export const ChatAgentConfigSchema = z
       .exactOptional(),
   })
   .strict();
+
+export const ToolApprovalModeSchema = z.enum(["ask", "reject", "auto"]);
+export type ToolApprovalMode = z.infer<typeof ToolApprovalModeSchema>;
+
+/**
+ * Safety classification scale (1–10) for tool actions.
+ * Tools supply a level with each approval request. Higher is more dangerous.
+ * Anchors:
+ * - 6: might delete non-temporary files or data
+ * - 8: could lead to the destruction of data
+ * - 10: absolutely destructive system command
+ */
+export const ToolApprovalClassificationLevels = {
+  1: "Completely harmless (read-only, no side effects)",
+  2: "Minimal risk (local read/list, no writes)",
+  3: "Low risk (writes temporary or ephemeral data only)",
+  4: "Low-moderate risk (creates non-critical files or network reads)",
+  5: "Moderate risk (modifies existing non-critical data or installs packages)",
+  6: "Might delete non-temporary files or data",
+  7: "Elevated risk (bulk modifications, privilege changes, external writes)",
+  8: "Could lead to the destruction of data",
+  9: "Severe risk (system configuration damage, security exposure)",
+  10: "Absolutely destructive system command",
+} as const;
+
+export type ToolApprovalClassificationLevel = keyof typeof ToolApprovalClassificationLevels;
+
+/** Structured LLM output when toolApprovalMode is auto. */
+export const ToolApprovalSafetyAssessmentSchema = z.object({
+  level: z.number().int().min(1).max(10).describe("Safety risk classification from 1 (safest) to 10 (most dangerous)"),
+  reasoning: z.string().describe("A single sentence explanation of why this classification level was chosen"),
+});
+export type ToolApprovalSafetyAssessment = z.infer<typeof ToolApprovalSafetyAssessmentSchema>;
 
 const ChatAgentDefaultConfig = z
   .object({
@@ -94,6 +136,27 @@ const ChatAgentDefaultConfig = z
       .boolean()
       .default(true) //TODO: Evaluate security risks associated with this
       .meta({ advanced: true, description: "Allow agents to fetch attachments from remote URLs" } satisfies ConfigFieldMeta),
+    autoToolApprovalLevel: z
+      .number()
+      .int()
+      .min(0)
+      .max(10)
+      .default(6)
+      .meta({
+        advanced: true,
+        description: "Auto-approve tool actions at or below this safety level (0–10). Higher levels use toolApprovalMode.",
+      } satisfies ConfigFieldMeta),
+    toolApprovalMode: ToolApprovalModeSchema.default("auto").meta({
+      advanced: true,
+      description: "How to handle tool actions above autoToolApprovalLevel: ask, reject, or auto",
+    } satisfies ConfigFieldMeta),
+    saveClassificationLogsToFile: z
+      .string()
+      .exactOptional()
+      .meta({
+        advanced: true,
+        description: "File path to save tool approval classification logs to",
+      } satisfies ConfigFieldMeta),
     compaction: z
       .object({
         policy: z

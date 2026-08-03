@@ -8,6 +8,7 @@ import { createRPCEndpoint } from "@tokenring-ai/rpc/createRPCEndpoint";
 import { deepEquals } from "bun";
 import type { z } from "zod";
 import ChatService from "../ChatService.ts";
+import { type ParsedChatConfig, ToolApprovalClassificationLevels } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
 import ChatRpcSchema from "./schema.ts";
 
@@ -44,6 +45,16 @@ const streamEnabledTools = createAgentStateSliceStream({
     status: "success" as const,
     tools: state.currentConfig.enabledTools,
   }),
+});
+
+const streamToolApproval = createAgentStateSliceStream({
+  SliceClass: ChatServiceState,
+  project: state => ({
+    status: "success" as const,
+    autoToolApprovalLevel: state.currentConfig.autoToolApprovalLevel,
+    toolApprovalMode: state.currentConfig.toolApprovalMode,
+  }),
+  equals: (a, b) => a.autoToolApprovalLevel === b.autoToolApprovalLevel && a.toolApprovalMode === b.toolApprovalMode,
 });
 
 const streamChatUsage = createAgentStateSliceStream({
@@ -157,6 +168,40 @@ export default createRPCEndpoint(ChatRpcSchema, {
     const chatService = app.requireService(ChatService);
     const tools = chatService.disableTools(args.tools, agent);
     return { status: "success", tools };
+  },
+
+  getToolApprovalLevels() {
+    return {
+      levels: Object.entries(ToolApprovalClassificationLevels).map(([level, description]) => ({
+        level: Number(level),
+        description,
+      })),
+    };
+  },
+
+  streamToolApproval,
+
+  setToolApproval(args, app: TokenRingApp) {
+    const agent = app.requireService(AgentManager).getAgent(args.agentId);
+    if (!agent) {
+      return { status: "agentNotFound" };
+    }
+    const chatService = app.requireService(ChatService);
+    const updates: Partial<ParsedChatConfig> = {};
+    if (args.autoToolApprovalLevel !== undefined) {
+      updates.autoToolApprovalLevel = args.autoToolApprovalLevel;
+    }
+    if (args.toolApprovalMode !== undefined) {
+      updates.toolApprovalMode = args.toolApprovalMode;
+    }
+    chatService.updateChatConfig(updates, agent);
+
+    const config = chatService.getChatConfig(agent);
+    return {
+      status: "success",
+      autoToolApprovalLevel: config.autoToolApprovalLevel,
+      toolApprovalMode: config.toolApprovalMode,
+    };
   },
 
   async clearChatMessages(args, app: TokenRingApp) {

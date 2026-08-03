@@ -103,6 +103,8 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
     return `Messages: ${this.messages.length}
 ${markdownList([
   `Enabled Tools: ${this.currentConfig.enabledTools.join(", ") || "None"}`,
+  `Auto Tool Approval Level: ${this.currentConfig.autoToolApprovalLevel}`,
+  `Tool Approval Mode: ${this.currentConfig.toolApprovalMode}`,
   `Compaction Policy: ${this.currentConfig.compaction.policy}`,
   `Compaction Threshold: ${this.currentConfig.compaction.compactionThreshold}`,
   `Compaction Apply Threshold: ${this.currentConfig.compaction.applyThreshold}`,

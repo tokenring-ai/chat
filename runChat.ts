@@ -124,8 +124,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
             if (
               await agent.askForApproval({
                 message: `The agent has completed ${options.steps.length} steps, which is longer than your configured limit of ${chatConfig.maxSteps}. Would you like to continue?`,
-                default: false,
-                timeout: 60,
+                defaultValue: false,
               })
             ) {
               maxSteps += chatConfig.maxSteps;
@@ -193,8 +192,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
           agent.headless &&
           (await agent.askForApproval({
             message: "Context is getting long. Would you like to compact it to save tokens?",
-            default: true,
-            timeout: 30,
+            defaultValue: true,
           })))
       ) {
         if (!chatService.hasPendingCompaction(agent) && !chatService.isCompactionInProgress(agent)) {
