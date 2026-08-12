@@ -85,7 +85,6 @@ export default {
           cost: AIResponseCostSchema,
           contextLength: z.number(),
           maxContextLength: z.number().int().nonnegative().nullable(),
-          //lastStepUsage: LanguageModelUsageSchema,
           totalUsage: LanguageModelUsageSchema,
           toolCount: z.number().int().nonnegative(),
         }),

@@ -3,7 +3,7 @@ import type { AIResponseCost } from "@tokenring-ai/ai-client/schema.client";
 import { AIResponseCostSchema, LanguageModelUsageSchema } from "@tokenring-ai/ai-client/schema.client";
 import deepClone from "@tokenring-ai/utility/object/deepClone";
 import markdownList from "@tokenring-ai/utility/string/markdownList";
-import async from "async";
+import { queue } from "async";
 import { z } from "zod";
 import { ChatConfigMergedSchema, type ParsedChatConfig, StoredChatCompactionSchema, type StoredChatMessage, StoredChatMessageSchema } from "../schema.ts";
 
@@ -14,14 +14,14 @@ const serializationSchema = z.object({
   pendingCompaction: StoredChatCompactionSchema.nullable().default(null),
   compactionInProgress: z.boolean().default(false),
   contextLength: z.number().default(0),
-  lastStepUsage: LanguageModelUsageSchema.exactOptional(),
+  lastStepUsage: LanguageModelUsageSchema.prefault({}),
   totalUsage: LanguageModelUsageSchema.prefault({}),
   totalCosts: AIResponseCostSchema.prefault({}),
 });
 
 export class ChatServiceState extends AgentStateSlice<typeof serializationSchema> {
   currentConfig: ParsedChatConfig;
-  toolQueue = async.queue(async (task: () => Promise<object>) => task(), 1);
+  toolQueue = queue(async (task: () => Promise<object>) => task(), 1);
   /** History of chat messages */
   injectedMessages: string[] = [];
   messages: StoredChatMessage[] = [];
@@ -71,6 +71,10 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
     this.messages = data.messages;
     this.pendingCompaction = data.pendingCompaction;
     this.compactionInProgress = data.compactionInProgress;
+    this.contextLength = data.contextLength;
+    this.lastStepUsage = data.lastStepUsage;
+    this.totalUsage = data.totalUsage;
+    this.totalCosts = data.totalCosts;
   }
 
   addCosts(costs: AIResponseCost) {
@@ -110,6 +114,10 @@ ${markdownList([
   `Compaction Apply Threshold: ${this.currentConfig.compaction.applyThreshold}`,
   `Pending Compaction: ${this.pendingCompaction ? "Yes" : "No"}`,
   `Max Steps: ${this.currentConfig.maxSteps}`,
+  ...(this.currentConfig.maxCost != null ? [`Max Cost: $${this.currentConfig.maxCost}`] : []),
+  ...(this.currentConfig.maxInputTokens != null ? [`Max Input Tokens: ${this.currentConfig.maxInputTokens}`] : []),
+  ...(this.currentConfig.maxOutputTokens != null ? [`Max Output Tokens: ${this.currentConfig.maxOutputTokens}`] : []),
+  ...(this.currentConfig.maxRuntime != null ? [`Max Runtime: ${this.currentConfig.maxRuntime}s`] : []),
   `System Prompt: ${this.currentConfig.systemPrompt}`,
 ])}`;
   }

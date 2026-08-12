@@ -25,7 +25,7 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
 
       ...messages.slice(0, -1).map((msg, index) => {
         let content: string;
-        if (msg.content === "string") {
+        if (typeof msg.content === "string") {
           content = msg.content;
         } else if (Array.isArray(msg.content)) {
           content = msg.content

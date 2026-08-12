@@ -1,6 +1,7 @@
 import type { Agent } from "@tokenring-ai/agent";
 import type { BaseAttachment } from "@tokenring-ai/agent/AgentEvents";
 import { chatTool } from "@tokenring-ai/ai-client";
+import { MetricsService } from "@tokenring-ai/metrics";
 import formatError from "@tokenring-ai/utility/error/formatError";
 import codeBlock from "@tokenring-ai/utility/string/codeBlock";
 import type { MaybePromise } from "bun";
@@ -63,6 +64,8 @@ export function tokenRingTool<ToolInputSchema extends ZodObject<{}, z.core.$stri
         inputSchema,
         async execute(args: z.output<typeof inputSchema>): Promise<ToolResultOutput> {
           const executeToolFunction = async (): Promise<ToolResultOutput> => {
+            agent.getService(MetricsService)?.addToolCalls(agent, name);
+
             let result: TokenRingFullToolResult;
             try {
               result = await execute(args, agent);
@@ -90,6 +93,11 @@ ${codeBlock(formatError(err), "text")}`,
                 ],
                 result: `An error was thrown while calling the tool. Use your best judgement on whether to retry the tool call or to use a different strategy.`,
               };
+            }
+
+            // Thrown failures and soft-fail tool results both set failed: true.
+            if (result.failed) {
+              agent.getService(MetricsService)?.recordError(agent, { type: "toolError" });
             }
 
             agent.toolCallResult({

@@ -55,7 +55,6 @@ export type CheckToolApprovalOptions = {
   label?: string | undefined;
   /** Default selection when prompting the user. */
   default?: boolean | undefined;
-  timeout?: never;
 };
 
 type ToolApprovalClassificationLogEntry = {
@@ -67,9 +66,9 @@ type ToolApprovalClassificationLogEntry = {
   autoToolApprovalLevel: number;
   toolApprovalMode: ParsedChatConfig["toolApprovalMode"];
   autoClassifierRan: boolean;
-  autoClassifier: (ToolApprovalSafetyAssessment & { assessedLevel: number }) | null;
+  autoClassifierAssessment: ToolApprovalSafetyAssessment | undefined;
   autoClassifierError?: string;
-  approved: true;
+  approved: boolean;
 };
 
 export type BuildChatMessagesOptions = {
@@ -216,6 +215,8 @@ export default class ChatService implements TokenRingService {
       instructions = lastMessage.instructions;
     } else {
       const replacementFunctions = {
+        WORKSPACE_DIRECTORY: () => this.app.appConfig.workspaceDirectory,
+        WORKING_DIRECTORY: () => this.app.appConfig.workingDirectory,
         DATE: () => new Date().toLocaleDateString(),
       } as Record<string, () => string>;
 
@@ -411,9 +412,9 @@ export default class ChatService implements TokenRingService {
     const clampedLevel = Math.min(10, Math.max(1, Math.round(safetyLevel)));
 
     let autoClassifierRan = false;
-    let autoClassifier: (ToolApprovalSafetyAssessment & { assessedLevel: number }) | null = null;
     let autoClassifierError: string | undefined;
-    let approved: boolean | null;
+    let autoClassifierAssessment: ToolApprovalSafetyAssessment | undefined;
+    let approved: boolean;
 
     if (clampedLevel <= autoToolApprovalLevel) {
       approved = true;
@@ -440,44 +441,45 @@ export default class ChatService implements TokenRingService {
             .map(([level, description]) => `${level}: ${description}`)
             .join("\n");
 
-          const [assessment] = await agent.busyWithActivity(
-            "Classifying tool safety...",
-            client.generateObject(
-              {
-                instructions: `You are a security classifier for AI agent tool use.
+          autoClassifierAssessment = (
+            await agent.busyWithActivity(
+              "Classifying tool safety...",
+              client.generateObject(
+                {
+                  instructions: `You are a security classifier for AI agent tool use.
 Classify the risk of the proposed action on a scale of 1 to 10.
 Use these anchor levels:
 ${levelDescriptions}
 
 Respond only with the structured assessment.`.trim(),
-                messages: [
-                  {
-                    role: "user",
-                    content: `Action summary: ${message}
+                  messages: [
+                    {
+                      role: "user",
+                      content: `Action summary: ${message}
 
 Detailed description:
 ${detailedDescription}
 
 Classify the safety risk of allowing this action based on the anchor levels.`,
-                  },
-                ],
-                schema: ToolApprovalSafetyAssessmentSchema,
-              },
-              agent,
-            ),
-          );
+                    },
+                  ],
+                  schema: ToolApprovalSafetyAssessmentSchema,
+                },
+                agent,
+              ),
+            )
+          )[0];
 
           autoClassifierRan = true;
-          // Never trust a lower classification than the tool reported.
-          const assessedLevel = Math.max(clampedLevel, assessment.level);
-          autoClassifier = { ...assessment, assessedLevel };
 
-          if (assessedLevel <= autoToolApprovalLevel) {
-            agent.infoMessage(`Auto-approved tool action after classification (risk ${assessedLevel}/10 ≤ ${autoToolApprovalLevel}): ${assessment.reasoning}`);
+          if (autoClassifierAssessment.level <= autoToolApprovalLevel) {
+            agent.infoMessage(
+              `Auto-approved tool action after classification (risk ${autoClassifierAssessment.level}/10 ≤ ${autoToolApprovalLevel}): ${autoClassifierAssessment.reasoning}`,
+            );
             approved = true;
           } else {
             approved = await agent.askForApproval({
-              message: `${message}\n\nClassified risk: **${assessedLevel}/10** (tool reported ${clampedLevel}; auto-approve ≤ ${autoToolApprovalLevel}).\n${assessment.reasoning}\n\n${detailedDescription}`,
+              message: `${message}\n\nClassified risk: **${autoClassifierAssessment.level}/10** (tool reported ${clampedLevel}; auto-approve ≤ ${autoToolApprovalLevel}).\n\n${autoClassifierAssessment.reasoning}\n\n${detailedDescription}`,
               label,
               defaultValue,
             });
@@ -495,7 +497,7 @@ Classify the safety risk of allowing this action based on the anchor levels.`,
       }
     }
 
-    if (approved === true && saveClassificationLogsToFile) {
+    if (saveClassificationLogsToFile) {
       await this.appendToolApprovalClassificationLog(
         saveClassificationLogsToFile,
         {
@@ -507,9 +509,9 @@ Classify the safety risk of allowing this action based on the anchor levels.`,
           autoToolApprovalLevel,
           toolApprovalMode,
           autoClassifierRan,
-          autoClassifier,
+          autoClassifierAssessment,
           ...(autoClassifierError !== undefined && { autoClassifierError }),
-          approved: true,
+          approved,
         },
         agent,
       );

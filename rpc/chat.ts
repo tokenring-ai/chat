@@ -71,7 +71,7 @@ const streamChatUsage = createAgentStateSliceStream({
       contextLength: state.contextLength,
       maxContextLength,
       totalUsage: LanguageModelUsageSchema.parse(lastMessage?.response.totalUsage),
-      lastStepUsage: LanguageModelUsageSchema.parse(lastMessage?.response.lastStepUsage),
+      //lastStepUsage: LanguageModelUsageSchema.parse(lastMessage?.response.lastStepUsage),
       toolCount: state.currentConfig.enabledTools.length,
     };
   },

@@ -4,7 +4,7 @@ import ChatService from "../ChatService.ts";
 import type { ContextHandlerOptions } from "../schema.ts";
 
 const priorMessagesParamsSchema = z.object({
-  maxMessages: z.number().min(4).default(1000),
+  maxMessages: z.number().min(5).default(1000),
 });
 
 export default function* getContextItems({ sourceConfig, agent }: ContextHandlerOptions): Generator<ChatInputMessage> {

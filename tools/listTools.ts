@@ -22,7 +22,7 @@ function execute(_: z.output<typeof inputSchema>, agent: Agent): TokenRingToolRe
 
 const inputSchema = z.object({});
 
-const description = "Retrieves a list of currently inactivate tools that can be enabled using the enable_tool tool with the permission of the user.";
+const description = "Retrieves a list of currently inactive tools that can be enabled using the enable_tool tool with the permission of the user.";
 
 export default {
   name,

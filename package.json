@@ -6,6 +6,7 @@
     "@tokenring-ai/app": "workspace:*",
     "@tokenring-ai/ai-client": "workspace:*",
     "@tokenring-ai/agent": "workspace:*",
+    "@tokenring-ai/metrics": "workspace:*",
     "@tokenring-ai/utility": "workspace:*",
     "@tokenring-ai/lifecycle": "workspace:*",
     "@tokenring-ai/rpc": "workspace:*",

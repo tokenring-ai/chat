@@ -6,6 +6,7 @@ const name = "sleep";
 const displayName = "Agent/Sleep";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const MAX_SLEEP_SECONDS = 3600; // 1 hour
 
 export async function execute({ seconds }: z.output<typeof inputSchema>, _agent: Agent): Promise<TokenRingToolResult> {
   await new Promise(resolve => setTimeout(resolve, seconds * 1000));
@@ -30,7 +31,7 @@ const description =
   "Useful for introducing delays in agent workflows or waiting before performing actions.";
 
 const inputSchema = z.object({
-  seconds: z.number().int().positive().describe("The number of seconds to sleep (must be a positive integer)."),
+  seconds: z.number().int().positive().max(MAX_SLEEP_SECONDS).describe("The number of seconds to sleep (must be a positive integer, max 1 hour)."),
 });
 
 export default {

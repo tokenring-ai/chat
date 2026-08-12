@@ -5,6 +5,7 @@ import type { AIResponse } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import { LanguageModelUsageSchema } from "@tokenring-ai/ai-client/schema.client";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
+import { MetricsService } from "@tokenring-ai/metrics";
 import { backoff } from "@tokenring-ai/utility/promise/backoff";
 import EnhancedSet from "@tokenring-ai/utility/set/enhancedSet";
 import ChatService from "./ChatService.ts";
@@ -13,7 +14,7 @@ import { AfterChatCompletion } from "./lifecycle.ts";
 import type { ParsedChatConfig } from "./schema.ts";
 import { ChatServiceState } from "./state/chatServiceState.ts";
 
-type StopReason = "finished" | "longContext" | "maxSteps";
+type StopReason = "finished" | "longContext" | "maxSteps" | "maxCost" | "maxInputTokens" | "maxOutputTokens" | "maxRuntime";
 
 function isThresholdReached(
   { inputTokens, outputTokens }: { inputTokens?: number | undefined; outputTokens?: number | undefined },
@@ -22,6 +23,22 @@ function isThresholdReached(
 ) {
   const totalTokens = (inputTokens ?? 0) + (outputTokens ?? 0);
   return totalTokens > chatClient.getModelSpec().maxContextLength * threshold;
+}
+
+/** Cumulative usage/cost for the current turn from completed steps. */
+function getTurnTotals(steps: Array<{ usage: unknown }>, chatClient: AIChatClient) {
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let totalCost = 0;
+
+  for (const step of steps) {
+    const usage = LanguageModelUsageSchema.parse(step.usage);
+    inputTokens += usage.inputTokens;
+    outputTokens += usage.outputTokens;
+    totalCost += chatClient.calculateCost(usage).total;
+  }
+
+  return { inputTokens, outputTokens, totalCost };
 }
 
 export type RunChatOptions = {
@@ -41,12 +58,22 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
   const model = chatService.requireModel(agent);
 
   const times = 5;
-  const client = await backoff({ times, interval: 1000, multiplier: 2 }, ({ attempt }) => {
-    if (attempt > 1) {
-      agent.setCurrentActivity(`Chat model ${model} is not responding, retry ${attempt}/${times}`);
-    }
-    return chatModelRegistry.getClient(model);
-  });
+  let client: AIChatClient;
+  try {
+    client = await backoff({ times, interval: 1000, multiplier: 2 }, ({ attempt }) => {
+      if (attempt > 1) {
+        agent.setCurrentActivity(`Chat model ${model} is not responding, retry ${attempt}/${times}`);
+        agent.getService(MetricsService)?.addRetries(1, agent);
+      }
+      return chatModelRegistry.getClient(model);
+    });
+  } catch (error) {
+    agent.getService(MetricsService)?.recordError(agent, {
+      type: "modelClientUnavailable",
+      provider: model,
+    });
+    throw error;
+  }
 
   const enabledTools = new EnhancedSet(chatConfig.enabledTools);
   let updatedTools = false;
@@ -89,6 +116,8 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
   let stepCount: number = 0;
   let stopReason = "finished" as StopReason;
   let maxSteps = chatConfig.maxSteps;
+  const { maxCost, maxInputTokens, maxOutputTokens, maxRuntime } = chatConfig;
+  const runStartedAt = Date.now();
 
   agent.setCurrentActivity("Waiting for response");
   try {
@@ -106,13 +135,40 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
             });
           }
 
+          const previousStepCount = stepCount;
           stepCount = options.steps.length;
+          const stepDelta = stepCount - previousStepCount;
+          if (stepDelta > 0) {
+            agent.getService(MetricsService)?.addSteps(agent, stepDelta);
+          }
+
           if (stepCount > 0) {
             const { compactionThreshold } = agent.getState(ChatServiceState).currentConfig.compaction;
             if (isThresholdReached(options.steps[stepCount - 1]!.usage, client, compactionThreshold)) {
               stopReason = "longContext";
               return true;
             }
+          }
+
+          // Resource limits for this turn (optional; undefined = unlimited)
+          const { inputTokens, outputTokens, totalCost } = getTurnTotals(options.steps, client);
+          const elapsedSeconds = (Date.now() - runStartedAt) / 1000;
+
+          if (maxCost != null && totalCost >= maxCost) {
+            stopReason = "maxCost";
+            return true;
+          }
+          if (maxInputTokens != null && inputTokens >= maxInputTokens) {
+            stopReason = "maxInputTokens";
+            return true;
+          }
+          if (maxOutputTokens != null && outputTokens >= maxOutputTokens) {
+            stopReason = "maxOutputTokens";
+            return true;
+          }
+          if (maxRuntime != null && elapsedSeconds >= maxRuntime) {
+            stopReason = "maxRuntime";
+            return true;
           }
 
           if (maxSteps > 0 && stepCount > maxSteps) {
@@ -209,11 +265,32 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
 
         if (stopReason === "longContext" && appliedCompaction) {
           const remainingSteps = chatConfig.maxSteps - stepCount;
-          if (remainingSteps > 0) {
+          const { inputTokens, outputTokens, totalCost } = getTurnTotals([{ usage: response.totalUsage }], client);
+          const elapsedSeconds = (Date.now() - runStartedAt) / 1000;
+          const remainingCost = maxCost != null ? maxCost - totalCost : undefined;
+          const remainingInputTokens = maxInputTokens != null ? maxInputTokens - inputTokens : undefined;
+          const remainingOutputTokens = maxOutputTokens != null ? maxOutputTokens - outputTokens : undefined;
+          const remainingRuntime = maxRuntime != null ? maxRuntime - elapsedSeconds : undefined;
+          const budgetExhausted =
+            (remainingCost != null && remainingCost <= 0) ||
+            (remainingInputTokens != null && remainingInputTokens <= 0) ||
+            (remainingOutputTokens != null && remainingOutputTokens <= 0) ||
+            (remainingRuntime != null && remainingRuntime <= 0);
+
+          if (remainingSteps > 0 && !budgetExhausted) {
+            const remainingConfig: ParsedChatConfig = {
+              ...chatConfig,
+              maxSteps: remainingSteps,
+              ...(remainingCost != null && { maxCost: remainingCost }),
+              ...(remainingInputTokens != null && { maxInputTokens: remainingInputTokens }),
+              ...(remainingOutputTokens != null && { maxOutputTokens: remainingOutputTokens }),
+              ...(remainingRuntime != null && { maxRuntime: remainingRuntime }),
+            };
+
             agent.infoMessage("Context compaction applied, and agent still has work to do. Continuing work...");
             return await runChat({
               input: "Continue",
-              chatConfig: { ...chatConfig, maxSteps: remainingSteps },
+              chatConfig: remainingConfig,
               agent,
             });
           }
@@ -222,14 +299,16 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     }
 
     if (stopReason === "maxSteps") {
-      if (agent.headless) {
-        agent.infoMessage("Agent stopped due to reaching the configured maxSteps");
-      } else {
-        await agent.askForApproval({
-          message: "Agent stopped due to reaching the configured maxSteps. Would you like to continue?",
-        });
-        return await runChat({ input: "Continue", chatConfig, agent });
-      }
+      // TODO: Should this throw an error?
+      agent.infoMessage("Agent stopped due to reaching the configured maxSteps");
+    } else if (stopReason === "maxCost") {
+      agent.infoMessage("Agent stopped due to reaching the configured maxCost");
+    } else if (stopReason === "maxInputTokens") {
+      agent.infoMessage("Agent stopped due to reaching the configured maxInputTokens");
+    } else if (stopReason === "maxOutputTokens") {
+      agent.infoMessage("Agent stopped due to reaching the configured maxOutputTokens");
+    } else if (stopReason === "maxRuntime") {
+      agent.infoMessage("Agent stopped due to reaching the configured maxRuntime");
     }
 
     return response; // Return the full response object

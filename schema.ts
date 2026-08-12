@@ -47,6 +47,14 @@ export const ChatAgentConfigSchema = z
     transcriptionModel: z.string().exactOptional(),
     systemPrompt: z.string(),
     maxSteps: z.number().exactOptional(),
+    /** Stop the chat once estimated total cost (USD) for this turn reaches this amount. */
+    maxCost: z.number().exactOptional(),
+    /** Stop the chat once cumulative input tokens for this turn reach this amount. */
+    maxInputTokens: z.number().exactOptional(),
+    /** Stop the chat once cumulative output tokens for this turn reach this amount. */
+    maxOutputTokens: z.number().exactOptional(),
+    /** Stop the chat once this many seconds have elapsed for the current turn. */
+    maxRuntime: z.number().exactOptional(),
     allowRemoteAttachments: z.boolean().exactOptional(),
     /** Auto-approve tool actions whose safety level is at or below this value (0–10). */
     autoToolApprovalLevel: z.number().int().min(0).max(10).exactOptional(),
@@ -132,6 +140,34 @@ const ChatAgentDefaultConfig = z
       .number()
       .default(0)
       .meta({ advanced: true, description: "Maximum tool-call steps per turn (0 = unlimited)" } satisfies ConfigFieldMeta),
+    maxCost: z
+      .number()
+      .exactOptional()
+      .meta({
+        advanced: true,
+        description: "Maximum estimated cost in USD per turn; chat stops when this is reached",
+      } satisfies ConfigFieldMeta),
+    maxInputTokens: z
+      .number()
+      .exactOptional()
+      .meta({
+        advanced: true,
+        description: "Maximum cumulative input tokens per turn; chat stops when this is reached",
+      } satisfies ConfigFieldMeta),
+    maxOutputTokens: z
+      .number()
+      .exactOptional()
+      .meta({
+        advanced: true,
+        description: "Maximum cumulative output tokens per turn; chat stops when this is reached",
+      } satisfies ConfigFieldMeta),
+    maxRuntime: z
+      .number()
+      .exactOptional()
+      .meta({
+        advanced: true,
+        description: "Maximum runtime in seconds per turn; chat stops when this is reached",
+      } satisfies ConfigFieldMeta),
     allowRemoteAttachments: z
       .boolean()
       .default(true) //TODO: Evaluate security risks associated with this
