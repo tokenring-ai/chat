@@ -1,8 +1,9 @@
 import type { TreeLeaf } from "@tokenring-ai/agent/question";
 import type { AgentCommandInputSchema, AgentCommandInputType, TokenRingAgentCommand } from "@tokenring-ai/agent/types";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
+import type { ModelSettings } from "@tokenring-ai/ai-client/schema.client";
 import { serializeModel } from "@tokenring-ai/ai-client/util/modelSettings";
-import EnhancedMap from "@tokenring-ai/utility/map/enhancedMap";
+import EnhancedStringMap from "@tokenring-ai/utility/map/enhancedStringMap";
 import { ChatService } from "../../../../index.ts";
 
 const inputSchema = {} as const satisfies AgentCommandInputSchema;
@@ -27,7 +28,7 @@ async function execute({ agent }: AgentCommandInputType<typeof inputSchema>): Pr
     },
   });
   if (selection) {
-    const newSettings = new EnhancedMap<string, any>();
+    const newSettings: ModelSettings = new EnhancedStringMap();
     for (const k of selection) newSettings.set(k, true);
     const newModel = serializeModel(base, newSettings);
     chatService.setModel(newModel, agent);

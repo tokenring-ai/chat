@@ -5,11 +5,14 @@ import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
 import { AIResponseCostSchema, LanguageModelUsageSchema, SerializedChatModelSpecSchema } from "@tokenring-ai/ai-client/schema.client";
 import type TokenRingApp from "@tokenring-ai/app";
 import { createRPCEndpoint } from "@tokenring-ai/rpc/createRPCEndpoint";
+import { stripUndefinedKeys } from "@tokenring-ai/utility/object/stripObject";
 import { deepEquals } from "bun";
 import type { z } from "zod";
 import ChatService from "../ChatService.ts";
+import ContextualSearchService from "../ContextualSearchService.ts";
 import { type ParsedChatConfig, ToolApprovalClassificationLevels } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
+import ToolDirectoryService from "../ToolDirectoryService.ts";
 import ChatRpcSchema from "./schema.ts";
 
 type ModelQueryResult =
@@ -84,6 +87,37 @@ export default createRPCEndpoint(ChatRpcSchema, {
     return {
       tools: Object.fromEntries(tools.map(([toolName, tool]) => [toolName, { displayName: tool.toolDefinition?.displayName || toolName }])),
     };
+  },
+
+  getToolDirectory(_args, app: TokenRingApp) {
+    return { directory: app.requireService(ToolDirectoryService).getToolDirectory() };
+  },
+
+  listToolDefinitions(_args, app: TokenRingApp) {
+    return app.requireService(ToolDirectoryService).listToolDefinitions();
+  },
+
+  async getToolDefinition(args, app: TokenRingApp) {
+    const tool = await app.requireService(ToolDirectoryService).getToolDefinition(args.name);
+    if (!tool) {
+      return { status: "toolNotFound" };
+    }
+    return { status: "success", tool };
+  },
+
+  async createToolDefinition(args, app: TokenRingApp) {
+    const tool = await app.requireService(ToolDirectoryService).createToolDefinition(args.name, args.tool);
+    return { tool };
+  },
+
+  async updateToolDefinition(args, app: TokenRingApp) {
+    const tool = await app.requireService(ToolDirectoryService).updateToolDefinition(args.name, args.tool);
+    return { tool };
+  },
+
+  async deleteToolDefinition(args, app: TokenRingApp) {
+    const success = await app.requireService(ToolDirectoryService).deleteToolDefinition(args.name);
+    return { success };
   },
 
   getModel(args, app: TokenRingApp) {
@@ -212,5 +246,24 @@ export default createRPCEndpoint(ChatRpcSchema, {
     const chatService = app.requireService(ChatService);
     await chatService.clearChatMessages(agent);
     return { status: "success", success: true };
+  },
+
+  async *searchContext(args, app: TokenRingApp, signal) {
+    const agent = app.requireService(AgentManager).getAgent(args.agentId);
+    if (!agent) {
+      yield { status: "agentNotFound" };
+      return;
+    }
+    for await (const snapshot of app.requireService(ContextualSearchService).searchStream(args.query, agent, { limitPerProvider: args.limit ?? 8 }, signal)) {
+      if (signal.aborted) return;
+      yield {
+        status: "success" as const,
+        categories: snapshot.categories.map(category => ({
+          ...category,
+          items: category.items.map(item => stripUndefinedKeys(item)),
+        })),
+        pending: snapshot.pending,
+      };
+    }
   },
 });

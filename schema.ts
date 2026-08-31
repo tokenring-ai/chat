@@ -1,6 +1,5 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import type { ChatAttachment, ToolCallResult } from "@tokenring-ai/agent/AgentEvents";
-import { SubAgentConfigSchema } from "@tokenring-ai/agent/schema";
 
 import type { Tool as AITool } from "@tokenring-ai/ai-client";
 import type { ChatInputMessage } from "@tokenring-ai/ai-client/client/AIChatClient";
@@ -257,26 +256,16 @@ export const ChatConfigMergedSchema = z.object({
   ...ChatAgentDefaultConfig.shape,
 });
 
-export const ChatToolInputArgumentSchema = z.object({
-  description: z.string(),
-  defaultValue: z.string().exactOptional(),
-});
-
-export const ChatToolConfigSchema = z.object({
-  /** Type of agent used to execute the tool */
-  agentType: z.string(),
-  /** Tool Display Name */
-  displayName: z.string(),
-  /** Tool Description */
-  description: z.string(),
-  /** Tool Input Schema */
-  inputArguments: z.record(z.string(), ChatToolInputArgumentSchema),
-  /** The steps to execute */
-  steps: z.array(z.string()).min(1),
-  /** The subagent configuration */
-  subAgent: SubAgentConfigSchema.prefault({}),
-});
-export type ChatToolConfig = z.infer<typeof ChatToolConfigSchema>;
+export {
+  type ChatToolConfig,
+  ChatToolConfigSchema,
+  ChatToolInputArgumentSchema,
+  type ToolDefinition,
+  ToolDefinitionSchema,
+  type ToolItem,
+  type ToolItemInput,
+  ToolItemSchema,
+} from "./toolSchema.ts";
 
 export type ChatAgentConfig = {
   chat: z.input<typeof ChatAgentConfigSchema>;

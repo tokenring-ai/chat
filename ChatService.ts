@@ -106,7 +106,12 @@ export default class ChatService implements TokenRingService {
   registerContextHandlers = this.contextHandlers.setAll;
 
   private options = ChatServiceConfigSchema.parse({});
+  /** The live agent tools, as last reconciled. Keyed by tool name, merged from the two sources below. */
   private toolDefinitions = new EnhancedStringMap<ChatToolConfig>();
+  /** Agent tools from the package config; read-only, replaced wholesale on reconfigure. */
+  private configToolConfigs: Record<string, ChatToolConfig> = {};
+  /** Agent tools authored in the workspace tool directory, owned by `ToolDirectoryService`. */
+  private workspaceToolConfigs: Record<string, ChatToolConfig> = {};
 
   constructor(
     readonly app: TokenRingApp,
@@ -120,11 +125,30 @@ export default class ChatService implements TokenRingService {
   }
 
   /**
-   * Reconciles package-config agent tools against the live tool registry.
+   * Replaces the package-config agent tools and reconciles.
    * Built-in tools registered via {@link addTools} are left alone.
    */
   reconfigureTools(toolDefinitions: Record<string, ChatToolConfig>): void {
-    this.toolDefinitions.reconcileAgainst(toolDefinitions, {
+    this.configToolConfigs = toolDefinitions;
+    this.reconcileTools();
+  }
+
+  /**
+   * Replaces the agent tools read from the workspace tool directory and reconciles. Called by
+   * {@link import("./ToolDirectoryService.ts").default} after every mutation.
+   */
+  setWorkspaceToolConfigs(toolDefinitions: Record<string, ChatToolConfig>): void {
+    this.workspaceToolConfigs = toolDefinitions;
+    this.reconcileTools();
+  }
+
+  /**
+   * Reconciles the merge of both tool sources against the live tool registry. A workspace tool wins
+   * over a config tool of the same name — the editable copy is the one the user can actually change.
+   */
+  private reconcileTools(): void {
+    const merged = { ...this.configToolConfigs, ...this.workspaceToolConfigs };
+    this.toolDefinitions.reconcileAgainst(merged, {
       creating: (name, definition) => {
         this.tools.set(name, tokenRingTool(createAgentTool(name, definition)));
         return definition;

@@ -7,6 +7,9 @@ import {
 import type { RPCSchema } from "@tokenring-ai/rpc/types";
 import { AgentNotFoundSchema, SuccessSchema } from "@tokenring-ai/rpc/types";
 import { z } from "zod";
+// toolSchema.ts is the light half of ../schema.ts, split out so this file — and therefore the client
+// bundle — never pulls in the AI client the server-side chat schema depends on.
+import { ToolDefinitionSchema, ToolItemSchema } from "../toolSchema.ts";
 
 const ModelNotFoundSchema = z.object({
   status: z.literal("modelNotFound"),
@@ -31,6 +34,54 @@ export default {
       input: z.object({}),
       result: z.object({
         tools: z.record(z.string(), z.object({ displayName: z.string() })),
+      }),
+    },
+    getToolDirectory: {
+      type: "query",
+      input: z.object({}),
+      result: z.object({
+        directory: z.string(),
+      }),
+    },
+    listToolDefinitions: {
+      type: "query",
+      input: z.object({}),
+      result: z.array(ToolDefinitionSchema),
+    },
+    getToolDefinition: {
+      type: "query",
+      input: z.object({
+        name: z.string(),
+      }),
+      result: z.discriminatedUnion("status", [SuccessSchema.extend({ tool: ToolDefinitionSchema }), z.object({ status: z.literal("toolNotFound") })]),
+    },
+    createToolDefinition: {
+      type: "mutation",
+      input: z.object({
+        name: z.string(),
+        tool: ToolItemSchema,
+      }),
+      result: z.object({
+        tool: ToolDefinitionSchema,
+      }),
+    },
+    updateToolDefinition: {
+      type: "mutation",
+      input: z.object({
+        name: z.string(),
+        tool: ToolItemSchema,
+      }),
+      result: z.object({
+        tool: ToolDefinitionSchema,
+      }),
+    },
+    deleteToolDefinition: {
+      type: "mutation",
+      input: z.object({
+        name: z.string(),
+      }),
+      result: z.object({
+        success: z.boolean(),
       }),
     },
     getModel: {
@@ -191,6 +242,43 @@ export default {
       result: z.discriminatedUnion("status", [
         SuccessSchema.extend({
           success: z.boolean(),
+        }),
+        AgentNotFoundSchema,
+      ]),
+    },
+    searchContext: {
+      type: "stream",
+      input: z.object({
+        agentId: z.string(),
+        query: z.string(),
+        limit: z.number().int().positive().max(25).default(8).exactOptional(),
+      }),
+      result: z.discriminatedUnion("status", [
+        SuccessSchema.extend({
+          categories: z.array(
+            z.object({
+              id: z.string(),
+              label: z.string(),
+              items: z.array(
+                z.object({
+                  id: z.string(),
+                  tag: z.string(),
+                  title: z.string(),
+                  subtitle: z.string().exactOptional(),
+                  categoryId: z.string(),
+                  categoryLabel: z.string(),
+                  score: z.number().exactOptional(),
+                }),
+              ),
+            }),
+          ),
+          pending: z.array(
+            z.object({
+              id: z.string(),
+              categoryId: z.string(),
+              categoryLabel: z.string(),
+            }),
+          ),
         }),
         AgentNotFoundSchema,
       ]),
