@@ -777,7 +777,7 @@ values.
 
 | Method                | Type     | Description                                                         |
 |-----------------------|----------|---------------------------------------------------------------------|
-| `getAvailableTools`   | query    | All registered tools with display names                             |
+| `getAvailableTools`   | query    | All registered tools with display names and descriptions            |
 | `getToolDirectory`    | query    | The resolved path of the editable tool directory                    |
 | `listToolDefinitions` | query    | Every valid tool YAML file in the tool directory, sorted by name    |
 | `getToolDefinition`   | query    | One tool's full body, or `status: "toolNotFound"`                   |

@@ -10,6 +10,7 @@ import { ChatModelRegistry, TranscriptionModelRegistry } from "@tokenring-ai/ai-
 import type { ChatModelSpec } from "@tokenring-ai/ai-client/schema.client";
 import { parseModelAndSettings } from "@tokenring-ai/ai-client/util/modelSettings";
 import type TokenRingApp from "@tokenring-ai/app";
+import { noteRegistration } from "@tokenring-ai/app/registrationOwner";
 import type { TokenRingService } from "@tokenring-ai/app/types";
 import { ConfigurationError } from "@tokenring-ai/app/types";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
@@ -92,8 +93,16 @@ export default class ChatService implements TokenRingService {
   defaultTranscriptionModel: string | null = null;
   private tools = new KeyedRegistry<NamedTool>();
   requireTool = this.tools.require;
-  registerTool = this.tools.set;
-  unregisterTool = this.tools.unregister;
+  // MCP servers register here rather than through addTools. Config and workspace
+  // tools go through reconcileTools and are intentionally not attributed to a plugin.
+  registerTool = (name: string, tool: NamedTool) => {
+    noteRegistration("tools", name);
+    this.tools.set(name, tool);
+  };
+  unregisterTool = (name: string) => {
+    this.app.forgetRegistration("tools", name);
+    return this.tools.unregister(name);
+  };
   getAvailableToolNames = this.tools.keysArray;
   getAvailableToolEntries = this.tools.entriesArray;
 
@@ -277,6 +286,7 @@ export default class ChatService implements TokenRingService {
       throw new ConfigurationError(this.name, `Tool "${tool.name}" is already registered`);
     }
 
+    noteRegistration("tools", tool.name);
     this.tools.set(tool.name, tokenRingTool(tool));
     return tool;
   }
@@ -288,6 +298,7 @@ export default class ChatService implements TokenRingService {
         throw new ConfigurationError(this.name, `Tool "${tool.name}" is already registered`);
       }
 
+      noteRegistration("tools", tool.name);
       this.tools.set(tool.name, tokenRingTool(tool));
     }
   }

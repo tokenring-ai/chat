@@ -85,7 +85,12 @@ export default createRPCEndpoint(ChatRpcSchema, {
     const chatService = app.requireService(ChatService);
     const tools = chatService.getAvailableToolEntries();
     return {
-      tools: Object.fromEntries(tools.map(([toolName, tool]) => [toolName, { displayName: tool.toolDefinition?.displayName || toolName }])),
+      tools: Object.fromEntries(
+        tools.map(([toolName, tool]) => [
+          toolName,
+          { displayName: tool.toolDefinition?.displayName || tool.displayName || toolName, description: tool.toolDefinition?.description ?? "" },
+        ]),
+      ),
     };
   },
 

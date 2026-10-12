@@ -33,7 +33,14 @@ export default {
       type: "query",
       input: z.object({}),
       result: z.object({
-        tools: z.record(z.string(), z.object({ displayName: z.string() })),
+        tools: z.record(
+          z.string(),
+          z.object({
+            displayName: z.string(),
+            /** The tool's model-facing description; empty when the tool has no definition. */
+            description: z.string().default(""),
+          }),
+        ),
       }),
     },
     getToolDirectory: {
