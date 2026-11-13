@@ -65,6 +65,14 @@ export class ChatServiceState extends AgentStateSlice<typeof serializationSchema
     };
   }
 
+  /** The conversation as it stood at `timestamp`: only turns finished by then, without a compaction recorded later. */
+  serializeAt(timestamp: number): z.output<typeof serializationSchema> {
+    const current = this.serialize();
+    const messages = this.messages.filter(message => message.createdAt <= timestamp);
+    if (messages.length === this.messages.length) return current;
+    return { ...current, messages, pendingCompaction: null, compactionInProgress: false };
+  }
+
   deserialize(data: z.output<typeof serializationSchema>): void {
     this.currentConfig = data.currentConfig;
     this.injectedMessages = data.injectedMessages;

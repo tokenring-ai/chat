@@ -126,7 +126,10 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
         instructions,
         messages,
         async stopWhen(options) {
-          const lastStep = options.steps[stepCount - 1];
+          // The step that just finished (stepCount still holds the previous count here). Reading
+          // steps[stepCount - 1] lagged one step behind and never saw a turn's last step, which left
+          // the context length at 0 after one-step replies and dropped that step's usage and cost.
+          const lastStep = options.steps.length > stepCount ? options.steps.at(-1) : undefined;
           if (lastStep) {
             agent.mutateState(ChatServiceState, state => {
               state.contextLength = (lastStep.usage.inputTokens ?? 0) + (lastStep.usage.outputTokens ?? 0);
