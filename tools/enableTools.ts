@@ -30,7 +30,7 @@ async function execute({ toolNames }: z.output<typeof inputSchema>, agent: Agent
 }
 
 const inputSchema = z.object({
-  toolNames: z.array(z.string()).describe("The names of the tools to enable, as returned by list_tools"),
+  toolNames: z.array(z.string()).describe("The names of the tools to enable, as returned by tools_list"),
 });
 
 const description = "Enables the specified tools for the agent";

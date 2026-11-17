@@ -1,4 +1,4 @@
-import { AgentCommandService } from "@tokenring-ai/agent";
+import { AgentCommandService, AgentJobService } from "@tokenring-ai/agent";
 import type { TokenRingPlugin } from "@tokenring-ai/app";
 import type { ConfigFieldMeta } from "@tokenring-ai/app/config/metadata";
 import { AgentLifecycleService } from "@tokenring-ai/lifecycle";
@@ -11,6 +11,7 @@ import contextHandlers from "./contextHandlers.ts";
 import AgentContextualSearchProvider from "./contextualSearch/AgentContextualSearchProvider.ts";
 import injectSubagentResults from "./hooks/injectSubagentResults.ts";
 import resolveContextualTags from "./hooks/resolveContextualTags.ts";
+import PermissionService from "./PermissionService.ts";
 import packageJSON from "./package.json" with { type: "json" };
 import chatRPC from "./rpc/chat.ts";
 import { ChatServiceConfigSchema, ChatToolConfigSchema } from "./schema.ts";
@@ -35,6 +36,7 @@ export default {
     app.waitForService(AgentCommandService, agentCommandService => agentCommandService.addAgentCommands(agentCommands));
 
     const chatService = app.addService(ChatService, new ChatService(app));
+    app.addService(PermissionService, new PermissionService(app));
     chatService.registerContextHandlers(contextHandlers);
     chatService.addTools(tools);
 
@@ -47,6 +49,9 @@ export default {
       rpcService.registerEndpoint(chatRPC);
     });
 
+    // Job agents get their approval policy snapshotted (and their tools enabled) through chat.
+    app.waitForService(AgentJobService, jobService => jobService.setChatIntegration(chatService.jobIntegration()));
+
     app.waitForService(AgentLifecycleService, lifecycleService => {
       lifecycleService.addHooks(injectSubagentResults, resolveContextualTags);
     });
@@ -58,6 +63,7 @@ export default {
   async reconfigure(app, config) {
     const chatService = app.requireService(ChatService);
     chatService.reconfigure(config.chat);
+    app.requireService(PermissionService).reconfigure(config.chat.permissions);
     chatService.reconfigureTools(config.tools);
 
     await app.requireService(ToolDirectoryService).reconfigure(config.toolDirectory);

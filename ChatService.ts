@@ -4,6 +4,9 @@ import type Agent from "@tokenring-ai/agent/Agent";
 import { CommandFailedError } from "@tokenring-ai/agent/AgentError";
 import type { ChatAttachment } from "@tokenring-ai/agent/AgentEvents";
 import { mimeTypeClassifications } from "@tokenring-ai/agent/AgentEvents";
+import type { JobRefusal } from "@tokenring-ai/agent/schema";
+import AgentJobService, { type JobChatIntegration } from "@tokenring-ai/agent/services/AgentJobService";
+import AgentManager from "@tokenring-ai/agent/services/AgentManager";
 import type { AgentCreationContext } from "@tokenring-ai/agent/types";
 
 import { ChatModelRegistry, TranscriptionModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
@@ -21,8 +24,11 @@ import KeyedRegistry from "@tokenring-ai/utility/registry/KeyedRegistry";
 import EnhancedSet from "@tokenring-ai/utility/set/enhancedSet";
 import interpolateString from "@tokenring-ai/utility/string/interpolateString";
 import { AfterChatClear, AfterChatCompaction } from "./lifecycle.ts";
+import PermissionService from "./PermissionService.ts";
+import { permissionIdProblem } from "./permissions/permissionIds.ts";
 import type { ChatToolConfig, ToolApprovalSafetyAssessment } from "./schema.ts";
 import {
+  ALWAYS_ASK_LEVEL,
   ChatAgentConfigSchema,
   ChatServiceConfigSchema,
   type ContextHandler,
@@ -34,6 +40,7 @@ import {
   type StoredChatMessage,
   type TokenRingToolDefinition,
   ToolApprovalClassificationLevels,
+  ToolApprovalModeSchema,
   ToolApprovalSafetyAssessmentSchema,
 } from "./schema.ts";
 import { ChatServiceState } from "./state/chatServiceState.ts";
@@ -56,6 +63,14 @@ export type CheckToolApprovalOptions = {
   label?: string | undefined;
   /** Default selection when prompting the user. */
   default?: boolean | undefined;
+  /**
+   * The kind of action this is, so a person can "Always allow" it: an id like `blog.mysite.publish`
+   * (`<domain>.<scope>.<action>`, segments `[a-z0-9_-]`; slug user-chosen names with `permissionSlug`) and a
+   * plain-language `summary` of the scope ("Publish posts on mysite"). A matching grant approves the request
+   * without asking, in every approval mode and in unattended jobs, for requests up to level 8. Requests
+   * without it behave exactly as before. Levels 9-10 are never grantable.
+   */
+  permission?: { id: string; summary: string } | undefined;
 };
 
 type ToolApprovalClassificationLogEntry = {
@@ -430,8 +445,10 @@ export default class ChatService implements TokenRingService {
    * Otherwise `toolApprovalMode` decides:
    * - `ask` — prompt the user via {@link Agent.askForApproval}
    * - `reject` — deny without prompting
-   * - `auto` — re-assess with the chat model; auto-approve if the assessed
-   *   level is within the auto-approval threshold, otherwise prompt the user
+   * - `auto` — below {@link ALWAYS_ASK_LEVEL}, re-assess with the chat model and auto-approve if the
+   *   assessed level is within the threshold, otherwise prompt the user; at or above it, prompt the user
+   *
+   * What each level means is the tool approval standard: {@link ToolApprovalClassificationLevels}.
    *
    * Prefer this over calling {@link Agent.askForApproval} directly from tools so approval
    * policy stays consistent across the workspace.
@@ -440,10 +457,11 @@ export default class ChatService implements TokenRingService {
    * with message, description, safety level, and auto-classifier details.
    */
   async checkToolApproval(
-    { message, detailedDescription, safetyLevel, toolName, label, default: defaultValue }: CheckToolApprovalOptions,
+    { message, detailedDescription, safetyLevel, toolName, label, default: defaultValue, permission }: CheckToolApprovalOptions,
     agent: Agent,
   ): Promise<boolean | null> {
-    const { autoToolApprovalLevel, toolApprovalMode, saveClassificationLogsToFile } = this.getChatConfig(agent);
+    const { saveClassificationLogsToFile } = this.getChatConfig(agent);
+    const { autoToolApprovalLevel, toolApprovalMode, policyAgent } = this.approvalPolicy(agent);
     const clampedLevel = Math.min(10, Math.max(1, Math.round(safetyLevel)));
 
     let autoClassifierRan = false;
@@ -451,21 +469,72 @@ export default class ChatService implements TokenRingService {
     let autoClassifierAssessment: ToolApprovalSafetyAssessment | undefined;
     let approved: boolean;
 
-    if (clampedLevel <= autoToolApprovalLevel) {
+    // An unattended job's refused approvals are recorded on its job record, so a run that "succeeded"
+    // without doing what it was asked to shows why.
+    // A request that can be "always allowed" names its permission; level 9-10 requests never can be.
+    const permissions = permission ? this.app.getService(PermissionService) : undefined;
+    const grantable =
+      permission && permissions && permissionIdProblem(permission.id) === null && permissions.canGrantLevel(clampedLevel) ? permission : undefined;
+    const grant = permission && permissions ? permissions.findGrantFor(permission.id, clampedLevel) : undefined;
+
+    const refusedInJob = () =>
+      this.noteJobRefusal(agent, {
+        tool: toolName ?? label ?? "tool",
+        message,
+        level: clampedLevel,
+        ...(grantable && { permissionId: grantable.id, permissionSummary: grantable.summary }),
+      });
+    const ask = async (askMessage: string): Promise<boolean> =>
+      await agent.askForApproval({
+        message: grantable
+          ? `${askMessage}\n\n"Always allow" means: don't ask again for this: ${grantable.summary}. You can change this any time in Configuration > Permissions.`
+          : askMessage,
+        label,
+        defaultValue,
+        onUnanswered: refusedInJob,
+        ...(grantable &&
+          permissions && {
+            alwaysAllow: {
+              label: `Always allow: ${grantable.summary}`,
+              onGrant: async () => {
+                try {
+                  await permissions.grant({ id: grantable.id, summary: grantable.summary, level: clampedLevel });
+                  agent.infoMessage(
+                    `Saved: TokenRing will no longer ask before this: ${grantable.summary}. You can change this any time in Configuration > Permissions (or with /permissions revoke ${grantable.id}).`,
+                  );
+                } catch (error) {
+                  // The request in front of the person is still approved; only the standing permission is missing.
+                  agent.warningMessage(
+                    `This request was approved, but the permission could not be saved: ${Error.isError(error) ? error.message : String(error)}`,
+                  );
+                }
+              },
+            },
+          }),
+      });
+
+    if (grant && permissions) {
+      // A standing permission comes first: it covers every approval mode and unattended runs.
+      agent.infoMessage(`Allowed by permission \`${grant.id}\``);
+      permissions.touch(grant.id, grant.source);
+      approved = true;
+    } else if (clampedLevel <= autoToolApprovalLevel) {
       approved = true;
     } else {
       const levelLabel = ToolApprovalClassificationLevels[clampedLevel as keyof typeof ToolApprovalClassificationLevels];
-      const annotatedMessage = `${message}\n\nSafety level: **${clampedLevel}/10** (${levelLabel})\nAuto-approve at or below: ${autoToolApprovalLevel}`;
+      const policySource = policyAgent === agent ? "" : ` (permission setting of ${policyAgent.config.displayName}, which started this sub-agent)`;
+      // Plain request first; the numeric level is advanced detail and comes last.
+      const levelDetails = `Details: safety level ${clampedLevel}/10 (${levelLabel}). Approved automatically at level ${autoToolApprovalLevel} or below${policySource}.`;
 
       if (toolApprovalMode === "reject") {
-        agent.warningMessage(`Rejected tool action at safety level ${clampedLevel}/10 (auto-approve ≤ ${autoToolApprovalLevel}): ${message}`);
+        agent.warningMessage(
+          `Not done: this chat is set to refuse actions that need your approval. ${message} (Details: safety level ${clampedLevel}/10; automatic up to ${autoToolApprovalLevel}.)`,
+        );
         approved = false;
-      } else if (toolApprovalMode === "ask") {
-        approved = await agent.askForApproval({
-          message: `${annotatedMessage}\n\n${detailedDescription}`,
-          label,
-          defaultValue,
-        });
+        refusedInJob();
+      } else if (toolApprovalMode === "ask" || clampedLevel >= ALWAYS_ASK_LEVEL) {
+        // At ALWAYS_ASK_LEVEL and above (other people, the public, irreversible) a model's guess is not enough.
+        approved = await ask(`${message}\n\n${detailedDescription}\n\n${levelDetails}`);
       } else {
         // toolApprovalMode === "auto"
         try {
@@ -509,25 +578,21 @@ Classify the safety risk of allowing this action based on the anchor levels.`,
 
           if (autoClassifierAssessment.level <= autoToolApprovalLevel) {
             agent.infoMessage(
-              `Auto-approved tool action after classification (risk ${autoClassifierAssessment.level}/10 ≤ ${autoToolApprovalLevel}): ${autoClassifierAssessment.reasoning}`,
+              `Went ahead without asking, because it looked low-risk: ${autoClassifierAssessment.reasoning} (Details: risk ${autoClassifierAssessment.level}/10; automatic up to ${autoToolApprovalLevel}.)`,
             );
             approved = true;
           } else {
-            approved = await agent.askForApproval({
-              message: `${message}\n\nClassified risk: **${autoClassifierAssessment.level}/10** (tool reported ${clampedLevel}; auto-approve ≤ ${autoToolApprovalLevel}).\n\n${autoClassifierAssessment.reasoning}\n\n${detailedDescription}`,
-              label,
-              defaultValue,
-            });
+            approved = await ask(
+              `${message}\n\n${autoClassifierAssessment.reasoning}\n\n${detailedDescription}\n\nDetails: classified risk ${autoClassifierAssessment.level}/10 (the tool reported ${clampedLevel}). Approved automatically at level ${autoToolApprovalLevel} or below.`,
+            );
           }
         } catch (error) {
+          // Cancelled while classifying: the turn is over, so there is nobody to ask.
+          if (agent.getAbortSignal().aborted) throw error;
           const reason = Error.isError(error) ? error.message : String(error);
           autoClassifierError = reason;
           agent.warningMessage(`Tool safety classification failed (${reason}); falling back to asking the user`);
-          approved = await agent.askForApproval({
-            message: `${annotatedMessage}\n\n${detailedDescription}`,
-            label,
-            defaultValue,
-          });
+          approved = await ask(`${message}\n\n${detailedDescription}\n\n${levelDetails}`);
         }
       }
     }
@@ -553,6 +618,75 @@ Classify the safety risk of allowing this action based on the anchor levels.`,
     }
 
     return approved;
+  }
+
+  /** Records a refused approval on the job record when `agent` works for a job. */
+  private noteJobRefusal(agent: Agent, refusal: JobRefusal): void {
+    try {
+      agent.getService(AgentJobService)?.recordRefusal(agent, refusal);
+    } catch {
+      // Recording is best-effort; the refusal itself already happened.
+    }
+  }
+
+  /**
+   * Whose permission setting decides a tool approval. A sub-agent follows the agent at the top of
+   * its parent chain — the chat a person is using — read when it asks, so changing that chat's
+   * setting also covers the sub-agents it has running. An agent without a parent uses its own.
+   *
+   * A job agent (see {@link AgentJobService}) has its policy pinned: it was snapshotted from its
+   * starter when the job began, so the job agent uses its own setting, and a sub-agent under it
+   * stops its walk up the chain there rather than following the chat above the job.
+   */
+  approvalPolicy(agent: Agent): { autoToolApprovalLevel: number; toolApprovalMode: ParsedChatConfig["toolApprovalMode"]; policyAgent: Agent } {
+    const own = this.getChatConfig(agent);
+    const root = agent.parentAgentId ? this.policyRoot(agent) : undefined;
+    if (root && root !== agent) {
+      try {
+        const { autoToolApprovalLevel, toolApprovalMode } = this.getChatConfig(root);
+        return { autoToolApprovalLevel, toolApprovalMode, policyAgent: root };
+      } catch {
+        // The root has no chat state (not a chat agent): fall back to the sub-agent's own setting.
+      }
+    }
+    return { autoToolApprovalLevel: own.autoToolApprovalLevel, toolApprovalMode: own.toolApprovalMode, policyAgent: agent };
+  }
+
+  /** The top of `agent`'s parent chain, or the nearest agent on it (itself included) whose policy is pinned. */
+  private policyRoot(agent: Agent): Agent {
+    const jobs = agent.getService(AgentJobService);
+    const agentManager = agent.getService(AgentManager);
+    if (!agentManager) return agent;
+    if (!jobs) return agentManager.getRootAgent(agent);
+    let current = agent;
+    const seen = new Set([agent.id]);
+    while (!jobs.isPolicyPinned(current.id) && current.parentAgentId) {
+      const parent = agentManager.getAgent(current.parentAgentId);
+      if (!parent || seen.has(parent.id)) break;
+      seen.add(parent.id);
+      current = parent;
+    }
+    return current;
+  }
+
+  /** What the agent job engine needs from chat: approval snapshots and tool enabling. */
+  jobIntegration(): JobChatIntegration {
+    return {
+      approvalPolicyOf: agent => {
+        const { autoToolApprovalLevel, toolApprovalMode } = this.approvalPolicy(agent);
+        return { autoToolApprovalLevel, toolApprovalMode };
+      },
+      defaultApprovalPolicy: () => {
+        const { autoToolApprovalLevel, toolApprovalMode } = this.options.agentDefaults;
+        return { autoToolApprovalLevel, toolApprovalMode };
+      },
+      setApprovalPolicy: (agent, { autoToolApprovalLevel, toolApprovalMode }) => {
+        this.updateChatConfig({ autoToolApprovalLevel, toolApprovalMode: ToolApprovalModeSchema.parse(toolApprovalMode) }, agent);
+      },
+      enableTools: (agent, tools) => {
+        this.enableTools(tools, agent);
+      },
+    };
   }
 
   private async appendToolApprovalClassificationLog(filePath: string, entry: ToolApprovalClassificationLogEntry, agent: Agent): Promise<void> {

@@ -88,25 +88,42 @@ export const ToolApprovalModeSchema = z.enum(["ask", "reject", "auto"]);
 export type ToolApprovalMode = z.infer<typeof ToolApprovalModeSchema>;
 
 /**
- * Safety classification scale (1–10) for tool actions.
- * Tools supply a level with each approval request. Higher is more dangerous.
- * Anchors:
- * - 6: might delete non-temporary files or data
- * - 8: could lead to the destruction of data
- * - 10: absolutely destructive system command
+ * The tool approval standard (docs/docs/tool-approval-levels.md). A tool rates the action it is about
+ * to take, not the tool in general: the same tool can be a 4 for a draft and an 8 when it sends.
+ * Levels 1–6 stay within your own things; 7 and up reach shared systems, other people or the public.
  */
 export const ToolApprovalClassificationLevels = {
-  1: "Completely harmless (read-only, no side effects)",
-  2: "Minimal risk (local read/list, no writes)",
-  3: "Low risk (writes temporary or ephemeral data only)",
-  4: "Low-moderate risk (creates non-critical files or network reads)",
-  5: "Moderate risk (modifies existing non-critical data or installs packages)",
-  6: "Might delete non-temporary files or data",
-  7: "Elevated risk (bulk modifications, privilege changes, external writes)",
-  8: "Could lead to the destruction of data",
-  9: "Severe risk (system configuration damage, security exposure)",
-  10: "Absolutely destructive system command",
+  1: "Read, local: reads files, app state or local tools; changes nothing",
+  2: "Read, remote: searches the web or reads a connected account (email, calendar, GitHub, a database); changes nothing",
+  3: "Agent bookkeeping: changes only the agent's own working state (todos, goals, which tools are on, temporary files)",
+  4: "Recoverable change to your own things: edits that keep the previous version, drafts nobody else sees, new notes, tasks or local commits, sandboxed builds and tests",
+  5: "Change to your own things that takes effort to undo, or that costs money: moving or archiving email, removing local containers or images, paid generation, starting agents that work unattended once",
+  6: "Permanent loss of some of your own data: deleting or overwriting files with no kept version, deleting notes, memories or tasks, trashing email, discarding local git changes, resetting a skill",
+  7: "Change to a shared or external system that can be undone and notifies nobody, or bulk loss of your own data: uploading to cloud storage, database writes, editing a live post, editing or closing an issue or PR, recurring scheduled agents, running code outside the sandbox",
+  8: "Reaches other people or the public, or cannot be undone outside your machine: sending email or messages, posting, commenting, invitations, git push, publishing packages, merging, deleting remote records, installing downloaded code",
+  9: "Severe: wide irreversible loss, shared infrastructure or security: force push, dropping tables, pruning volumes, changing credentials or permissions, sudo, remote shells",
+  10: "Catastrophic: can destroy the system or all data (wiping disks, formatting, rm -rf /, shutting the machine down)",
 } as const;
+
+/** Named levels of the tool approval standard ({@link ToolApprovalClassificationLevels}). */
+export const ApprovalLevel = {
+  ReadLocal: 1,
+  ReadRemote: 2,
+  Bookkeeping: 3,
+  RecoverableChange: 4,
+  CostlyChange: 5,
+  OwnDataLoss: 6,
+  SharedChange: 7,
+  ReachesPeople: 8,
+  Severe: 9,
+  Catastrophic: 10,
+} as const satisfies Record<string, ToolApprovalClassificationLevel>;
+
+/**
+ * In `auto` mode, actions at this level or above always go to a person: the classifier only judges
+ * level 7, where a wrong guess can still be undone.
+ */
+export const ALWAYS_ASK_LEVEL = ApprovalLevel.ReachesPeople;
 
 export type ToolApprovalClassificationLevel = keyof typeof ToolApprovalClassificationLevels;
 
@@ -233,6 +250,53 @@ const ChatAgentDefaultConfig = z
   })
   .strict();
 
+/** Highest approval level a permission grant can cover; levels 9-10 always ask a person. */
+export const MAX_GRANTABLE_LEVEL = ApprovalLevel.ReachesPeople;
+
+export const PermissionGrantSchema = z.object({
+  id: z
+    .string()
+    .meta({ description: "Permission id, e.g. blog.mysite.publish. Hand-edited ids may use * (one segment) and ** (the rest)" } satisfies ConfigFieldMeta),
+  grantedAt: z.string().meta({ description: "When the permission was granted (ISO 8601)" } satisfies ConfigFieldMeta),
+  lastUsedAt: z
+    .string()
+    .exactOptional()
+    .meta({ description: "When the permission last approved a request (ISO 8601)" } satisfies ConfigFieldMeta),
+  uses: z
+    .number()
+    .int()
+    .min(0)
+    .exactOptional()
+    .meta({ description: "How many requests the permission has approved" } satisfies ConfigFieldMeta),
+  note: z
+    .string()
+    .exactOptional()
+    .meta({ description: "What the permission covers, in plain language" } satisfies ConfigFieldMeta),
+});
+export type PermissionGrantConfig = z.output<typeof PermissionGrantSchema>;
+
+export const PermissionsConfigSchema = z
+  .object({
+    maxGrantLevel: z
+      .number()
+      .int()
+      .min(0)
+      .max(MAX_GRANTABLE_LEVEL)
+      .default(MAX_GRANTABLE_LEVEL)
+      .meta({
+        description: "Highest approval level a grant may cover (at most 8; levels 9-10 always ask)",
+      } satisfies ConfigFieldMeta),
+    grants: z
+      .array(PermissionGrantSchema)
+      .default([])
+      .meta({ description: 'Standing permissions ("Always allow") that approve matching requests without asking' } satisfies ConfigFieldMeta),
+  })
+  .prefault({})
+  .meta({
+    label: "Permissions",
+    description: "Standing permissions that approve specific actions without asking, including in unattended runs",
+  } satisfies ConfigFieldMeta);
+
 export const ChatServiceConfigSchema = z
   .object({
     defaultModels: z
@@ -244,6 +308,7 @@ export const ChatServiceConfigSchema = z
       .default([])
       .meta({ advanced: true, description: "Transcription model fallback chain" } satisfies ConfigFieldMeta),
     agentDefaults: ChatAgentDefaultConfig.prefault({}).meta({ label: "Agent Defaults" } satisfies ConfigFieldMeta),
+    permissions: PermissionsConfigSchema,
   })
   .prefault({})
   .meta({ label: "Chat", description: "Conversation and tool-use behavior for agents" } satisfies ConfigFieldMeta);

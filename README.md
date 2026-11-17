@@ -22,14 +22,17 @@ handlers, lifecycle hook, and the JSON-RPC endpoint at `/rpc/chat`.
 - **Per-turn resource limits**: optional `maxSteps`, `maxCost`, `maxInputTokens`,
   `maxOutputTokens`, and `maxRuntime` caps that stop a turn before it overspends.
 - **Context management**: built-in context handlers for the current message, prior messages,
-  tool context, and tool calls; automatic, staged, and manual compaction.
+  tool context, tool calls, and available agent types; automatic, staged, and manual compaction.
 - **Tool registry**: wildcard enable/disable/set operations, `adjustActivation` hooks, and
   sequential or parallel execution controlled by the `parallelTools` flag.
 - **Tool approval safety levels**: tools declare a numeric risk level (1–10); actions at or
   below `autoToolApprovalLevel` run automatically, while higher-risk actions follow an
   ask / reject / auto-classify policy.
-- **Built-in tools**: `tools_list`, `enable_tools`, `get_current_datetime`, `give_up`, and
-  `sleep`, plus config-defined sub-agent tools.
+- **Built-in tools**: `tools_list`, `enable_tools`, `get_current_datetime`, `give_up`,
+  `sleep`, the background sub-agent tools (`agent_start`, `agent_send`, `agent_output`,
+  `agent_list`, `agent_stop`; see the agent plugin), plus config-defined sub-agent tools.
+- **Sub-agent approvals**: a sub-agent's tool approvals follow the permission
+  setting of the chat at the top of its parent chain, read when it asks.
 - **Attachments**: text, image, audio, and video attachments, with audio transcription when
   the selected chat model does not support audio input.
 - **Analytics**: input/output token counts, cost breakdown, context length, and throughput
@@ -118,7 +121,7 @@ The package registers nineteen agent commands.
 
 ## Tools
 
-The plugin registers five built-in tools on `ChatService`:
+The plugin registers these built-in tools on `ChatService`:
 
 | Tool                   | Display Name               | Description                                                               |
 |------------------------|----------------------------|---------------------------------------------------------------------------|
@@ -133,7 +136,7 @@ The plugin registers five built-in tools on `ChatService`:
 **Display Name:** `Chat/List Tools`
 
 **Description:** Retrieves a list of currently inactive tools that can be enabled using the
-enable_tool tool with the permission of the user.
+enable_tools tool with the permission of the user.
 
 **Schema strictness:** the tool accepts an empty input schema (`z.object({})`).
 
@@ -149,7 +152,7 @@ many inactive tools were found.
 
 | Parameter   | Type       | Description                                                      |
 |-------------|------------|------------------------------------------------------------------|
-| `toolNames` | `string[]` | The names of the tools to enable, as returned by list_tools      |
+| `toolNames` | `string[]` | The names of the tools to enable, as returned by tools_list      |
 
 Before enabling the tools, the tool asks the user for approval
 (`agent.askForApproval`). If the user denies access, the tool returns a failed result with
@@ -218,7 +221,7 @@ arguments at execution time.
 
 ## Context Handlers
 
-Context handlers build the messages that are sent to the model. The plugin registers four
+Context handlers build the messages that are sent to the model. The plugin registers five
 built-in handlers, keyed by the `type` used in the `context` config:
 
 | Handler            | Description                                                                             |
@@ -227,6 +230,7 @@ built-in handlers, keyed by the `type` used in the `context` config:
 | `prior-messages`   | Yields previous conversation messages with middle-of-stream truncation                  |
 | `tool-context`     | Yields the required context of every enabled tool (`requiredContextHandlers`)           |
 | `tool-call`        | Executes a native TokenRing tool and injects its result into the conversation           |
+| `available-agents` | Lists every agent type with its description (required by `task_create`, `task_assign` and `scheduler_add_task`) |
 
 ### current-message
 
@@ -256,6 +260,12 @@ named native TokenRing tool, parses `toolInput` against its input schema, execut
 yields the result (with any attachments) as a user message prefixed by `header`. Executing a
 non-native tool throws `Tool "…" is not a native TokenRing tool, and cannot be injected into
 the chat context.`
+
+### available-agents
+
+Yields every agent type registered with `AgentManager` as a `- type: description` list. Tools that
+take an agent type (`task_create`, `task_assign`, `scheduler_add_task`) require it so the model
+picks a type that exists.
 
 Register custom handlers with `ChatService.registerContextHandler(name, handler)`; they are
 referenced from `context.initial` / `context.followUp` by `type`:
@@ -698,7 +708,7 @@ and the function returns `Promise<AIResponse>`.
 - Resolves attachments for the model (`resolveAttachmentsForModel`), then builds the request
   with `buildChatMessages`.
 - Streams the chat with a `stopWhen` callback that enforces the compaction thresholds plus the
-  optional `maxSteps` (asking the user when headless is off and the limit is exceeded),
+  optional `maxSteps` (asking whether to go on when the limit is exceeded; unanswered, it stops),
   `maxCost`, `maxInputTokens`, `maxOutputTokens`, and `maxRuntime` limits.
 - Pushes the completed exchange onto the message history and fires `AfterChatCompletion`.
 - Applies a pending compaction when the `applyThreshold` is reached, and stages a new
@@ -909,7 +919,7 @@ plugin/chat/
 ├── schema.ts                   # Config schemas and types
 ├── plugin.ts                   # Plugin definition (install + reconfigure)
 ├── commands.ts                 # Command registry (19 commands)
-├── contextHandlers.ts          # Context handler registry (4 handlers)
+├── contextHandlers.ts          # Context handler registry (5 handlers)
 ├── lifecycle.ts                # Hook event classes
 ├── tools.ts                    # Built-in tool registry (5 tools)
 ├── bun.config.ts               # Test runner configuration
@@ -938,6 +948,7 @@ plugin/chat/
 │       ├── select.ts           # /tools select
 │       └── set.ts              # /tools set
 ├── contextHandlers/
+│   ├── availableAgents.ts      # available-agents handler
 │   ├── currentMessage.ts       # current-message handler
 │   ├── priorMessages.ts        # prior-messages handler
 │   ├── toolCall.ts             # tool-call handler

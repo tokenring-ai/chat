@@ -12,6 +12,8 @@ import modelSettingsSet from "./commands/chat/model/settings/set.ts";
 import modelSettingsShow from "./commands/chat/model/settings/show.ts";
 import chatReset from "./commands/chat/reset.ts";
 import chatSend from "./commands/chat/send.ts";
+import permissionsList from "./commands/permissions/list.ts";
+import permissionsRevoke from "./commands/permissions/revoke.ts";
 import toolDisable from "./commands/tool/disable.ts";
 import toolEnable from "./commands/tool/enable.ts";
 import toolList from "./commands/tool/list.ts";
@@ -25,6 +27,8 @@ export default [
   chatCompact,
   chatReset,
   approve,
+  permissionsList,
+  permissionsRevoke,
 
   // Model commands
   modelGet,

@@ -16,13 +16,13 @@ function execute(_: z.output<typeof inputSchema>, agent: Agent): TokenRingToolRe
 
   return {
     message: `**Tools** Retrieved list of ${toolList.length} tools`,
-    result: `The following tools are inactive, and can be enabled with the enable_tool tool call:\n${toolList.join("\n")}`,
+    result: `The following tools are inactive, and can be enabled with the enable_tools tool call:\n${toolList.join("\n")}`,
   };
 }
 
 const inputSchema = z.object({});
 
-const description = "Retrieves a list of currently inactive tools that can be enabled using the enable_tool tool with the permission of the user.";
+const description = "Retrieves a list of currently inactive tools that can be enabled using the enable_tools tool with the permission of the user.";
 
 export default {
   name,

@@ -10,6 +10,7 @@ import { deepEquals } from "bun";
 import type { z } from "zod";
 import ChatService from "../ChatService.ts";
 import ContextualSearchService from "../ContextualSearchService.ts";
+import PermissionService, { PermissionError } from "../PermissionService.ts";
 import { type ParsedChatConfig, ToolApprovalClassificationLevels } from "../schema.ts";
 import { ChatServiceState } from "../state/chatServiceState.ts";
 import ToolDirectoryService from "../ToolDirectoryService.ts";
@@ -24,22 +25,31 @@ type ModelQueryResult =
       modelSpec: z.output<typeof SerializedChatModelSpecSchema>;
     };
 
+/**
+ * The chat client for a model name, or null when the registry does not know it (or rejects its
+ * settings). `getClient` throws "Model X not found" for those; callers report `modelNotFound`.
+ */
+function findChatClient(agent: Agent, model: string) {
+  try {
+    return agent.requireService(ChatModelRegistry).getClient(model);
+  } catch {
+    return null;
+  }
+}
+
 function buildModelResult(chatService: ChatService, agent: Agent): ModelQueryResult {
   const model = chatService.getModel(agent);
-
-  if (model) {
-    const registry = agent.requireService(ChatModelRegistry);
-    const client = registry.getClient(model);
-    return {
-      status: "success" as const,
-      model,
-      modelSpec: SerializedChatModelSpecSchema.parse(client.getModelSpec() satisfies z.input<typeof SerializedChatModelSpecSchema>),
-    };
-  } else {
-    return {
-      status: "modelNotFound",
-    };
+  // A model that was stored before it was validated (or whose provider has since gone away)
+  // is reported as not found rather than failing the query.
+  const client = model ? findChatClient(agent, model) : null;
+  if (!model || !client) {
+    return { status: "modelNotFound" };
   }
+  return {
+    status: "success" as const,
+    model,
+    modelSpec: SerializedChatModelSpecSchema.parse(client.getModelSpec() satisfies z.input<typeof SerializedChatModelSpecSchema>),
+  };
 }
 
 const streamEnabledTools = createAgentStateSliceStream({
@@ -60,12 +70,18 @@ const streamToolApproval = createAgentStateSliceStream({
   equals: (a, b) => a.autoToolApprovalLevel === b.autoToolApprovalLevel && a.toolApprovalMode === b.toolApprovalMode,
 });
 
+function permissionGrantsResult(app: TokenRingApp) {
+  const service = app.requireService(PermissionService);
+  return { status: "success" as const, grants: service.list(), maxGrantLevel: service.maxGrantLevel };
+}
+
 const streamChatUsage = createAgentStateSliceStream({
   SliceClass: ChatServiceState,
   project: (state, agent) => {
     const lastMessage = state.messages[state.messages.length - 1];
     const model = state.currentConfig.model ?? null;
-    const maxContextLength = model ? agent.requireService(ChatModelRegistry).getClient(model).getModelSpec().maxContextLength : null;
+    // An unknown stored model must not break the usage stream; its context limit is just unknown.
+    const maxContextLength = model ? (findChatClient(agent, model)?.getModelSpec().maxContextLength ?? null) : null;
 
     return {
       status: "success" as const,
@@ -158,6 +174,9 @@ export default createRPCEndpoint(ChatRpcSchema, {
     if (!agent) {
       return { status: "agentNotFound" };
     }
+    if (!findChatClient(agent, args.model)) {
+      return { status: "modelNotFound" };
+    }
     const chatService = app.requireService(ChatService);
     chatService.setModel(args.model, agent);
     return { status: "success", success: true };
@@ -219,6 +238,57 @@ export default createRPCEndpoint(ChatRpcSchema, {
   },
 
   streamToolApproval,
+
+  listPermissionGrants(_args, app: TokenRingApp) {
+    return permissionGrantsResult(app);
+  },
+
+  async *streamPermissionGrants(_args, app: TokenRingApp, signal) {
+    const service = app.requireService(PermissionService);
+    let wake: (() => void) | undefined;
+    let changed = true;
+    const unsubscribe = service.onChange(() => {
+      changed = true;
+      wake?.();
+    });
+    try {
+      while (!signal.aborted) {
+        if (changed) {
+          changed = false;
+          yield permissionGrantsResult(app);
+          continue;
+        }
+        await new Promise<void>(resolve => {
+          wake = resolve;
+          signal.addEventListener("abort", () => resolve(), { once: true });
+        });
+        wake = undefined;
+      }
+    } finally {
+      unsubscribe();
+    }
+  },
+
+  async revokePermissionGrant(args, app: TokenRingApp) {
+    try {
+      const removed = await app.requireService(PermissionService).revoke(args.id);
+      return removed ? { status: "success" as const, id: args.id } : { status: "notFound" as const };
+    } catch (error) {
+      if (error instanceof PermissionError) return { status: "rejected" as const, message: error.message };
+      throw error;
+    }
+  },
+
+  async grantPermission(args, app: TokenRingApp) {
+    const service = app.requireService(PermissionService);
+    try {
+      const grant = await service.grant({ id: args.id, ...(args.summary !== undefined && { summary: args.summary }) });
+      return { status: "success" as const, grant };
+    } catch (error) {
+      if (error instanceof PermissionError) return { status: "rejected" as const, message: error.message };
+      throw error;
+    }
+  },
 
   setToolApproval(args, app: TokenRingApp) {
     const agent = app.requireService(AgentManager).getAgent(args.agentId);

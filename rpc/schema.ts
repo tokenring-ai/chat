@@ -25,6 +25,28 @@ const ToolApprovalSettingsSchema = SuccessSchema.extend({
   toolApprovalMode: ToolApprovalModeSchema,
 });
 
+const PermissionGrantInfoSchema = z.object({
+  id: z.string(),
+  summary: z.string().exactOptional(),
+  grantedAt: z.string(),
+  lastUsedAt: z.string().exactOptional(),
+  uses: z.number().int(),
+  source: z.enum(["global", "workspace"]),
+  /** Set when the grant approves nothing (untrusted config file, malformed id), and why. */
+  ignoredReason: z.string().exactOptional(),
+});
+
+const PermissionGrantsSchema = SuccessSchema.extend({
+  grants: z.array(PermissionGrantInfoSchema),
+  /** Highest approval level a grant can cover (at most 8). */
+  maxGrantLevel: z.number().int(),
+});
+
+const PermissionRejectedSchema = z.object({
+  status: z.literal("rejected"),
+  message: z.string(),
+});
+
 export default {
   name: "Chat RPC",
   path: "/rpc/chat",
@@ -42,6 +64,26 @@ export default {
           }),
         ),
       }),
+    },
+    listPermissionGrants: {
+      type: "query",
+      input: z.object({}),
+      result: PermissionGrantsSchema,
+    },
+    streamPermissionGrants: {
+      type: "stream",
+      input: z.object({}),
+      result: PermissionGrantsSchema,
+    },
+    revokePermissionGrant: {
+      type: "mutation",
+      input: z.object({ id: z.string() }),
+      result: z.discriminatedUnion("status", [SuccessSchema.extend({ id: z.string() }), z.object({ status: z.literal("notFound") }), PermissionRejectedSchema]),
+    },
+    grantPermission: {
+      type: "mutation",
+      input: z.object({ id: z.string(), summary: z.string().exactOptional() }),
+      result: z.discriminatedUnion("status", [SuccessSchema.extend({ grant: PermissionGrantInfoSchema }), PermissionRejectedSchema]),
     },
     getToolDirectory: {
       type: "query",
@@ -130,6 +172,8 @@ export default {
           success: z.boolean(),
         }),
         AgentNotFoundSchema,
+        // The model is not registered (or its settings are invalid); nothing was stored.
+        ModelNotFoundSchema,
       ]),
     },
     streamChatUsage: {

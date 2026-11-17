@@ -1,5 +1,6 @@
 import type Agent from "@tokenring-ai/agent/Agent";
 import type { ChatAttachment } from "@tokenring-ai/agent/AgentEvents";
+import { AgentEventState } from "@tokenring-ai/agent/state/agentEventState";
 import type AIChatClient from "@tokenring-ai/ai-client/client/AIChatClient";
 import type { AIResponse } from "@tokenring-ai/ai-client/client/AIChatClient";
 import { ChatModelRegistry } from "@tokenring-ai/ai-client/ModelRegistry";
@@ -49,11 +50,41 @@ export type RunChatOptions = {
 };
 
 /**
+ * Whether to keep going after the step limit. Asks; unanswered by the agent's deadline, or with
+ * nobody to ask, it stops.
+ */
+export async function shouldContinuePastMaxSteps(agent: Pick<Agent, "askForApproval">, stepsTaken: number, maxSteps: number): Promise<boolean> {
+  return await agent.askForApproval({
+    message: `The agent has completed ${stepsTaken} steps, which is longer than your configured limit of ${maxSteps}. Would you like to continue?`,
+    defaultValue: false,
+  });
+}
+
+/**
  * runChat tool: Runs a chat with the AI model, combining streamChat and runChat functionality.
  */
+/**
+ * Whether to compact once the context passes the threshold. "ask" asks; unanswered by the agent's
+ * deadline, or with nobody to ask (queue items, dispatched tasks, bots), it compacts rather than let
+ * its context keep growing.
+ */
+export async function shouldCompact(policy: ParsedChatConfig["compaction"]["policy"], agent: Pick<Agent, "askForApproval">): Promise<boolean> {
+  if (policy === "automatic") return true;
+  if (policy !== "ask") return false;
+  return await agent.askForApproval({
+    message: "Context is getting long. Would you like to compact it to save tokens?",
+    defaultValue: true,
+    whenUnanswered: true,
+  });
+}
+
 export default async function runChat({ input, attachments, chatConfig, agent }: RunChatOptions): Promise<AIResponse> {
   const chatModelRegistry = agent.requireService(ChatModelRegistry);
   const chatService = agent.requireService(ChatService);
+
+  // The session is titled by the first thing its model is asked: a command that only changes
+  // settings (`/tools enable …`) never reaches here, so it never becomes the title.
+  agent.mutateState(AgentEventState, state => state.setTitleOnce(input));
 
   const model = chatService.requireModel(agent);
 
@@ -175,17 +206,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
           }
 
           if (maxSteps > 0 && stepCount > maxSteps) {
-            if (agent.headless) {
-              stopReason = "maxSteps";
-              return true;
-            }
-
-            if (
-              await agent.askForApproval({
-                message: `The agent has completed ${options.steps.length} steps, which is longer than your configured limit of ${chatConfig.maxSteps}. Would you like to continue?`,
-                defaultValue: false,
-              })
-            ) {
+            if (await shouldContinuePastMaxSteps(agent, options.steps.length, chatConfig.maxSteps)) {
               maxSteps += chatConfig.maxSteps;
               return false;
             } else {
@@ -245,15 +266,7 @@ export default async function runChat({ input, attachments, chatConfig, agent }:
     }
 
     if (reachedCompactionThreshold) {
-      if (
-        config.compaction.policy === "automatic" ||
-        (config.compaction.policy === "ask" &&
-          agent.headless &&
-          (await agent.askForApproval({
-            message: "Context is getting long. Would you like to compact it to save tokens?",
-            defaultValue: true,
-          })))
-      ) {
+      if (await shouldCompact(config.compaction.policy, agent)) {
         if (!chatService.hasPendingCompaction(agent) && !chatService.isCompactionInProgress(agent)) {
           agent.infoMessage("Context is getting long. Preparing a compaction summary...");
           agent.setCurrentActivity("Preparing context compaction...");

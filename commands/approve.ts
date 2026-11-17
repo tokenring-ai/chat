@@ -67,7 +67,7 @@ function execute({ args, agent }: AgentCommandInputType<typeof inputSchema>): st
 const command = {
   name: "approval",
   alias: ["approve"],
-  description: "Show or set tool approval level and mode (ask, reject, auto)",
+  description: "Advanced: show or set when TokenRing asks before acting (level and mode: ask, reject, auto)",
   inputSchema,
   execute,
   help,

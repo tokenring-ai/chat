@@ -36,8 +36,6 @@ export function createAgentTool(toolName: string, toolConfig: ChatToolConfig) {
 
       const request: RunSubAgentOptions = {
         agentType: toolConfig.agentType,
-        background: false,
-        headless: agent.headless,
         from: `Parent agent tool: /${toolName}`,
         steps,
         parentAgent: agent,

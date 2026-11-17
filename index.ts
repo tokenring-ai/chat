@@ -10,6 +10,16 @@ export type {
 } from "./ContextualSearchProvider.ts";
 export { default as ContextualSearchService } from "./ContextualSearchService.ts";
 export { formatContextualTag, parseContextualTags } from "./contextualSearch/tags.ts";
+export {
+  ConfigurationPermissionStore,
+  default as PermissionService,
+  type GrantSource,
+  MemoryPermissionStore,
+  PermissionError,
+  type PermissionGrantInfo,
+  type PermissionStore,
+} from "./PermissionService.ts";
+export { permissionIdProblem, permissionPatternMatches, permissionSlug } from "./permissions/permissionIds.ts";
 export { default as runChat } from "./runChat.ts";
 export {
   ChatAgentConfigSchema,
